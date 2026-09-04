@@ -187,7 +187,12 @@ function nextQ() {
   state.qi++; state.ans = null; state.pick = null; state.calc = ''; state.texte = ''; state.revealed = false;
   render();
 }
-function go(screen, patch) { state.screen = screen; if (patch) Object.assign(state, patch); render(); }
+function go(screen, patch) {
+  if (state.screen === 'mental' && screen !== 'mental' && mentalState.timer) {
+    clearInterval(mentalState.timer); mentalState.timer = null;
+  }
+  state.screen = screen; if (patch) Object.assign(state, patch); render();
+}
 
 // ---- computed view values (mirrors the design's renderVals) --------------
 function computeVals() {
@@ -225,7 +230,9 @@ function computeVals() {
     isQuiz: scr === 'quiz', isDone: scr === 'done', isExamPick: scr === 'examPick',
     isExamResult: scr === 'examResult', isSrs: scr === 'srs', isCourses: scr === 'courses',
     isFiche: scr === 'fiche', isProgress: scr === 'progress', isProfile: scr === 'profile',
-    showTabs: ['home', 'browse', 'cat', 'srs', 'courses', 'fiche', 'progress', 'profile', 'examPick'].indexOf(scr) >= 0,
+    isLabo: scr === 'labo', isMental: scr === 'mental',
+    showTabs: ['home', 'browse', 'cat', 'srs', 'courses', 'fiche', 'progress', 'profile', 'examPick', 'labo', 'mental'].indexOf(scr) >= 0,
+    mentalBest: S.mentalBest || 0,
 
     onb0: st.onb === 0, onb1: st.onb === 1, onb2: st.onb === 2,
     onbStepLabel: 'ÉTAPE ' + (st.onb + 1) + ' / 3',
@@ -236,7 +243,7 @@ function computeVals() {
       { label: 'Jouer', k: 'home' }, { label: 'Réviser', k: 'srs' }, { label: 'Cours', k: 'courses' },
       { label: 'Stats', k: 'progress' }, { label: 'Profil', k: 'profile' }
     ].map(function (t) {
-      var on = scr === t.k || (t.k === 'home' && (scr === 'browse' || scr === 'cat' || scr === 'examPick')) || (t.k === 'courses' && scr === 'fiche');
+      var on = scr === t.k || (t.k === 'home' && (scr === 'browse' || scr === 'cat' || scr === 'examPick' || scr === 'labo' || scr === 'mental')) || (t.k === 'courses' && scr === 'fiche');
       return { label: t.label, k: t.k, on: on, off: !on };
     })
   };
@@ -261,12 +268,21 @@ function computeVals() {
 
   var tKeys = Object.keys(Dd.THEORY || {});
   v.ficheCount = tKeys.length;
+  var theoryPole = {};
+  allCats().forEach(function (c) { if (c.theory) theoryPole[c.theory] = c.pole; });
   v.fiches = tKeys.map(function (k) {
     var t = Dd.THEORY[k];
-    return { key: k, title: t.title, meta: ((t.sections || []).length) + ' SECTIONS · ' + Math.max(2, Math.round((t.sections || []).length * 1.2)) + ' MIN' };
+    return {
+      key: k, title: t.title, icon: t.icon || '📘', pole: theoryPole[k] || '',
+      meta: ((t.sections || []).length) + ' SECTIONS · ' + Math.max(2, Math.round((t.sections || []).length * 1.2)) + ' MIN'
+    };
   });
+  v.fichesByPole = pNames.map(function (p) {
+    return { label: p, fiches: v.fiches.filter(function (f) { return f.pole === p; }) };
+  }).filter(function (g) { return g.fiches.length; });
   var fi = Dd.THEORY ? Dd.THEORY[st.fiche] : null;
   v.ficheTitle = fi ? fi.title : '';
+  v.ficheIcon = fi ? (fi.icon || '📘') : '📘';
   v.ficheSource = fi ? (fi.source || '') : '';
   v.ficheIdx = fi ? 'FICHE ' + (tKeys.indexOf(st.fiche) + 1) + ' / ' + tKeys.length : '';
   v.ficheMin = fi ? Math.max(2, Math.round((fi.sections || []).length * 1.2)) : 0;
@@ -502,6 +518,10 @@ function tplHome(v) {
     '<div style="margin:26px 24px 0;display:flex;gap:10px;">' +
     '<button data-action="goBrowse" class="hv-a" style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;cursor:pointer;color:var(--ink);"><div style="font:300 26px/1 Newsreader,serif;">19</div><div style="font:400 11.5px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:7px;">Catégories</div></button>' +
     '<button data-action="goExamPick" class="hv-a" style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;cursor:pointer;color:var(--ink);"><div style="font:300 26px/1 Newsreader,serif;">40</div><div style="font:400 11.5px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:7px;">Examen blanc</div></button></div>' +
+    '<div style="margin:26px 24px 0;"><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);">OUTILS</div>' +
+    '<div style="margin-top:12px;display:flex;gap:10px;">' +
+    '<button data-action="goLabo" class="hv-a" style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;cursor:pointer;color:var(--ink);"><div style="font:400 22px Newsreader,serif;color:var(--acc);">∑</div><div style="font:500 13px \'Space Grotesk\',sans-serif;margin-top:9px;">Labo</div><div style="font:400 11px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:2px;">5 simulateurs</div></button>' +
+    '<button data-action="goMental" class="hv-a" style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;cursor:pointer;color:var(--ink);"><div style="font:400 22px Newsreader,serif;color:var(--gold);">⏱</div><div style="font:500 13px \'Space Grotesk\',sans-serif;margin-top:9px;">Calcul mental</div><div style="font:400 11px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:2px;">10 questions chrono</div></button></div></div>' +
     '<div style="height:26px;"></div></div>';
 }
 
@@ -643,16 +663,27 @@ function tplSrs(v) {
     '<div style="height:26px;"></div></div>';
 }
 
+function tplFicheCard(f) {
+  return '<button data-action="ficheGo" data-fiche="' + esc(f.key) + '" class="hv-a" style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;box-sizing:border-box;">' +
+    '<span style="flex-shrink:0;width:44px;height:44px;border-radius:14px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:19px;">' + esc(f.icon) + '</span>' +
+    '<span style="flex:1;min-width:0;"><span style="display:block;font:500 13.5px/1.35 \'Space Grotesk\',sans-serif;">' + esc(f.title) + '</span><span style="display:block;font:500 9.5px \'JetBrains Mono\',monospace;letter-spacing:.1em;color:var(--dim);margin-top:5px;">' + esc(f.meta) + '</span></span>' +
+    '<span style="flex-shrink:0;font:400 15px Newsreader,serif;color:var(--acc);">&#8250;</span></button>';
+}
+
 function tplCourses(v) {
-  var fiches = v.fiches.map(function (f) {
-    return '<button data-action="ficheGo" data-fiche="' + esc(f.key) + '" class="hv-a" style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;">' +
-      '<span style="flex:1;"><span style="display:block;font:500 13px/1.35 \'Space Grotesk\',sans-serif;">' + esc(f.title) + '</span><span style="display:block;font:500 9.5px \'JetBrains Mono\',monospace;letter-spacing:.1em;color:var(--dim);margin-top:5px;">' + esc(f.meta) + '</span></span>' +
-      '<span style="font:400 15px Newsreader,serif;color:var(--acc);">&#8250;</span></button>';
+  var groups = v.fichesByPole.map(function (g, gi) {
+    var cards = g.fiches.map(tplFicheCard).join('');
+    return '<div style="margin-top:' + (gi === 0 ? '4' : '26') + 'px;">' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">' +
+      '<span style="font:500 11px \'Space Grotesk\',sans-serif;color:var(--ink2);">' + esc(g.label) + '</span>' +
+      '<span style="flex:1;height:1px;background:var(--line);"></span>' +
+      '<span style="font:500 9.5px \'JetBrains Mono\',monospace;color:var(--dim);">' + g.fiches.length + '</span></div>' +
+      '<div style="display:flex;flex-direction:column;gap:9px;">' + cards + '</div></div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:58px 24px 0;"><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.2em;color:var(--ink3);">FICHES</div>' +
     '<div style="font:300 34px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:14px;">' + v.ficheCount + ' <span style="font-style:italic;">cours</span></div></div>' +
-    '<div style="margin:22px 24px 0;display:flex;flex-direction:column;gap:9px;">' + fiches + '</div>' +
+    '<div style="margin:22px 24px 0;">' + groups + '</div>' +
     '<div style="height:26px;"></div></div>';
 }
 
@@ -663,8 +694,10 @@ function tplFiche(v) {
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:56px 26px 0;"><button data-action="goCourses" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Fiches</button>' +
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);"><div>' + esc(v.ficheIdx) + '</div><div style="color:var(--acc);">' + v.ficheMin + ' MIN</div></div>' +
-    '<div style="font:300 32px/1.12 Newsreader,serif;letter-spacing:-.025em;margin-top:14px;">' + esc(v.ficheTitle) + '</div>' +
+    '<div style="display:flex;align-items:center;gap:14px;margin-top:18px;">' +
+    '<span style="flex-shrink:0;width:52px;height:52px;border-radius:16px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:23px;">' + esc(v.ficheIcon) + '</span>' +
+    '<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;align-items:center;font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);"><div>' + esc(v.ficheIdx) + '</div><div style="color:var(--acc);">' + v.ficheMin + ' MIN</div></div>' +
+    '<div style="font:300 26px/1.15 Newsreader,serif;letter-spacing:-.02em;margin-top:6px;">' + esc(v.ficheTitle) + '</div></div></div>' +
     '<div style="margin-top:16px;height:1px;background:linear-gradient(90deg,var(--acc),var(--acc2),transparent);"></div>' +
     '<div style="font:400 10px/1.6 \'JetBrains Mono\',monospace;color:var(--dim);margin-top:14px;">' + esc(v.ficheSource) + '</div></div>' +
     '<div style="padding:6px 26px 0;">' + sections + '</div>' +
@@ -724,6 +757,417 @@ function tplTabs(v) {
     '<div style="background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px;display:flex;gap:2px;">' + tabs + '</div></div>';
 }
 
+// ---- Labo : simulateurs financiers -----------------------------------------
+function fmtNum(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+function euro(n) { return fmtNum(Math.round(n)) + ' €'; }
+function pctv(x) { return (Math.round(x * 100) / 100).toString().replace('.', ',') + ' %'; }
+function irTax(rev, parts) {
+  if (rev <= 0 || parts <= 0) return 0;
+  var br = [[11294, 0], [28797, 0.11], [82341, 0.30], [177106, 0.41], [Infinity, 0.45]];
+  var q = rev / parts, tax = 0, prev = 0;
+  for (var i = 0; i < br.length; i++) {
+    var cap = br[i][0], rate = br[i][1];
+    if (q > prev) { tax += (Math.min(q, cap) - prev) * rate; prev = cap; } else break;
+  }
+  return tax * parts;
+}
+function partsOf(couple, enf) {
+  var p = couple ? 2 : 1;
+  p += Math.min(enf, 2) * 0.5;
+  if (enf > 2) p += (enf - 2) * 1;
+  return p;
+}
+
+var laboState = { ciFreq: 'mois', perCouple: false, perMode: 'libre', pxMode: 'ech' };
+
+function laboField(label, id, min, max, step, value, labelId) {
+  return '<div style="margin-top:14px;"><div style="display:flex;justify-content:space-between;gap:10px;font:500 12px \'Space Grotesk\',sans-serif;color:var(--ink2);"><span' + (labelId ? ' id="' + labelId + '"' : '') + '>' + label + '</span><b id="' + id + 'V" style="color:var(--ink);font-family:\'JetBrains Mono\',monospace;font-weight:500;font-size:11.5px;white-space:nowrap;">—</b></div>' +
+    '<input type="range" id="' + id + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + value + '"></div>';
+}
+function laboSeg(idA, labelA, idB, labelB, prefixLabel) {
+  return '<div style="margin-top:14px;">' + (prefixLabel ? '<div style="font:500 12px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-bottom:6px;">' + prefixLabel + '</div>' : '') +
+    '<div style="display:flex;gap:8px;"><button type="button" id="' + idA + '" class="lab-seg on" style="flex:1;">' + labelA + '</button><button type="button" id="' + idB + '" class="lab-seg" style="flex:1;">' + labelB + '</button></div></div>';
+}
+function laboSeg3(a, la, b, lb, c, lc) {
+  return '<div style="display:flex;gap:8px;margin-top:10px;"><button type="button" id="' + a + '" class="lab-seg" style="flex:1;">' + la + '</button><button type="button" id="' + b + '" class="lab-seg on" style="flex:1;">' + lb + '</button><button type="button" id="' + c + '" class="lab-seg" style="flex:1;">' + lc + '</button></div>';
+}
+function laboKpiRow(items) {
+  var cells = items.map(function (it) {
+    return '<div style="flex:1;min-width:0;"><div style="font:500 9.5px \'JetBrains Mono\',monospace;letter-spacing:.08em;color:var(--ink3);">' + it.label + '</div><div id="' + it.id + '" style="font:500 15.5px \'JetBrains Mono\',monospace;margin-top:5px;color:' + (it.color || 'var(--ink)') + ';word-break:break-word;">—</div></div>';
+  }).join('');
+  return '<div style="display:flex;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);">' + cells + '</div>';
+}
+function laboBar(idA, idB) {
+  return '<div style="height:8px;border-radius:4px;overflow:hidden;display:flex;margin-top:14px;background:var(--line);">' +
+    '<span id="' + idA + '" style="display:block;height:8px;background:var(--acc2);"></span>' +
+    '<span id="' + idB + '" style="display:block;height:8px;background:var(--warn);"></span></div>';
+}
+function laboNote(id) {
+  return '<div id="' + id + '" style="font:400 11.5px/1.6 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:12px;"></div>';
+}
+function laboCard(tag, tagColor, icon, title, purpose, inner) {
+  return '<div style="background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:18px;margin-top:14px;">' +
+    '<div style="display:inline-block;font:500 9.5px \'JetBrains Mono\',monospace;letter-spacing:.06em;color:' + tagColor + ';background:var(--panel2);padding:5px 10px;border-radius:999px;">' + tag + '</div>' +
+    '<div style="font:500 15px \'Space Grotesk\',sans-serif;margin-top:11px;display:flex;align-items:center;gap:9px;"><span style="font-size:17px;">' + icon + '</span>' + title + '</div>' +
+    '<div style="font:400 11.5px/1.5 \'Space Grotesk\',sans-serif;color:var(--ink3);margin-top:5px;">' + purpose + '</div>' +
+    inner + '</div>';
+}
+function laboLine(label, value, tot) {
+  return '<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font:400 12px \'Space Grotesk\',sans-serif;color:' + (tot ? 'var(--ink)' : 'var(--ink2)') + ';' + (tot ? 'font-weight:600;border-top:1px solid var(--line);margin-top:4px;padding-top:10px;' : '') + '"><span>' + label + '</span><b style="font-family:\'JetBrains Mono\',monospace;font-weight:500;">' + value + '</b></div>';
+}
+
+function tplLabo() {
+  var card1 =
+    laboField('Capital de départ', 'ciCap', 0, 1000000, 5000, 50000) +
+    laboField('Versement mensuel', 'ciPmt', 0, 5000, 50, 300, 'ciPmtLbl') +
+    laboSeg('ciFreqMois', 'Mensuel', 'ciFreqAn', 'Annuel', 'Fréquence des versements') +
+    laboField('Frais sur versements', 'ciFeeIn', 0, 5, 0.25, 0) +
+    laboField('Rendement annuel brut', 'ciRate', 0, 15, 0.5, 6) +
+    laboField('Frais de gestion annuels', 'ciFeeMgmt', 0, 4, 0.1, 0) +
+    laboField('Durée', 'ciYr', 1, 40, 1, 20) +
+    laboKpiRow([{ id: 'ciFinal', label: 'CAPITAL FINAL' }, { id: 'ciInt', label: 'PLUS-VALUE NETTE', color: 'var(--acc)' }]) +
+    laboBar('ciBarCap', 'ciBarInt') + laboNote('ciNote');
+  var card2 =
+    laboSeg('perSolo', 'Célibataire', 'perCouple', 'Couple', 'Foyer') +
+    laboField('Revenu net imposable — déclarant 1', 'perR1', 0, 250000, 1000, 45000) +
+    '<div id="perR2Row" style="display:none;">' + laboField('Revenu net imposable — déclarant 2', 'perR2', 0, 250000, 1000, 35000) + '</div>' +
+    laboField('Nombre d’enfants à charge', 'perEnf', 0, 6, 1, 0) +
+    laboSeg('perLibre', 'Libre', 'perObj', 'Objectif en N mois', 'Versement') +
+    '<div id="perLibreRow">' + laboField('Versement PER (sur l’année)', 'perVers', 0, 60000, 500, 8000) + '</div>' +
+    '<div id="perObjRow" style="display:none;">' + laboField('Montant à atteindre', 'perTgt', 1000, 60000, 500, 10000) + laboField('En combien de mois', 'perMo', 1, 24, 1, 6) + '</div>' +
+    laboKpiRow([{ id: 'perGain', label: 'GAIN FISCAL RÉEL', color: 'var(--acc)' }, { id: 'perNet', label: 'EFFORT NET' }, { id: 'perTx', label: 'TAUX DU GAIN' }]) +
+    '<div id="perBreak" style="margin-top:6px;"></div>' + laboNote('perNote');
+  var card3 =
+    laboField('Montant emprunté', 'crCap', 20000, 1500000, 10000, 300000) +
+    laboField('Taux annuel', 'crRate', 0.5, 7, 0.1, 3.5) +
+    laboField('Durée', 'crYr', 5, 30, 1, 20) +
+    laboKpiRow([{ id: 'crMens', label: 'MENSUALITÉ' }, { id: 'crInt', label: 'COÛT DES INTÉRÊTS', color: 'var(--warn)' }]) +
+    laboBar('crBarCap', 'crBarInt') + laboNote('crNote');
+  var card4 =
+    laboField('Capital investi', 'frCap', 1000, 1000000, 5000, 100000) +
+    laboField('Rendement brut annuel', 'frBrut', 0, 12, 0.5, 6) +
+    laboField('Frais annuels', 'frFrais', 0, 5, 0.1, 1.5) +
+    laboField('Durée', 'frYr', 1, 40, 1, 25) +
+    laboKpiRow([{ id: 'frNet', label: 'CE QUE TU AS (NET)', color: 'var(--acc)' }, { id: 'frCost', label: 'COÛT TOTAL DES FRAIS', color: 'var(--warn)' }]) +
+    laboBar('frBarCap', 'frBarInt') + laboNote('frNote');
+  var guide = '<button type="button" id="pxGuideBtn" style="width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:11px 13px;font:500 12px \'Space Grotesk\',sans-serif;color:var(--ink);cursor:pointer;margin-top:14px;">📄 Comment remplir depuis un DIC ? (exemples)</button>' +
+    '<div id="pxGuide" style="display:none;margin-top:10px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px;font:400 11.5px/1.6 \'Space Grotesk\',sans-serif;color:var(--ink2);">' +
+    '<div>Reporte chaque valeur du DIC dans les bonnes cases :</div>' +
+    '<div style="margin-top:8px;"><b style="color:var(--ink);">Montant investi</b> — « Scénarios de performance » → « Exemple d’investissement » <i>(ex. 10 000 €)</i></div>' +
+    '<div style="margin-top:6px;"><b style="color:var(--ink);">Coupon /an (brut)</b> — Section 1 → « Intérêts » <i>(ex. 8 %)</i></div>' +
+    '<div style="margin-top:6px;"><b style="color:var(--ink);">Décrément (pts/an)</b> — Section 1 → indice « Decrement », 0 si absent <i>(ex. 4,7)</i></div>' +
+    '<div style="margin-top:6px;"><b style="color:var(--ink);">Barrière capital</b> — Section 1 → « Niveau de barrière », 100 % si capital garanti <i>(ex. 40 %)</i></div>' +
+    '<div style="margin-top:6px;"><b style="color:var(--ink);">Coûts d’entrée (produit)</b> — Section 4 → « Composition des coûts » <i>(ex. 8,91 %)</i></div>' +
+    '<div style="margin-top:6px;"><b style="color:var(--ink);">Frais de gestion /an</b> — Section 4 → « Coûts récurrents » <i>(ex. 0,80 %)</i></div>' +
+    '<div style="margin-top:6px;"><b style="color:var(--ink);">Coûts de sortie</b> — Section 4 → « Coûts de sortie », dus seulement si vente avant terme <i>(ex. 1,00 %)</i></div>' +
+    '<div style="margin-top:10px;color:var(--gold);">💡 Les frais du DIC sont ceux du PRODUIT. Ajoute à part les frais d’entrée du CGP / de l’enveloppe, absents du DIC.</div>' +
+    '<div style="margin-top:8px;">✅ Contrôle : « l’incidence des coûts annuels » du DIC (à l’échéance) doit être proche de ce qu’affiche le simulateur.</div>' +
+    '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;"><button type="button" id="pxFillCiti" style="flex:1;background:var(--acc);color:var(--on);border:none;border-radius:999px;padding:9px 12px;font:600 11px \'Space Grotesk\',sans-serif;cursor:pointer;">Exemple Citi (décrément)</button><button type="button" id="pxFillMS" style="flex:1;background:none;border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:9px 12px;font:500 11px \'Space Grotesk\',sans-serif;cursor:pointer;">Exemple Morgan Stanley</button></div>' +
+    '</div>';
+  var card5 = guide +
+    laboField('Montant investi', 'pxCap', 5000, 500000, 1000, 10000) +
+    laboField('Coupon conditionnel /an (brut)', 'pxCoup', 0, 12, 0.25, 8) +
+    laboField('Décrément de l’indice (pts/an)', 'pxDec', 0, 6, 0.1, 4.7) +
+    laboField('Barrière de protection du capital (%)', 'pxBar', 0, 100, 5, 40) +
+    laboField('Durée totale', 'pxN', 1, 12, 1, 12) +
+    '<div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.1em;color:var(--ink3);margin-top:18px;">FRAIS DU PRODUIT (DIC)</div>' +
+    laboField('Coûts d’entrée produit', 'pxEnt', 0, 12, 0.1, 8.9) +
+    laboField('Frais de gestion /an produit', 'pxGes', 0, 3, 0.1, 0.8) +
+    '<div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.1em;color:var(--ink3);margin-top:18px;">FRAIS CÔTÉ CGP / ENVELOPPE (HORS DIC)</div>' +
+    laboField('Frais d’entrée CGP / enveloppe', 'pxCgp', 0, 5, 0.1, 0) +
+    '<div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.1em;color:var(--ink3);margin-top:18px;">👇 SCÉNARIO DE SORTIE</div>' +
+    laboSeg3('scAuto', 'Remb. anticipé', 'scEch', 'À l’échéance', 'scVol', 'Sortie volontaire') +
+    '<div id="pxScenHint" style="font:400 11px/1.5 \'Space Grotesk\',sans-serif;color:var(--ink3);margin-top:8px;"></div>' +
+    '<div id="pxYrRow" style="display:none;">' + laboField('Année de sortie / de rappel', 'pxYr', 1, 12, 1, 3) + '</div>' +
+    '<div id="pxPerfRow" style="display:none;">' + laboField('Performance du sous-jacent (avant décrément)', 'pxPerf', -70, 40, 1, -30) + '</div>' +
+    '<div id="pxSorRow" style="display:none;">' + laboField('Coûts de sortie (si tu retires)', 'pxSor', 0, 5, 0.1, 1) + '</div>' +
+    laboKpiRow([{ id: 'pxCost', label: 'FRAIS DÉDUITS', color: 'var(--warn)' }, { id: 'pxRes', label: 'TU RÉCUPÈRES' }, { id: 'pxNet', label: 'RÉSULTAT /AN', color: 'var(--acc)' }]) +
+    '<div id="pxBreak" style="margin-top:6px;"></div>' + laboNote('pxNote');
+
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;"><button data-action="goHome" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Accueil</button>' +
+    '<div style="font:300 34px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:16px;">Labo <span style="font-style:italic;">interactif</span></div>' +
+    '<div style="font:400 13px/1.6 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:10px;">5 simulateurs, 5 usages distincts. Chiffres élevés supportés — adapte-les à tes clients.</div></div>' +
+    '<div style="margin:0 24px;">' +
+    laboCard('UTILITÉ', 'var(--gold)', '🌱', 'Intérêts composés + versements', 'La puissance du temps + de l’épargne régulière.', card1) +
+    laboCard('UTILITÉ', 'var(--acc)', '💸', 'Levier fiscal du PER', 'Ton vrai gain fiscal PER selon tes revenus (gère les effets de tranche).', card2) +
+    laboCard('UTILITÉ', 'var(--ink2)', '🏦', 'Crédit : mensualité & coût total', 'Le vrai coût d’un emprunt.', card3) +
+    laboCard('UTILITÉ', 'var(--warn)', '🔍', 'Frais : combien ça coûte vraiment', 'Combien les frais rognent la performance.', card4) +
+    laboCard('UTILITÉ', 'var(--gold)', '🧾', 'Produit structuré : coûts, coupon & scénarios', 'Décortiquer un structuré depuis son DIC.', card5) +
+    '</div><div style="height:32px;"></div></div>';
+}
+
+function wireLabo() {
+  function $(id) { return document.getElementById(id); }
+  function ci() {
+    var cap = +$('ciCap').value, pmt = +$('ciPmt').value, r = +$('ciRate').value, y = +$('ciYr').value, feeIn = +$('ciFeeIn').value, feeM = +$('ciFeeMgmt').value, freq = laboState.ciFreq;
+    $('ciCapV').textContent = euro(cap); $('ciPmtV').textContent = euro(pmt); $('ciRateV').textContent = pctv(r);
+    $('ciYrV').textContent = y + ' ans'; $('ciFeeInV').textContent = pctv(feeIn); $('ciFeeMgmtV').textContent = pctv(feeM);
+    var m = y * 12, pmtMois = (freq === 'an') ? pmt / 12 : pmt;
+    var netAnnual = (1 + r / 100) * (1 - feeM / 100), rm = Math.pow(netAnnual, 1 / 12) - 1, rmBrut = Math.pow(1 + r / 100, 1 / 12) - 1;
+    var k = 1 - feeIn / 100, capNet = cap * k, pmtNet = pmtMois * k;
+    function fv(rate, c, pm) { return rate > 0 ? c * Math.pow(1 + rate, m) + pm * ((Math.pow(1 + rate, m) - 1) / rate) : c + pm * m; }
+    var fin = fv(rm, capNet, pmtNet), finBrut = fv(rmBrut, cap, pmtMois), verse = cap + pmtMois * m, gain = fin - verse, fraisTot = finBrut - fin;
+    $('ciFinal').textContent = euro(fin); $('ciInt').textContent = euro(gain);
+    var p = fin > 0 ? Math.round(Math.max(0, gain) / fin * 100) : 0;
+    $('ciBarCap').style.width = (100 - p) + '%'; $('ciBarInt').style.width = p + '%';
+    var note = 'Tu verses ' + euro(verse) + ' de ta poche ; capital final ' + euro(fin) + ' (plus-value nette ' + euro(gain) + ').';
+    if (feeIn > 0 || feeM > 0) note += ' Frais prélevés ≈ ' + euro(fraisTot) + ' sur la période (sans frais : ' + euro(finBrut) + ').';
+    $('ciNote').textContent = note;
+  }
+  function per() {
+    var couple = laboState.perCouple, mode = laboState.perMode;
+    var r1 = +$('perR1').value, r2 = couple ? +$('perR2').value : 0, enf = +$('perEnf').value;
+    $('perR1V').textContent = euro(r1); $('perR2V').textContent = euro(r2); $('perEnfV').textContent = enf;
+    var vers, moTxt = '';
+    if (mode === 'obj') {
+      var tgt = +$('perTgt').value, mo = +$('perMo').value;
+      vers = tgt; $('perTgtV').textContent = euro(tgt); $('perMoV').textContent = mo + ' mois';
+      moTxt = 'Pour atteindre ' + euro(tgt) + ' en ' + mo + ' mois : verse ' + euro(Math.round(tgt / mo)) + ' /mois. ';
+    } else { vers = +$('perVers').value; $('perVersV').textContent = euro(vers); }
+    var parts = partsOf(couple, enf), rev = r1 + r2;
+    var irA = irTax(rev, parts), irB = irTax(Math.max(0, rev - vers), parts);
+    var gain = irA - irB, net = vers - gain, tx = vers > 0 ? gain / vers * 100 : 0;
+    $('perGain').textContent = euro(gain); $('perNet').textContent = euro(net); $('perTx').textContent = pctv(tx);
+    $('perBreak').innerHTML = laboLine('Parts fiscales', parts, false) + laboLine('Impôt avant versement PER', euro(irA), false) + laboLine('Impôt après versement PER', euro(irB), false) + laboLine('Économie d’impôt', euro(gain), true);
+    $('perNote').textContent = moTxt + 'Verser ' + euro(vers) + ' te fait économiser ' + euro(gain) + ' d’impôt : ça ne coûte réellement que ' + euro(net) + ' (taux du gain ' + pctv(tx) + '). Le gain suit ta tranche : plus tu es haut, plus il est fort, et il baisse si le versement te fait changer de tranche.';
+  }
+  function cr() {
+    var P = +$('crCap').value, ra = +$('crRate').value, y = +$('crYr').value;
+    $('crCapV').textContent = euro(P); $('crRateV').textContent = pctv(ra); $('crYrV').textContent = y + ' ans';
+    var n = y * 12, r = ra / 100 / 12, M = r > 0 ? P * r / (1 - Math.pow(1 + r, -n)) : P / n, tot = M * n, intr = tot - P;
+    $('crMens').textContent = euro(M); $('crInt').textContent = euro(intr);
+    var p = tot > 0 ? Math.round(intr / tot * 100) : 0;
+    $('crBarCap').style.width = (100 - p) + '%'; $('crBarInt').style.width = p + '%';
+    $('crNote').textContent = 'Sur ' + y + ' ans tu rembourses ' + euro(tot) + ', dont ' + euro(intr) + ' d’intérêts (' + p + '% du total).';
+  }
+  function fr() {
+    var P = +$('frCap').value, brut = +$('frBrut').value, fee = +$('frFrais').value, y = +$('frYr').value;
+    $('frCapV').textContent = euro(P); $('frBrutV').textContent = pctv(brut); $('frFraisV').textContent = pctv(fee); $('frYrV').textContent = y + ' ans';
+    var net = P * Math.pow((1 + brut / 100) * (1 - fee / 100), y), gross = P * Math.pow(1 + brut / 100, y), cost = gross - net;
+    $('frNet').textContent = euro(net); $('frCost').textContent = euro(cost);
+    var p = gross > 0 ? Math.round(cost / gross * 100) : 0;
+    $('frBarCap').style.width = (100 - p) + '%'; $('frBarInt').style.width = p + '%';
+    $('frNote').textContent = 'Sans frais tu aurais ' + euro(gross) + ' ; avec ' + pctv(fee) + ' de frais, il te reste ' + euro(net) + '. Coût : ' + euro(cost) + ' sur ' + y + ' ans.';
+  }
+  function st() {
+    var M = +$('pxCap').value, coup = +$('pxCoup').value, dec = +$('pxDec').value, N = +$('pxN').value, bar = +$('pxBar').value, ent = +$('pxEnt').value, ges = +$('pxGes').value, cgp = +$('pxCgp').value, sor = +$('pxSor').value;
+    var mode = laboState.pxMode;
+    if (+$('pxYr').max !== N) { $('pxYr').max = N; if (+$('pxYr').value > N) $('pxYr').value = N; }
+    var yr = Math.min(+$('pxYr').value, N), perf = +$('pxPerf').value;
+    $('pxCapV').textContent = euro(M); $('pxCoupV').textContent = pctv(coup); $('pxDecV').textContent = (Math.round(dec * 10) / 10).toString().replace('.', ',') + ' pts';
+    $('pxNV').textContent = N + ' ans'; $('pxBarV').textContent = bar + ' %'; $('pxEntV').textContent = pctv(ent); $('pxGesV').textContent = pctv(ges);
+    $('pxCgpV').textContent = pctv(cgp); $('pxSorV').textContent = pctv(sor); $('pxYrV').textContent = yr + ' ans'; $('pxPerfV').textContent = (perf > 0 ? '+' : '') + perf + ' %';
+    var y = (mode === 'ech') ? N : yr;
+    var gest = M * ges / 100 * y, exit = (mode === 'vol') ? M * sor / 100 : 0, entryProduit = M * ent / 100, entryCGP = M * cgp / 100;
+    var netFees = entryCGP + gest + exit, cost = netFees, coupons = 0, capital = 0, valeur = 0, gain = 0, statut = '', extra = '';
+    if (mode === 'auto') {
+      coupons = M * coup / 100 * y; capital = M; valeur = Math.max(0, capital + coupons - netFees); gain = valeur - M;
+      statut = 'Remboursement anticipé à ' + yr + ' ans : tu récupères le nominal (' + euro(M) + ') + les coupons versés. Pas de perte en capital, pas de coûts de sortie.';
+    } else if (mode === 'ech') {
+      var adj = perf - dec * N, lvl = 100 + adj;
+      if (lvl >= bar) { capital = M; coupons = M * coup / 100 * N; statut = 'À l’échéance : sous-jacent net de décrément à ' + Math.round(adj) + ' % → au-dessus de la barrière (' + bar + ' %). Capital protégé + coupons.'; }
+      else { capital = M * Math.max(0, lvl / 100); coupons = 0; statut = 'À l’échéance : sous-jacent net de décrément à ' + Math.round(adj) + ' % → sous la barrière (' + bar + ' %). Perte en capital : tu ne touches que ' + euro(capital) + '.'; }
+      valeur = Math.max(0, capital + coupons - netFees); gain = valeur - M;
+      extra = 'Le décrément retire ' + pctv(dec) + '/an à l’indice, soit ~' + Math.round(dec * N) + ' pts sur ' + N + ' ans : la performance brute de ' + (perf > 0 ? '+' : '') + perf + ' % devient ' + Math.round(adj) + ' % nette.';
+    } else {
+      var adj2 = perf - dec * yr, mkt = M * Math.max(0, (100 + adj2) / 100);
+      coupons = 0; capital = mkt; valeur = Math.max(0, mkt - netFees); gain = valeur - M;
+      statut = 'Sortie volontaire à ' + yr + ' ans (produit non rappelé) : tu vends au prix de marché ≈ ' + euro(mkt) + ', puis tu paies ' + euro(exit) + ' de coûts de sortie et la gestion. La protection du capital ne s’applique pas avant l’échéance.';
+    }
+    var rendNet = (M > 0 && y > 0) ? (Math.pow(Math.max(0, valeur) / M, 1 / y) - 1) * 100 : 0;
+    $('pxCost').textContent = euro(cost); $('pxRes').textContent = euro(valeur); $('pxNet').textContent = pctv(rendNet);
+    var lines = laboLine('Marge de structuration (déjà comprise dans le prix)', euro(entryProduit), false);
+    if (entryCGP > 0) lines += laboLine('Frais d’entrée CGP / enveloppe', euro(entryCGP), false);
+    lines += laboLine('Frais de gestion cumulés (' + y + ' an' + (y > 1 ? 's' : '') + ')', euro(gest), false);
+    if (mode === 'vol') lines += laboLine('Coûts de sortie', euro(exit), false);
+    if (coupons > 0) lines += laboLine('Coupons perçus', '+' + euro(coupons), false);
+    lines += laboLine('Capital récupéré', euro(capital), false);
+    lines += laboLine(gain >= 0 ? 'Gain net estimé' : 'Perte nette estimée', euro(gain), true);
+    $('pxBreak').innerHTML = lines;
+    var incid = (M > 0 && y > 0) ? ((entryProduit + entryCGP + gest + exit) / M / y * 100) : 0;
+    $('pxNote').textContent = statut + (extra ? ' ' + extra : '') + ' · Incidence des coûts ≈ ' + pctv(incid) + '/an (toutes couches, comparable au DIC).';
+  }
+  function pxMode(m) {
+    laboState.pxMode = m;
+    $('scAuto').classList.toggle('on', m === 'auto'); $('scEch').classList.toggle('on', m === 'ech'); $('scVol').classList.toggle('on', m === 'vol');
+    $('pxYrRow').style.display = (m === 'auto' || m === 'vol') ? '' : 'none';
+    $('pxPerfRow').style.display = (m === 'ech' || m === 'vol') ? '' : 'none';
+    $('pxSorRow').style.display = (m === 'vol') ? '' : 'none';
+    $('pxScenHint').textContent = (m === 'auto') ? 'Le sous-jacent a rempli la condition de rappel : tu es remboursé par anticipation au nominal + coupons.' : (m === 'ech') ? 'Le produit va au terme : le remboursement dépend de la performance du sous-jacent (après décrément) face à la barrière.' : 'Tu revends avant le terme sur le marché secondaire : pas de protection, plus des coûts de sortie.';
+    st();
+  }
+  function ciFreq(f) {
+    laboState.ciFreq = f;
+    $('ciFreqMois').classList.toggle('on', f === 'mois'); $('ciFreqAn').classList.toggle('on', f === 'an');
+    $('ciPmtLbl').textContent = (f === 'an') ? 'Versement annuel' : 'Versement mensuel';
+    ci();
+  }
+  function perFoyer(c) {
+    laboState.perCouple = c;
+    $('perSolo').classList.toggle('on', !c); $('perCouple').classList.toggle('on', c);
+    $('perR2Row').style.display = c ? '' : 'none';
+    per();
+  }
+  function perMode(m) {
+    laboState.perMode = m;
+    $('perLibre').classList.toggle('on', m === 'libre'); $('perObj').classList.toggle('on', m === 'obj');
+    $('perLibreRow').style.display = (m === 'libre') ? '' : 'none'; $('perObjRow').style.display = (m === 'obj') ? '' : 'none';
+    per();
+  }
+  ['ciCap', 'ciPmt', 'ciRate', 'ciYr', 'ciFeeIn', 'ciFeeMgmt'].forEach(function (id) { $(id).addEventListener('input', ci); });
+  $('ciFreqMois').addEventListener('click', function () { ciFreq('mois'); });
+  $('ciFreqAn').addEventListener('click', function () { ciFreq('an'); });
+  ['perR1', 'perR2', 'perEnf', 'perVers', 'perTgt', 'perMo'].forEach(function (id) { $(id).addEventListener('input', per); });
+  $('perSolo').addEventListener('click', function () { perFoyer(false); });
+  $('perCouple').addEventListener('click', function () { perFoyer(true); });
+  $('perLibre').addEventListener('click', function () { perMode('libre'); });
+  $('perObj').addEventListener('click', function () { perMode('obj'); });
+  ['crCap', 'crRate', 'crYr'].forEach(function (id) { $(id).addEventListener('input', cr); });
+  ['frCap', 'frBrut', 'frFrais', 'frYr'].forEach(function (id) { $(id).addEventListener('input', fr); });
+  ['pxCap', 'pxCoup', 'pxDec', 'pxBar', 'pxN', 'pxEnt', 'pxGes', 'pxCgp', 'pxSor', 'pxYr', 'pxPerf'].forEach(function (id) { $(id).addEventListener('input', st); });
+  $('scAuto').addEventListener('click', function () { pxMode('auto'); });
+  $('scEch').addEventListener('click', function () { pxMode('ech'); });
+  $('scVol').addEventListener('click', function () { pxMode('vol'); });
+  $('pxGuideBtn').addEventListener('click', function () {
+    var hid = $('pxGuide').style.display === 'none';
+    $('pxGuide').style.display = hid ? '' : 'none';
+    $('pxGuideBtn').textContent = hid ? '✕ Masquer le guide' : '📄 Comment remplir depuis un DIC ? (exemples)';
+  });
+  $('pxFillCiti').addEventListener('click', function () {
+    $('pxCap').value = 10000; $('pxCoup').value = 8; $('pxDec').value = 4.7; $('pxBar').value = 40; $('pxN').value = 12;
+    $('pxEnt').value = 8.9; $('pxGes').value = 0.8; $('pxCgp').value = 0; $('pxSor').value = 1; pxMode('ech');
+  });
+  $('pxFillMS').addEventListener('click', function () {
+    $('pxCap').value = 10000; $('pxCoup').value = 5.5; $('pxDec').value = 0; $('pxBar').value = 100; $('pxN').value = 12;
+    $('pxEnt').value = 11.2; $('pxGes').value = 0.8; $('pxCgp').value = 0; $('pxSor').value = 0.5; pxMode('ech');
+  });
+  ciFreq(laboState.ciFreq); perFoyer(laboState.perCouple); perMode(laboState.perMode); cr(); fr(); pxMode(laboState.pxMode);
+}
+
+// ---- Calcul mental chronométré ----------------------------------------------
+var MEN_TIME = 25;
+var mentalState = { timer: null, left: 0, score: 0, idx: 0, total: 10, cur: null, log: [], answered: false };
+function _ri(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+function _pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+var MEN_GENS = [
+  function () { var b = _ri(2, 40) * 10; return { q: '10 % de ' + fmtNum(b) + ' = ?', a: b * 0.10, method: '10 % = on décale la virgule d’un cran : ' + fmtNum(b) + ' ÷ 10.' }; },
+  function () { var b = _ri(2, 40) * 10; return { q: '5 % de ' + fmtNum(b) + ' = ?', a: b * 0.05, method: '5 % = la moitié de 10 %. Prends 10 % puis ÷ 2.' }; },
+  function () { var b = _ri(2, 30) * 10; return { q: '20 % de ' + fmtNum(b) + ' = ?', a: b * 0.20, method: '20 % = 10 % × 2.' }; },
+  function () { var b = _ri(2, 20) * 20; return { q: '25 % de ' + fmtNum(b) + ' = ?', a: b * 0.25, method: '25 % = ÷ 4 (la moitié de la moitié).' }; },
+  function () { var b = _ri(2, 40) * 10; return { q: '50 % de ' + fmtNum(b) + ' = ?', a: b * 0.50, method: '50 % = ÷ 2.' }; },
+  function () { var b = _ri(3, 30) * 100; return { q: '1 % de ' + fmtNum(b) + ' = ?', a: b * 0.01, method: '1 % = ÷ 100.' }; },
+  function () { var b = _ri(2, 20) * 20; return { q: '15 % de ' + fmtNum(b) + ' = ?', a: b * 0.15, method: '15 % = 10 % + sa moitié (5 %).' }; },
+  function () { var n = _ri(4, 40) * 10; return { q: fmtNum(n) + ' × 5 = ?', a: n * 5, method: '×5 = ×10 puis ÷ 2.' }; },
+  function () { var n = _ri(3, 30) * 4; return { q: fmtNum(n) + ' × 25 = ?', a: n * 25, method: '×25 = ×100 puis ÷ 4.' }; },
+  function () { var n = _ri(4, 40) * 2; return { q: fmtNum(n) + ' × 50 = ?', a: n * 50, method: '×50 = ×100 puis ÷ 2.' }; },
+  function () { var n = _ri(3, 20); return { q: fmtNum(n) + ' × 9 = ?', a: n * 9, method: '×9 = ×10 moins une fois le nombre.' }; },
+  function () { var n = _ri(3, 20); return { q: fmtNum(n) + ' × 11 = ?', a: n * 11, method: '×11 = ×10 plus une fois le nombre.' }; },
+  function () { var a = _ri(15, 90) * 10, b = _ri(15, 90) * 10; return { q: fmtNum(a) + ' + ' + fmtNum(b) + ' = ?', a: a + b, method: 'Arrondis à la centaine, additionne, puis rajuste.' }; },
+  function () { var base = _ri(5, 40) * 100, p = _pick([10, 20, 25, 50]); return { q: 'Augmenter ' + fmtNum(base) + ' de ' + p + ' % = ?', a: base * (1 + p / 100), method: 'Augmenter de ' + p + ' % = ×(1 + ' + p + '/100). Ici ×' + (1 + p / 100).toString().replace('.', ',') + '.' }; },
+  function () { var cap = _pick([5000, 10000, 20000, 50000]), r = _pick([2, 3, 4, 5]); return { q: 'Intérêts d’un an : ' + r + ' % de ' + fmtNum(cap) + ' = ?', a: cap * r / 100, method: 'Intérêts = capital × taux %. Ex : ' + r + ' % de ' + fmtNum(cap) + '.' }; },
+  function () { var r = _pick([2, 3, 4, 6, 8, 9, 12]); return { q: 'À ' + r + ' %/an, en combien d’années un capital double (règle de 72) ?', a: Math.round(72 / r * 10) / 10, method: 'Temps pour doubler ≈ 72 ÷ taux. Ici 72 ÷ ' + r + '.' }; }
+];
+function mentalGen() { return _pick(MEN_GENS)(); }
+
+function tplMental(v) {
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;"><button data-action="goHome" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Accueil</button>' +
+    '<div style="font:300 34px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:16px;text-align:center;">Calcul <span style="font-style:italic;">mental</span></div>' +
+    '<div style="font:400 13px/1.6 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:10px;text-align:center;">' + mentalState.total + ' questions, ' + MEN_TIME + ' s chacune. À chaque réponse, une astuce de calcul — et un récapitulatif complet à la fin.</div></div>' +
+    '<div id="menStage" style="margin:22px 24px 0;"></div><div style="height:32px;"></div></div>';
+}
+function mentalIntroHtml(v) {
+  return '<div style="background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px;text-align:center;">' +
+    '<div style="font:300 22px Newsreader,serif;">Prêt ?</div>' +
+    '<div style="font:400 12px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:10px;">Meilleur score : <b style="color:var(--ink);font-family:\'JetBrains Mono\',monospace;">' + v.mentalBest + '</b> / ' + mentalState.total + '</div>' +
+    '<button data-action="mentalStart" style="margin-top:16px;border:none;border-radius:999px;padding:14px 22px;font:600 13.5px \'Space Grotesk\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Commencer →</button></div>';
+}
+function wireMentalIntro() {
+  var btn = document.querySelector('#menStage [data-action="mentalStart"]');
+  if (btn) btn.addEventListener('click', mentalStart);
+}
+function mentalStart() { mentalState.score = 0; mentalState.idx = 0; mentalState.log = []; mentalNext(); }
+function mentalNext() {
+  if (mentalState.timer) { clearInterval(mentalState.timer); mentalState.timer = null; }
+  if (mentalState.idx >= mentalState.total) { mentalEnd(); return; }
+  mentalState.cur = mentalGen(); mentalState.left = MEN_TIME; mentalState.answered = false;
+  var stage = document.getElementById('menStage');
+  if (!stage) return;
+  stage.innerHTML = '<div style="text-align:center;font:500 11px \'Space Grotesk\',sans-serif;color:var(--ink2);">Question ' + (mentalState.idx + 1) + ' / ' + mentalState.total + ' · Score ' + mentalState.score + '</div>' +
+    '<div style="height:4px;border-radius:2px;background:var(--line);overflow:hidden;margin-top:10px;"><div id="menBar" style="height:4px;background:var(--acc);width:100%;"></div></div>' +
+    '<div id="menTimer" style="text-align:center;font:500 26px \'JetBrains Mono\',monospace;margin-top:10px;color:var(--ink);">' + MEN_TIME + '</div>' +
+    '<div id="menCard" style="background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:20px;margin-top:12px;">' +
+    '<div id="menQ" style="font:300 22px/1.35 Newsreader,serif;text-align:center;"></div>' +
+    '<input id="menInp" type="number" inputmode="decimal" autocomplete="off" placeholder="?" style="margin-top:16px;">' +
+    '<div id="menTip" style="display:none;margin-top:12px;font:400 12.5px/1.6 \'Space Grotesk\',sans-serif;color:var(--acc);"></div>' +
+    '<div style="margin-top:14px;"><button id="menValid" style="width:100%;border:none;border-radius:999px;padding:14px;font:600 13.5px \'Space Grotesk\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Valider →</button></div></div>';
+  var qEl = document.getElementById('menQ'), inp = document.getElementById('menInp');
+  qEl.textContent = mentalState.cur.q;
+  try { inp.focus(); } catch (e) {}
+  document.getElementById('menValid').addEventListener('click', function () { mentalAnswer(false); });
+  inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') mentalAnswer(false); });
+  mentalState.timer = setInterval(function () {
+    if (state.screen !== 'mental') { clearInterval(mentalState.timer); mentalState.timer = null; return; }
+    mentalState.left--;
+    var tEl = document.getElementById('menTimer');
+    if (tEl) { tEl.textContent = mentalState.left; tEl.style.color = mentalState.left <= 5 ? 'var(--warn)' : 'var(--ink)'; }
+    var bar = document.getElementById('menBar');
+    if (bar) bar.style.width = Math.max(0, mentalState.left / MEN_TIME * 100) + '%';
+    if (mentalState.left <= 0) { clearInterval(mentalState.timer); mentalState.timer = null; mentalAnswer(true); }
+  }, 1000);
+}
+function mentalAnswer(timeout) {
+  if (mentalState.answered) return;
+  if (mentalState.timer) { clearInterval(mentalState.timer); mentalState.timer = null; }
+  mentalState.answered = true;
+  var inp = document.getElementById('menInp');
+  var raw = inp ? inp.value : '';
+  var val = parseFloat(String(raw).replace(',', '.'));
+  var ok = (timeout !== true) && !isNaN(val) && Math.abs(val - mentalState.cur.a) < 0.01;
+  if (ok) mentalState.score++;
+  mentalState.log.push({ q: mentalState.cur.q, your: (timeout === true || raw === '') ? '—' : raw, a: mentalState.cur.a, ok: ok, method: mentalState.cur.method });
+  var card = document.getElementById('menCard');
+  if (inp) inp.disabled = true;
+  var vb = document.getElementById('menValid'); if (vb) vb.style.display = 'none';
+  var qEl = document.getElementById('menQ');
+  if (qEl && !ok) qEl.innerHTML = esc(mentalState.cur.q) + '<div style="font:500 13px \'JetBrains Mono\',monospace;color:var(--warn);margin-top:8px;">Réponse : ' + fmtNum(mentalState.cur.a) + '</div>';
+  var tip = document.getElementById('menTip');
+  if (tip) { tip.innerHTML = '💡 ' + esc(mentalState.cur.method); tip.style.display = 'block'; }
+  mentalState.idx++;
+  if (card) {
+    var nb = document.createElement('button');
+    nb.style.cssText = 'width:100%;border:none;border-radius:999px;padding:14px;margin-top:14px;font:600 13.5px \'Space Grotesk\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;';
+    nb.textContent = (mentalState.idx >= mentalState.total ? 'Voir le récapitulatif →' : 'Question suivante →');
+    nb.addEventListener('click', function () { if (state.screen === 'mental') mentalNext(); });
+    card.appendChild(nb);
+    try { nb.focus(); } catch (e) {}
+  }
+}
+function mentalEnd() {
+  var wasBest = mentalState.score > (store.mentalBest || 0);
+  if (wasBest) { store.mentalBest = mentalState.score; save(); }
+  var stage = document.getElementById('menStage');
+  if (!stage) return;
+  var pct = Math.round(mentalState.score / mentalState.total * 100);
+  var h = '<div style="background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px;text-align:center;">' +
+    '<div style="font:400 12px \'Space Grotesk\',sans-serif;color:var(--ink2);">Terminé !</div>' +
+    '<div style="font:300 46px Newsreader,serif;margin-top:8px;">' + mentalState.score + ' / ' + mentalState.total + '</div>' +
+    '<div style="font:400 12.5px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:6px;">' + (pct >= 80 ? 'Excellent' : pct >= 50 ? 'Bien' : 'À retravailler') + (wasBest ? ' — 🏆 nouveau record !' : '') + '</div>' +
+    '<div style="font:400 11.5px \'Space Grotesk\',sans-serif;color:var(--ink3);margin-top:4px;">Meilleur : <b style="color:var(--ink);font-family:\'JetBrains Mono\',monospace;">' + (store.mentalBest || 0) + '</b> / ' + mentalState.total + '</div>' +
+    '<button id="menAgain" style="margin-top:14px;border:none;border-radius:999px;padding:14px 22px;font:600 13.5px \'Space Grotesk\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Rejouer →</button></div>';
+  h += '<div style="margin-top:18px;"><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);">RÉCAPITULATIF</div><div style="display:flex;flex-direction:column;gap:9px;margin-top:12px;">';
+  mentalState.log.forEach(function (r) {
+    h += '<div style="background:var(--panel);border:1px solid ' + (r.ok ? 'var(--line)' : 'var(--warn)') + ';border-radius:14px;padding:13px;">' +
+      '<div style="display:flex;gap:9px;align-items:flex-start;font:400 12.5px/1.4 \'Space Grotesk\',sans-serif;"><span style="color:' + (r.ok ? 'var(--acc)' : 'var(--warn)') + ';font-weight:600;">' + (r.ok ? '✓' : '✗') + '</span><span>' + esc(r.q) + '</span></div>' +
+      '<div style="font:400 11.5px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:6px;">Ta réponse : <b style="color:var(--ink);">' + esc(r.your) + '</b> · Bonne réponse : <b style="color:var(--ink);">' + fmtNum(r.a) + '</b></div>' +
+      '<div style="font:400 11px/1.5 \'Space Grotesk\',sans-serif;color:var(--acc);margin-top:6px;">💡 ' + esc(r.method) + '</div></div>';
+  });
+  h += '</div></div>';
+  stage.innerHTML = h;
+  document.getElementById('menAgain').addEventListener('click', mentalStart);
+}
+
 // ---- render loop -----------------------------------------------------------
 var appEl, confettiEl, screenEl, tabsEl;
 var lastScreenKey = null;
@@ -757,7 +1201,16 @@ function render() {
   else if (v.isFiche) html = tplFiche(v);
   else if (v.isProgress) html = tplProgress(v);
   else if (v.isProfile) html = tplProfile(v);
+  else if (v.isLabo) html = tplLabo(v);
+  else if (v.isMental) html = tplMental(v);
   screenEl.innerHTML = html;
+
+  if (v.isLabo) wireLabo();
+  if (v.isMental) {
+    var menStage = document.getElementById('menStage');
+    if (menStage) menStage.innerHTML = mentalIntroHtml(v);
+    wireMentalIntro();
+  }
 
   if (v.screenKey !== lastScreenKey) {
     lastScreenKey = v.screenKey;
@@ -787,6 +1240,8 @@ function onAppClick(e) {
     case 'goSrs': go('srs'); break;
     case 'goCourses': go('courses'); break;
     case 'goExamPick': go('examPick'); break;
+    case 'goLabo': go('labo'); break;
+    case 'goMental': go('mental'); break;
     case 'poleToggle':
       state.openPole = state.openPole === d.pole ? null : d.pole;
       state.screen = 'browse';
