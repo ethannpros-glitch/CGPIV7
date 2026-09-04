@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cartographie tentaculaire</title>
+<style>
+  :root{
+    --bg:#07070d;
+    --bg-2:#0c0d18;
+    --card:#12131f;
+    --card-soft:#181a29;
+    --border:#2a2c40;
+    --ink:#eef0fb;
+    --muted:#8a8ca8;
+    --accent:#7c5cff;
+    --accent-2:#00e5ff;
+    --accent-soft:rgba(124,92,255,0.16);
+    --danger:#ff5d7a;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;margin:0;}
+  body{
+    background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    overflow:hidden;
+  }
+  #app{position:fixed;inset:0;display:flex;flex-direction:column;}
+
+  header#topbar{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:13px 22px;border-bottom:1px solid var(--border);
+    background:linear-gradient(180deg,var(--card),var(--bg-2));z-index:20;flex-wrap:wrap;gap:10px;
+  }
+  header h1{font-weight:700;font-size:16px;margin:0;letter-spacing:.01em;}
+  header h1 .eyebrow{
+    display:block;font-size:10.5px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;
+    background:linear-gradient(90deg,var(--accent-2),var(--accent));
+    -webkit-background-clip:text;background-clip:text;color:transparent;margin-bottom:3px;
+  }
+  .controls{display:flex;gap:8px;flex-wrap:wrap;}
+  button{
+    font-family:inherit;font-size:12.5px;font-weight:600;
+    background:var(--card-soft);color:var(--ink);border:1px solid var(--border);
+    padding:8px 12px;border-radius:8px;cursor:pointer;transition:border-color .15s,background .15s,transform .1s,box-shadow .15s;
+  }
+  button:hover{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent-soft);}
+  button:active{transform:scale(0.96);}
+  button:focus-visible, div[tabindex]:focus-visible, textarea:focus-visible, input:focus-visible{
+    outline:2px solid var(--accent-2);outline-offset:2px;
+  }
+  button.primary{background:linear-gradient(135deg,var(--accent),#4d2fd9);color:#fff;border-color:transparent;box-shadow:0 2px 12px -2px rgba(124,92,255,.55);}
+  button.primary:hover{filter:brightness(1.12);}
+  button.danger:hover{border-color:var(--danger);color:var(--danger);background:rgba(255,93,122,0.1);}
+  button.icon{padding:8px 11px;}
+
+  #body{flex:1;display:flex;min-height:0;}
+
+  aside#sidebar{
+    width:220px;flex:none;background:var(--bg-2);border-right:1px solid var(--border);
+    display:flex;flex-direction:column;overflow:hidden;
+  }
+  #sidebar .sidebarHead{padding:14px 14px 10px;}
+  #sidebar .sidebarTitle{font-size:10.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:8px;}
+  #sidebar button#addDossierBtn{width:100%;}
+  #dossierList{flex:1;overflow-y:auto;padding:4px 8px 12px;}
+  .dossierItem{
+    position:relative;
+    display:flex;align-items:center;justify-content:space-between;gap:6px;
+    padding:9px 10px 9px 16px;border-radius:8px;cursor:pointer;margin-bottom:3px;
+    font-size:13px;color:var(--ink);transition:background .12s;
+  }
+  .dossierItem:hover{background:var(--card-soft);}
+  .dossierItem.active{background:var(--card);border:1px solid var(--border);font-weight:700;}
+  .dossierItem.active::before{
+    content:"";position:absolute;left:6px;top:50%;transform:translateY(-50%);
+    width:6px;height:6px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent-2),var(--accent));
+    box-shadow:0 0 8px 1px var(--accent-2);
+  }
+  .dossierName{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .dossierNameInput{
+    flex:1;font-family:inherit;font-size:13px;font-weight:700;background:var(--card);
+    border:1px solid var(--accent);border-radius:5px;padding:3px 6px;color:var(--ink);
+  }
+  .dossierDelete{
+    background:none;border:none;color:var(--muted);font-size:15px;padding:0 3px;
+    opacity:0;transition:opacity .1s;line-height:1;
+  }
+  .dossierItem:hover .dossierDelete{opacity:1;}
+  .dossierDelete:hover{color:var(--danger);border:none;background:none;}
+
+  main#canvasWrap{flex:1;position:relative;overflow:hidden;cursor:grab;background:radial-gradient(ellipse at 50% 42%, #0e1024 0%, #07070d 62%, #050508 100%);}
+  main#canvasWrap.dragging{cursor:grabbing;}
+
+  .blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.28;pointer-events:none;z-index:0;animation:blobDrift 26s ease-in-out infinite;}
+  .blob.b1{width:420px;height:420px;left:8%;top:14%;background:#00e5ff;animation-duration:24s;}
+  .blob.b2{width:380px;height:380px;right:10%;top:52%;background:#ff2fb0;animation-duration:30s;animation-delay:-6s;}
+  .blob.b3{width:340px;height:340px;left:38%;bottom:6%;background:#8c52ff;animation-duration:34s;animation-delay:-14s;}
+  @keyframes blobDrift{
+    0%{transform:translate(0,0) scale(1);}
+    50%{transform:translate(46px,-34px) scale(1.18);}
+    100%{transform:translate(0,0) scale(1);}
+  }
+
+  svg#canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;}
+  #worldHtml{position:absolute;left:50%;top:50%;width:0;height:0;z-index:2;}
+  #worldHtml > .inner{position:absolute;left:0;top:0;}
+
+  .node-box{
+    position:absolute;left:0;top:0;transform:translate(-50%,-50%);
+    background:linear-gradient(160deg,rgba(255,255,255,.06),rgba(255,255,255,0)),var(--card);
+    border:1.5px solid var(--nc, var(--border));border-radius:999px;
+    display:flex;align-items:center;justify-content:center;gap:6px;
+    padding:0 14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    cursor:pointer;user-select:none;font-size:13px;font-weight:600;color:var(--ink);
+    backdrop-filter:blur(6px);
+    box-shadow:0 0 0 1px color-mix(in srgb, var(--nc, transparent) 35%, transparent) inset,
+               0 6px 20px -8px color-mix(in srgb, var(--nc, #000) 65%, black);
+    transition:border-color .15s, box-shadow .15s, transform .15s;
+    animation:nodeIn .5s cubic-bezier(.2,1.4,.4,1) both;
+  }
+  .node-box:hover{transform:translate(-50%,-50%) scale(1.06);box-shadow:0 0 0 1px color-mix(in srgb, var(--nc,#7c5cff) 60%, transparent) inset, 0 8px 26px -8px color-mix(in srgb, var(--nc,#7c5cff) 80%, black);}
+  .node-box.selected{border-width:2px;}
+  .node-box.selected::after{
+    content:"";position:absolute;inset:-8px;border-radius:999px;border:1.5px solid var(--nc,var(--accent));
+    animation:ringPulse 1.6s ease-out infinite;pointer-events:none;
+  }
+
+  .node-box.depth-0{
+    width:150px;height:150px;border-radius:50%;
+    background:radial-gradient(circle at 32% 28%, #2a2b46, #101124 70%);
+    border-color:transparent;color:#fff;font-weight:800;font-size:16px;
+    box-shadow:0 0 0 1.5px rgba(255,255,255,.14) inset;
+    animation:nodeIn .6s cubic-bezier(.2,1.4,.4,1) both, corePulse 3.6s ease-in-out infinite;
+    z-index:5;
+  }
+  .node-box.depth-0::before{
+    content:"";position:absolute;inset:-22px;border-radius:50%;z-index:-1;
+    background:conic-gradient(from 0deg, #00e5ff, #ff2fb0, #ffd23f, #39ff88, #8c52ff, #00e5ff);
+    filter:blur(18px);opacity:.35;animation:auraSpin 14s linear infinite;
+  }
+  .node-box.depth-1{width:172px;height:54px;font-weight:700;}
+  .node-box.depth-2, .node-box.depth-3{width:142px;height:44px;font-size:12.5px;color:var(--muted);font-weight:600;}
+
+  .noteDot{width:7px;height:7px;border-radius:50%;background:var(--nc,var(--accent-2));flex:none;opacity:0;transition:opacity .15s;box-shadow:0 0 6px 1px var(--nc,var(--accent-2));}
+  .noteDot.show{opacity:1;}
+  .node-box.depth-0 .noteDot{background:#fff;box-shadow:0 0 6px 1px #fff;}
+
+  .edge-glow{fill:none;stroke-linecap:round;}
+  .edge-flow{fill:none;stroke-linecap:round;animation-name:dashFlow;animation-timing-function:linear;animation-iteration-count:infinite;}
+
+  @keyframes nodeIn{
+    0%{opacity:0;transform:translate(-50%,-50%) scale(.25);}
+    65%{opacity:1;transform:translate(-50%,-50%) scale(1.08);}
+    100%{opacity:1;transform:translate(-50%,-50%) scale(1);}
+  }
+  @keyframes ringPulse{
+    0%{transform:scale(1);opacity:.6;}
+    100%{transform:scale(1.55);opacity:0;}
+  }
+  @keyframes corePulse{
+    0%,100%{box-shadow:0 0 0 1.5px rgba(255,255,255,.14) inset, 0 0 0 0 rgba(124,92,255,.5), 0 0 36px 4px rgba(124,92,255,.28);}
+    50%{box-shadow:0 0 0 1.5px rgba(255,255,255,.2) inset, 0 0 0 8px rgba(124,92,255,0), 0 0 56px 12px rgba(124,92,255,.5);}
+  }
+  @keyframes auraSpin{ to{ transform:rotate(360deg); } }
+  @keyframes dashFlow{ to{ stroke-dashoffset:-200; } }
+
+  #emptyHint{
+    position:absolute;font-size:12.5px;font-weight:600;color:var(--muted);
+    white-space:nowrap;pointer-events:none;z-index:4;
+  }
+
+  aside#panel{
+    position:fixed;top:0;right:0;height:100%;width:380px;max-width:88vw;
+    background:var(--card);border-left:1px solid var(--border);
+    padding:22px;transform:translateX(100%);transition:transform .2s ease;
+    display:flex;flex-direction:column;gap:12px;z-index:30;
+    box-shadow:-20px 0 40px rgba(0,0,0,0.5);
+  }
+  aside#panel.open{transform:translateX(0);}
+  #panelClose{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--muted);font-size:22px;padding:4px 8px;line-height:1;}
+  #panelClose:hover{color:var(--accent-2);background:none;}
+  .panelEyebrow{font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:16px;}
+  #panelLabel{
+    background:transparent;border:none;border-bottom:2px solid var(--border);
+    color:var(--ink);font-family:inherit;font-size:18px;font-weight:700;
+    padding:6px 0;width:100%;
+  }
+  #panelLabel:focus{border-bottom-color:var(--accent-2);}
+  #panelPath{font-size:11.5px;color:var(--muted);}
+  label.fieldLabel{font-size:11px;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted);margin-top:4px;display:block;font-weight:700;}
+  #panelNotes{
+    flex:1;min-height:240px;resize:vertical;
+    background:var(--bg-2);border:1.5px solid var(--border);border-radius:10px;
+    color:var(--ink);font-family:inherit;font-size:13.5px;line-height:1.6;
+    padding:12px;
+  }
+  #panelNotes:focus{border-color:var(--accent-2);}
+  .panelActions{display:flex;flex-direction:column;gap:8px;margin-top:auto;}
+  .panelActions button{width:100%;padding:11px;}
+  .savedTag{font-size:10.5px;color:var(--accent-2);opacity:0;transition:opacity .2s;font-weight:700;}
+  .savedTag.show{opacity:1;}
+
+  @media (max-width:820px){
+    aside#sidebar{width:170px;}
+    header h1{font-size:14px;}
+    .controls button{padding:7px 9px;font-size:11.5px;}
+    aside#panel{width:100%;max-width:100%;top:auto;bottom:0;height:72vh;border-left:none;border-top:1px solid var(--border);transform:translateY(100%);border-radius:16px 16px 0 0;}
+    aside#panel.open{transform:translateY(0);}
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="topbar">
+    <h1><span class="eyebrow">Cartographie tentaculaire</span>Sujet actif</h1>
+    <div class="controls">
+      <button id="addRootBtn" class="primary" title="Ajouter une branche au nœud central">+ Branche</button>
+      <button id="zoomOut" class="icon" title="Zoom arrière">−</button>
+      <button id="zoomIn" class="icon" title="Zoom avant">+</button>
+      <button id="resetView" title="Recentrer la vue">Recentrer</button>
+      <button id="exportBtn" title="Exporter en JSON">Exporter</button>
+      <button id="resetData" class="danger" title="Réinitialiser ce dossier">Réinitialiser</button>
+    </div>
+  </header>
+  <div id="body">
+    <aside id="sidebar">
+      <div class="sidebarHead">
+        <div class="sidebarTitle">Dossiers</div>
+        <button id="addDossierBtn" class="primary">+ Nouveau dossier</button>
+      </div>
+      <div id="dossierList"></div>
+    </aside>
+    <main id="canvasWrap">
+      <div class="blob b1"></div>
+      <div class="blob b2"></div>
+      <div class="blob b3"></div>
+      <svg id="canvas">
+        <defs>
+          <filter id="edgeGlow" filterUnits="userSpaceOnUse" x="-4000" y="-4000" width="8000" height="8000">
+            <feGaussianBlur stdDeviation="4.2"/>
+          </filter>
+        </defs>
+        <g id="svgWorld"><g id="edgesGlowLayer"></g><g id="edgesLayer"></g></g>
+      </svg>
+      <div id="worldHtml"><div class="inner" id="nodesLayer"></div></div>
+    </main>
+  </div>
+
+  <aside id="panel" aria-hidden="true">
+    <button id="panelClose" aria-label="Fermer">×</button>
+    <div class="panelEyebrow">Nœud sélectionné</div>
+    <input id="panelLabel" type="text" maxlength="120" />
+    <div id="panelPath"></div>
+    <label class="fieldLabel">Notes — détails, pièges, process...</label>
+    <textarea id="panelNotes" placeholder="Ex. points de vigilance, pièces à fournir, argumentaire..."></textarea>
+    <span class="savedTag" id="savedTag">Enregistré</span>
+    <div class="panelActions">
+      <button id="addChildBtn" class="primary">+ Ajouter une sous-branche</button>
+      <button id="deleteBtn" class="danger">Supprimer ce nœud</button>
+    </div>
+  </aside>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORE_KEY = "cartographie-tentaculaire-store";
+  var RADIUS_BASE = 190;
+  var RADIUS_STEP = 175;
+  var PALETTE = ["#00e5ff","#ff2fb0","#ffd23f","#39ff88","#8c52ff","#ff6b3d","#3df2c0","#ff4d6d","#5ec8ff","#c9ff4d"];
+  var idCounter = 1;
+
+  function newId(prefix){ return (prefix||"n") + (idCounter++) + "_" + Math.random().toString(36).slice(2,7); }
+
+  function makeTree(label){ return { id:"root", label:label, notes:"", children:[] }; }
+  function makeDossier(name){ return { id:newId("d"), name:name, tree:makeTree(name) }; }
+
+  var store = null;     // { activeId, dossiers:[{id,name,tree}] }
+  var tree = null;      // reference to active dossier's tree
+  var selectedId = null;
+  var pan = {x:0,y:0};
+  var zoom = 1;
+  var saveTimer = null;
+  var renamingDossierId = null;
+
+  var canvasWrap = document.getElementById("canvasWrap");
+  var svgWorld = document.getElementById("svgWorld");
+  var edgesGlowLayer = document.getElementById("edgesGlowLayer");
+  var edgesLayer = document.getElementById("edgesLayer");
+  var nodesLayer = document.getElementById("nodesLayer");
+  var dossierList = document.getElementById("dossierList");
+  var panel = document.getElementById("panel");
+  var panelLabel = document.getElementById("panelLabel");
+  var panelPath = document.getElementById("panelPath");
+  var panelNotes = document.getElementById("panelNotes");
+  var savedTag = document.getElementById("savedTag");
+
+  // ---------- tree helpers ----------
+  function findNode(id, node){
+    node = node || tree;
+    if(!node) return null;
+    if(node.id === id) return node;
+    for(var i=0;i<node.children.length;i++){
+      var found = findNode(id, node.children[i]);
+      if(found) return found;
+    }
+    return null;
+  }
+  function findParent(id, node, parent){
+    node = node || tree; parent = parent || null;
+    if(node.id === id) return parent;
+    for(var i=0;i<node.children.length;i++){
+      var found = findParent(id, node.children[i], node);
+      if(found !== undefined && found !== null) return found;
+    }
+    return null;
+  }
+  function pathLabel(id){
+    var chain = []; var cur = findNode(id);
+    while(cur){ chain.unshift(cur.label); cur = findParent(cur.id); }
+    return chain.join(" / ");
+  }
+
+  function hashStr(s){
+    var h = 0;
+    for(var i=0;i<s.length;i++){ h = (h*31 + s.charCodeAt(i)) | 0; }
+    return h;
+  }
+
+  // ---------- radial layout ----------
+  var leafCursor = 0;
+  function assignLeaf(node){
+    if(!node.children || node.children.length===0){
+      node.leafIndex = leafCursor; leafCursor++;
+      return node.leafIndex;
+    }
+    var sum = 0;
+    node.children.forEach(function(c){ sum += assignLeaf(c); });
+    node.leafIndex = sum / node.children.length;
+    return node.leafIndex;
+  }
+  function computeLayout(){
+    leafCursor = 0;
+    assignLeaf(tree);
+    var total = Math.max(leafCursor, 1);
+    (function walk(node, depth){
+      node.depth = depth;
+      var r = depth===0 ? 0 : RADIUS_BASE + (depth-1)*RADIUS_STEP;
+      var angle = (node.leafIndex/total) * Math.PI*2;
+      node.angle = angle;
+      node.x = depth===0 ? 0 : Math.cos(angle)*r;
+      node.y = depth===0 ? 0 : Math.sin(angle)*r;
+      (node.children||[]).forEach(function(c){ walk(c, depth+1); });
+    })(tree, 0);
+    tree.color = null;
+    tree.children.forEach(function(c, i){
+      var color = PALETTE[i % PALETTE.length];
+      (function paint(n){ n.color = color; (n.children||[]).forEach(paint); })(c);
+    });
+  }
+  function boxDims(depth){
+    if(depth===0) return {w:150,h:150};
+    if(depth===1) return {w:172,h:54};
+    return {w:142,h:44};
+  }
+
+  function tentaclePath(px,py,cx,cy,seed){
+    var dx = cx-px, dy = cy-py;
+    var dist = Math.sqrt(dx*dx+dy*dy) || 1;
+    var nx = -dy/dist, ny = dx/dist;
+    var wobble = (((seed % 100)/100) - 0.5) * 0.5 * dist;
+    var c1x = px + dx*0.33 + nx*wobble;
+    var c1y = py + dy*0.33 + ny*wobble;
+    var c2x = px + dx*0.66 + nx*wobble*0.55;
+    var c2y = py + dy*0.66 + ny*wobble*0.55;
+    return "M "+px+","+py+" C "+c1x+","+c1y+" "+c2x+","+c2y+" "+cx+","+cy;
+  }
+
+  function renderAll(){
+    computeLayout();
+    edgesGlowLayer.innerHTML = "";
+    edgesLayer.innerHTML = "";
+    nodesLayer.innerHTML = "";
+    walkRender(tree, null);
+    centerViewIfNeeded();
+    applyTransform();
+    toggleEmptyHint();
+  }
+
+  var lastCenteredFor = null;
+  function centerViewIfNeeded(){
+    if(lastCenteredFor === getActiveDossier().id) return;
+    lastCenteredFor = getActiveDossier().id;
+    var minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+    (function walk(n){
+      minX=Math.min(minX,n.x); maxX=Math.max(maxX,n.x);
+      minY=Math.min(minY,n.y); maxY=Math.max(maxY,n.y);
+      (n.children||[]).forEach(walk);
+    })(tree);
+    if(!isFinite(minX)){ minX=maxX=minY=maxY=0; }
+    pan.x = -(minX+maxX)/2;
+    pan.y = -(minY+maxY)/2;
+    zoom = 1;
+  }
+
+  function toggleEmptyHint(){
+    var existing = document.getElementById("emptyHint");
+    if(existing) existing.remove();
+    if(tree.children.length===0){
+      var hint = document.createElement("div");
+      hint.id = "emptyHint";
+      var d0 = boxDims(0);
+      hint.textContent = "Sélectionnez le nœud central puis « + Branche » pour démarrer";
+      hint.style.left = "0px";
+      hint.style.top = (d0.h/2 + 26) + "px";
+      hint.style.transform = "translateX(-50%)";
+      nodesLayer.appendChild(hint);
+    }
+  }
+
+  function walkRender(node, parent){
+    if(parent){
+      var seed = Math.abs(hashStr(node.id));
+      var color = node.color || "#7c5cff";
+      var d = tentaclePath(parent.x,parent.y,node.x,node.y,seed);
+      var strokeW = Math.max(1.4, 4.6 - node.depth*0.7);
+      var baseOpacity = Math.max(0.35, 0.9 - node.depth*0.14);
+
+      var glow = document.createElementNS("http://www.w3.org/2000/svg","path");
+      glow.setAttribute("class","edge-glow");
+      glow.setAttribute("d", d);
+      glow.setAttribute("filter","url(#edgeGlow)");
+      glow.style.stroke = color;
+      glow.style.strokeWidth = (strokeW*2.4)+"px";
+      glow.style.opacity = baseOpacity*0.4;
+      edgesGlowLayer.appendChild(glow);
+
+      var path = document.createElementNS("http://www.w3.org/2000/svg","path");
+      path.setAttribute("class","edge-flow");
+      path.setAttribute("d", d);
+      path.style.stroke = color;
+      path.style.strokeWidth = strokeW+"px";
+      path.style.opacity = baseOpacity;
+      path.style.strokeDasharray = "7 11";
+      path.style.animationDuration = (2.2 + (seed % 12)*0.18) + "s";
+      path.style.animationDirection = (seed % 2===0) ? "normal" : "reverse";
+      edgesLayer.appendChild(path);
+    }
+    var dims = boxDims(node.depth);
+    var div = document.createElement("div");
+    div.className = "node-box depth-"+Math.min(node.depth,3) + (node.id===selectedId?" selected":"");
+    div.dataset.id = node.id;
+    div.style.width = dims.w+"px";
+    div.style.height = dims.h+"px";
+    div.style.left = node.x+"px";
+    div.style.top = node.y+"px";
+    if(node.color){ div.style.setProperty("--nc", node.color); }
+    div.style.animationDelay = (node.depth*0.05)+"s";
+    div.title = node.label;
+    div.tabIndex = 0;
+    div.setAttribute("role","button");
+    div.setAttribute("aria-label", node.label);
+    var text = document.createElement("span");
+    text.className = "node-text";
+    text.textContent = node.label;
+    div.appendChild(text);
+    var dot = document.createElement("span");
+    dot.className = "noteDot" + (node.notes && node.notes.trim() ? " show":"");
+    div.appendChild(dot);
+    div.addEventListener("click", function(e){ e.stopPropagation(); selectNode(node.id); });
+    div.addEventListener("keydown", function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); selectNode(node.id); } });
+    nodesLayer.appendChild(div);
+    (node.children||[]).forEach(function(child){ walkRender(child, node); });
+  }
+
+  function applyTransform(){
+    var t = "translate("+pan.x+"px,"+pan.y+"px) scale("+zoom+")";
+    nodesLayer.style.transform = t;
+    // #worldHtml is centered (left/top:50%) but svg#canvas fills the wrap from its
+    // top-left corner, so the svg group needs the extra half-size offset to share
+    // the same (0,0) origin as the HTML node layer.
+    var rect = canvasWrap.getBoundingClientRect();
+    var cx = rect.width/2, cy = rect.height/2;
+    svgWorld.setAttribute("transform","translate("+(cx+pan.x)+","+(cy+pan.y)+") scale("+zoom+")");
+  }
+
+  function selectNode(id){
+    var prevSelected = nodesLayer.querySelector(".node-box.selected");
+    if(prevSelected) prevSelected.classList.remove("selected");
+    selectedId = id;
+    var node = findNode(id);
+    var el = nodesLayer.querySelector('[data-id="'+id+'"]');
+    if(el) el.classList.add("selected");
+    openPanel(node);
+  }
+  function openPanel(node){
+    panel.classList.add("open");
+    panel.setAttribute("aria-hidden","false");
+    panelLabel.value = node.label;
+    panelNotes.value = node.notes || "";
+    panelPath.textContent = pathLabel(node.id);
+    document.getElementById("deleteBtn").style.display = node.id==="root" ? "none":"block";
+  }
+  function closePanel(){
+    panel.classList.remove("open");
+    panel.setAttribute("aria-hidden","true");
+    var prevSelected = nodesLayer.querySelector(".node-box.selected");
+    if(prevSelected) prevSelected.classList.remove("selected");
+    selectedId = null;
+  }
+
+  // ---------- dossiers ----------
+  function getActiveDossier(){
+    for(var i=0;i<store.dossiers.length;i++){ if(store.dossiers[i].id===store.activeId) return store.dossiers[i]; }
+    return store.dossiers[0];
+  }
+  function renderSidebar(){
+    dossierList.innerHTML = "";
+    store.dossiers.forEach(function(d){
+      var item = document.createElement("div");
+      item.className = "dossierItem" + (d.id===store.activeId ? " active":"");
+      if(renamingDossierId === d.id){
+        var input = document.createElement("input");
+        input.className = "dossierNameInput";
+        input.value = d.name;
+        item.appendChild(input);
+        dossierList.appendChild(item);
+        input.focus(); input.select();
+        function commit(){
+          var v = input.value.trim();
+          if(v) d.name = v;
+          renamingDossierId = null;
+          renderSidebar();
+          scheduleSave();
+        }
+        input.addEventListener("blur", commit);
+        input.addEventListener("keydown", function(e){
+          if(e.key==="Enter"){ e.preventDefault(); input.blur(); }
+          if(e.key==="Escape"){ renamingDossierId=null; renderSidebar(); }
+        });
+        input.addEventListener("click", function(e){ e.stopPropagation(); });
+      } else {
+        var name = document.createElement("span");
+        name.className = "dossierName";
+        name.textContent = d.name;
+        item.appendChild(name);
+        var del = document.createElement("button");
+        del.className = "dossierDelete";
+        del.textContent = "×";
+        del.title = "Supprimer ce dossier";
+        del.addEventListener("click", function(e){ e.stopPropagation(); deleteDossier(d.id); });
+        item.appendChild(del);
+        item.addEventListener("dblclick", function(e){ e.stopPropagation(); renamingDossierId = d.id; renderSidebar(); });
+        item.addEventListener("click", function(){ switchDossier(d.id); });
+        dossierList.appendChild(item);
+      }
+    });
+  }
+  function switchDossier(id){
+    if(id === store.activeId) return;
+    store.activeId = id;
+    tree = getActiveDossier().tree;
+    selectedId = null;
+    panel.classList.remove("open");
+    panel.setAttribute("aria-hidden","true");
+    renderSidebar();
+    renderAll();
+    scheduleSave();
+  }
+  function addDossier(){
+    var n = store.dossiers.length + 1;
+    var d = makeDossier("Nouveau sujet " + n);
+    store.dossiers.push(d);
+    store.activeId = d.id;
+    tree = d.tree;
+    selectedId = null;
+    renamingDossierId = d.id;
+    renderSidebar();
+    renderAll();
+    scheduleSave();
+  }
+  function deleteDossier(id){
+    if(store.dossiers.length <= 1){ alert("Il doit rester au moins un dossier."); return; }
+    var d = store.dossiers.find(function(x){ return x.id===id; });
+    if(!confirm('Supprimer le dossier "'+d.name+'" et tout son contenu ?')) return;
+    store.dossiers = store.dossiers.filter(function(x){ return x.id!==id; });
+    if(store.activeId === id){
+      store.activeId = store.dossiers[0].id;
+      tree = store.dossiers[0].tree;
+      selectedId = null;
+      panel.classList.remove("open");
+      panel.setAttribute("aria-hidden","true");
+    }
+    renderSidebar();
+    renderAll();
+    scheduleSave();
+  }
+
+  // ---------- persistence ----------
+  function scheduleSave(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(persist, 450);
+  }
+  function persist(){
+    if(!window.storage) return;
+    window.storage.set(STORE_KEY, JSON.stringify(store), false).then(function(res){
+      if(res){ savedTag.classList.add("show"); setTimeout(function(){ savedTag.classList.remove("show"); },1200); }
+    }).catch(function(err){ console.error("Erreur de sauvegarde", err); });
+  }
+  function bumpIdCounter(node){
+    var m = /n(\d+)_/.exec(node.id||"");
+    if(m){ idCounter = Math.max(idCounter, parseInt(m[1],10)+1); }
+    (node.children||[]).forEach(bumpIdCounter);
+  }
+  function loadData(){
+    function boot(){
+      var d = makeDossier("Patrimoine");
+      store = { activeId:d.id, dossiers:[d] };
+      tree = d.tree;
+      renderSidebar();
+      renderAll();
+    }
+    if(!window.storage){ boot(); return; }
+    window.storage.get(STORE_KEY, false).then(function(res){
+      if(res && res.value){
+        try{
+          store = JSON.parse(res.value);
+          store.dossiers.forEach(function(d){ bumpIdCounter(d.tree); });
+          tree = getActiveDossier().tree;
+          renderSidebar();
+          renderAll();
+        }catch(e){ boot(); }
+      } else { boot(); }
+    }).catch(function(){ boot(); });
+  }
+
+  // ---------- panel field events ----------
+  panelLabel.addEventListener("input", function(){
+    if(!selectedId) return;
+    var node = findNode(selectedId);
+    node.label = panelLabel.value;
+    panelPath.textContent = pathLabel(node.id);
+    var el = nodesLayer.querySelector('[data-id="'+selectedId+'"]');
+    if(el){ el.querySelector(".node-text").textContent = node.label; el.title = node.label; }
+    scheduleSave();
+  });
+  panelNotes.addEventListener("input", function(){
+    if(!selectedId) return;
+    var node = findNode(selectedId);
+    node.notes = panelNotes.value;
+    var el = nodesLayer.querySelector('[data-id="'+selectedId+'"]');
+    if(el){ el.querySelector(".noteDot").classList.toggle("show", !!node.notes.trim()); }
+    scheduleSave();
+  });
+  document.getElementById("panelClose").addEventListener("click", closePanel);
+  document.getElementById("addChildBtn").addEventListener("click", function(){
+    if(!selectedId) return;
+    var node = findNode(selectedId);
+    var child = { id:newId(), label:"Nouvelle branche", notes:"", children:[] };
+    node.children.push(child);
+    selectedId = child.id;
+    renderAll();
+    openPanel(child);
+    panelLabel.focus(); panelLabel.select();
+    scheduleSave();
+  });
+  document.getElementById("deleteBtn").addEventListener("click", function(){
+    if(!selectedId || selectedId==="root") return;
+    var parent = findParent(selectedId);
+    if(!parent) return;
+    if(!confirm('Supprimer "'+findNode(selectedId).label+'" et toutes ses sous-branches ?')) return;
+    parent.children = parent.children.filter(function(c){ return c.id!==selectedId; });
+    closePanel();
+    renderAll();
+    scheduleSave();
+  });
+  document.getElementById("addRootBtn").addEventListener("click", function(){
+    var child = { id:newId(), label:"Nouvelle branche", notes:"", children:[] };
+    tree.children.push(child);
+    selectedId = child.id;
+    renderAll();
+    openPanel(child);
+    panelLabel.focus(); panelLabel.select();
+    scheduleSave();
+  });
+  document.getElementById("exportBtn").addEventListener("click", function(){
+    var blob = new Blob([JSON.stringify(tree,null,2)], {type:"application/json"});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = "cartographie-tentaculaire.json";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+  document.getElementById("resetData").addEventListener("click", function(){
+    if(!confirm("Réinitialiser ce dossier ? Cette action efface toutes ses notes et branches.")) return;
+    var d = getActiveDossier();
+    d.tree = makeTree(d.name);
+    tree = d.tree;
+    lastCenteredFor = null;
+    closePanel();
+    renderAll();
+    persist();
+  });
+  document.getElementById("addDossierBtn").addEventListener("click", addDossier);
+
+  document.getElementById("zoomIn").addEventListener("click", function(){ setZoom(zoom*1.18); });
+  document.getElementById("zoomOut").addEventListener("click", function(){ setZoom(zoom/1.18); });
+  document.getElementById("resetView").addEventListener("click", function(){ lastCenteredFor=null; renderAll(); });
+  function setZoom(z){ zoom = Math.max(0.28, Math.min(2.2, z)); applyTransform(); }
+  canvasWrap.addEventListener("wheel", function(e){
+    e.preventDefault();
+    setZoom(zoom*(e.deltaY>0?0.92:1.08));
+  }, {passive:false});
+
+  var dragging=false, dragStart=null, panStart=null;
+  canvasWrap.addEventListener("pointerdown", function(e){
+    if(e.target.closest(".node-box")) return;
+    dragging = true; canvasWrap.classList.add("dragging");
+    dragStart = {x:e.clientX,y:e.clientY}; panStart = {x:pan.x,y:pan.y};
+  });
+  window.addEventListener("pointermove", function(e){
+    if(!dragging) return;
+    pan.x = panStart.x + (e.clientX-dragStart.x);
+    pan.y = panStart.y + (e.clientY-dragStart.y);
+    applyTransform();
+  });
+  window.addEventListener("pointerup", function(){ dragging=false; canvasWrap.classList.remove("dragging"); });
+  canvasWrap.addEventListener("click", function(e){
+    if(e.target===canvasWrap || e.target.id==="canvas"){ closePanel(); }
+  });
+  window.addEventListener("resize", applyTransform);
+
+  loadData();
+})();
+</script>
+</body>
+</html>
