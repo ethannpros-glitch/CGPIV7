@@ -4,25 +4,32 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cartographie tentaculaire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
   :root{
-    --bg:#07070d;
-    --bg-2:#0c0d18;
+    --bg:#05050b;
+    --bg-2:#0b0c17;
     --card:#12131f;
     --card-soft:#181a29;
     --border:#2a2c40;
     --ink:#eef0fb;
-    --muted:#8a8ca8;
+    --muted:#9092ab;
     --accent:#7c5cff;
     --accent-2:#00e5ff;
     --accent-soft:rgba(124,92,255,0.16);
     --danger:#ff5d7a;
+    --font-display:"Chakra Petch",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --font-body:"Manrope",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   }
+  /* Dark, single-world interface (deep-space / bioluminescent) by deliberate
+     choice — no light variant, the theme is the point. */
   *{box-sizing:border-box;}
   html,body{height:100%;margin:0;}
   body{
     background:var(--bg);color:var(--ink);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+    font-family:var(--font-body);
     overflow:hidden;
   }
   #app{position:fixed;inset:0;display:flex;flex-direction:column;}
@@ -32,7 +39,7 @@
     padding:13px 22px;border-bottom:1px solid var(--border);
     background:linear-gradient(180deg,var(--card),var(--bg-2));z-index:20;flex-wrap:wrap;gap:10px;
   }
-  header h1{font-weight:700;font-size:16px;margin:0;letter-spacing:.01em;}
+  header h1{font-family:var(--font-display);font-weight:700;font-size:17px;margin:0;letter-spacing:.01em;}
   header h1 .eyebrow{
     display:block;font-size:10.5px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;
     background:linear-gradient(90deg,var(--accent-2),var(--accent));
@@ -40,7 +47,7 @@
   }
   .controls{display:flex;gap:8px;flex-wrap:wrap;}
   button{
-    font-family:inherit;font-size:12.5px;font-weight:600;
+    font-family:var(--font-display);font-size:12.5px;font-weight:600;
     background:var(--card-soft);color:var(--ink);border:1px solid var(--border);
     padding:8px 12px;border-radius:8px;cursor:pointer;transition:border-color .15s,background .15s,transform .1s,box-shadow .15s;
   }
@@ -61,7 +68,7 @@
     display:flex;flex-direction:column;overflow:hidden;
   }
   #sidebar .sidebarHead{padding:14px 14px 10px;}
-  #sidebar .sidebarTitle{font-size:10.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:8px;}
+  #sidebar .sidebarTitle{font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-bottom:8px;}
   #sidebar button#addDossierBtn{width:100%;}
   #dossierList{flex:1;overflow-y:auto;padding:4px 8px 12px;}
   .dossierItem{
@@ -113,7 +120,7 @@
     border:1.5px solid var(--nc, var(--border));border-radius:999px;
     display:flex;align-items:center;justify-content:center;gap:6px;
     padding:0 14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-    cursor:pointer;user-select:none;font-size:13px;font-weight:600;color:var(--ink);
+    cursor:pointer;user-select:none;font-family:var(--font-display);font-size:13px;font-weight:600;color:var(--ink);
     backdrop-filter:blur(6px);
     box-shadow:0 0 0 1px color-mix(in srgb, var(--nc, transparent) 35%, transparent) inset,
                0 6px 20px -8px color-mix(in srgb, var(--nc, #000) 65%, black);
@@ -167,7 +174,7 @@
   @keyframes dashFlow{ to{ stroke-dashoffset:-200; } }
 
   #emptyHint{
-    position:absolute;font-size:12.5px;font-weight:600;color:var(--muted);
+    position:absolute;font-family:var(--font-mono);font-size:12.5px;font-weight:500;color:var(--muted);
     white-space:nowrap;pointer-events:none;z-index:4;
   }
 
@@ -181,19 +188,19 @@
   aside#panel.open{transform:translateX(0);}
   #panelClose{position:absolute;top:14px;right:14px;background:none;border:none;color:var(--muted);font-size:22px;padding:4px 8px;line-height:1;}
   #panelClose:hover{color:var(--accent-2);background:none;}
-  .panelEyebrow{font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:16px;}
+  .panelEyebrow{font-family:var(--font-mono);font-size:10.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);font-weight:500;margin-top:16px;}
   #panelLabel{
     background:transparent;border:none;border-bottom:2px solid var(--border);
-    color:var(--ink);font-family:inherit;font-size:18px;font-weight:700;
+    color:var(--ink);font-family:var(--font-display);font-size:19px;font-weight:700;
     padding:6px 0;width:100%;
   }
   #panelLabel:focus{border-bottom-color:var(--accent-2);}
-  #panelPath{font-size:11.5px;color:var(--muted);}
-  label.fieldLabel{font-size:11px;letter-spacing:0.05em;text-transform:uppercase;color:var(--muted);margin-top:4px;display:block;font-weight:700;}
+  #panelPath{font-family:var(--font-mono);font-size:11px;color:var(--muted);}
+  label.fieldLabel{font-family:var(--font-mono);font-size:11px;letter-spacing:0.03em;text-transform:uppercase;color:var(--muted);margin-top:4px;display:block;font-weight:500;}
   #panelNotes{
     flex:1;min-height:240px;resize:vertical;
     background:var(--bg-2);border:1.5px solid var(--border);border-radius:10px;
-    color:var(--ink);font-family:inherit;font-size:13.5px;line-height:1.6;
+    color:var(--ink);font-family:var(--font-body);font-size:13.5px;line-height:1.6;
     padding:12px;
   }
   #panelNotes:focus{border-color:var(--accent-2);}
@@ -277,6 +284,27 @@
 
   function makeTree(label){ return { id:"root", label:label, notes:"", children:[] }; }
   function makeDossier(name){ return { id:newId("d"), name:name, tree:makeTree(name) }; }
+
+  // Starter content so the map shows what it does the moment it opens,
+  // instead of a single empty node. Freely editable / deletable.
+  function makeExampleTree(){
+    function branch(label, notes, subs){
+      return {
+        id:newId(), label:label, notes:notes||"",
+        children:(subs||[]).map(function(s){ return { id:newId(), label:s, notes:"", children:[] }; })
+      };
+    }
+    return {
+      id:"root", label:"Patrimoine", notes:"", children:[
+        branch("Immobilier", "Distinguer résidence principale, locatif nu et LMNP avant tout arbitrage.", ["Résidence principale","Locatif nu","LMNP / LMP"]),
+        branch("Épargne & placements", "Comparer horizon de placement et fiscalité de sortie de chaque enveloppe.", ["Assurance-vie","PER","Compte-titres"]),
+        branch("Fiscalité", "Vérifier l'assujettissement à l'IFI avant tout conseil d'arbitrage.", ["IFI","Optimisation IR","Défiscalisation"]),
+        branch("Transmission", "Anticiper abattements et donations avant le passage chez le notaire.", ["Donation","Démembrement","Pacte Dutreil"]),
+        branch("Retraite", "", ["Rachat de trimestres","PER individuel"])
+      ]
+    };
+  }
+  function makeExampleDossier(){ return { id:newId("d"), name:"Patrimoine", tree:makeExampleTree() }; }
 
   var store = null;     // { activeId, dossiers:[{id,name,tree}] }
   var tree = null;      // reference to active dossier's tree
@@ -600,41 +628,85 @@
   }
 
   // ---------- persistence ----------
+  // Primary store: the "db" runtime capability (survives reloads and devices).
+  // Falls back to localStorage when the capability isn't granted (e.g. the
+  // file opened outside claude.ai), so the tool still works standalone.
+  var dbApi = null;
+  var dbReady = (function(){
+    try{
+      if(window.claude && typeof window.claude.use === "function"){
+        return window.claude.use("db").then(function(api){ dbApi = api; return api; }).catch(function(){ return null; });
+      }
+    }catch(e){}
+    return Promise.resolve(null);
+  })();
+  var downloadsReady = (function(){
+    try{
+      if(window.claude && typeof window.claude.use === "function"){
+        return window.claude.use("downloads").catch(function(){ return null; });
+      }
+    }catch(e){}
+    return Promise.resolve(null);
+  })();
+
+  function showSaved(){
+    savedTag.classList.add("show");
+    setTimeout(function(){ savedTag.classList.remove("show"); },1200);
+  }
+  function localSave(){
+    try{ localStorage.setItem(STORE_KEY, JSON.stringify(store)); showSaved(); }
+    catch(e){ console.error("Erreur de sauvegarde locale", e); }
+  }
   function scheduleSave(){
     clearTimeout(saveTimer);
     saveTimer = setTimeout(persist, 450);
   }
   function persist(){
-    if(!window.storage) return;
-    window.storage.set(STORE_KEY, JSON.stringify(store), false).then(function(res){
-      if(res){ savedTag.classList.add("show"); setTimeout(function(){ savedTag.classList.remove("show"); },1200); }
-    }).catch(function(err){ console.error("Erreur de sauvegarde", err); });
+    if(dbApi){
+      dbApi.doc("app/store").set(store).then(showSaved).catch(function(err){
+        console.error("Erreur de sauvegarde", err); localSave();
+      });
+    } else {
+      localSave();
+    }
   }
   function bumpIdCounter(node){
     var m = /n(\d+)_/.exec(node.id||"");
     if(m){ idCounter = Math.max(idCounter, parseInt(m[1],10)+1); }
     (node.children||[]).forEach(bumpIdCounter);
   }
+  function applyStore(raw){
+    store = raw;
+    store.dossiers.forEach(function(d){ bumpIdCounter(d.tree); });
+    tree = getActiveDossier().tree;
+    renderSidebar();
+    renderAll();
+  }
   function loadData(){
     function boot(){
-      var d = makeDossier("Patrimoine");
+      var d = makeExampleDossier();
       store = { activeId:d.id, dossiers:[d] };
       tree = d.tree;
       renderSidebar();
       renderAll();
+      scheduleSave();
     }
-    if(!window.storage){ boot(); return; }
-    window.storage.get(STORE_KEY, false).then(function(res){
-      if(res && res.value){
-        try{
-          store = JSON.parse(res.value);
-          store.dossiers.forEach(function(d){ bumpIdCounter(d.tree); });
-          tree = getActiveDossier().tree;
-          renderSidebar();
-          renderAll();
-        }catch(e){ boot(); }
-      } else { boot(); }
-    }).catch(function(){ boot(); });
+    function fromLocalStorage(){
+      var raw = null;
+      try{ raw = localStorage.getItem(STORE_KEY); }catch(e){}
+      if(raw){ try{ applyStore(JSON.parse(raw)); return; }catch(e){} }
+      boot();
+    }
+    dbReady.then(function(api){
+      if(!api){ fromLocalStorage(); return; }
+      api.doc("app/store").get().then(function(snap){
+        if(snap.exists && snap.data()){
+          try{ applyStore(snap.data()); }catch(e){ boot(); }
+        } else {
+          boot();
+        }
+      }).catch(fromLocalStorage);
+    });
   }
 
   // ---------- panel field events ----------
@@ -687,12 +759,15 @@
     scheduleSave();
   });
   document.getElementById("exportBtn").addEventListener("click", function(){
-    var blob = new Blob([JSON.stringify(tree,null,2)], {type:"application/json"});
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement("a");
-    a.href = url; a.download = "cartographie-tentaculaire.json";
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    var filename = (getActiveDossier().name || "cartographie").replace(/[^a-z0-9-_]+/gi,"-") + ".json";
+    var json = JSON.stringify(tree, null, 2);
+    downloadsReady.then(function(api){
+      if(!api){ alert("Export indisponible dans cette vue."); return; }
+      api.save({ filename:filename, data:json }).catch(function(err){
+        if(err && err.code === "declined") return;
+        console.error("Erreur d'export", err);
+      });
+    });
   });
   document.getElementById("resetData").addEventListener("click", function(){
     if(!confirm("Réinitialiser ce dossier ? Cette action efface toutes ses notes et branches.")) return;
