@@ -100,10 +100,10 @@
   main#canvasWrap{flex:1;position:relative;overflow:hidden;cursor:grab;background:radial-gradient(ellipse at 50% 42%, #0e1024 0%, #07070d 62%, #050508 100%);}
   main#canvasWrap.dragging{cursor:grabbing;}
 
-  .blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.28;pointer-events:none;z-index:0;animation:blobDrift 26s ease-in-out infinite;}
-  .blob.b1{width:420px;height:420px;left:8%;top:14%;background:#00e5ff;animation-duration:24s;}
-  .blob.b2{width:380px;height:380px;right:10%;top:52%;background:#ff2fb0;animation-duration:30s;animation-delay:-6s;}
-  .blob.b3{width:340px;height:340px;left:38%;bottom:6%;background:#8c52ff;animation-duration:34s;animation-delay:-14s;}
+  .blob{position:absolute;border-radius:50%;filter:blur(80px);opacity:.16;pointer-events:none;z-index:0;animation:blobDrift 26s ease-in-out infinite;}
+  .blob.b1{width:420px;height:420px;left:8%;top:14%;background:#0891b2;animation-duration:24s;}
+  .blob.b2{width:380px;height:380px;right:10%;top:52%;background:#a21caf;animation-duration:30s;animation-delay:-6s;}
+  .blob.b3{width:340px;height:340px;left:38%;bottom:6%;background:#5b21b6;animation-duration:34s;animation-delay:-14s;}
   @keyframes blobDrift{
     0%{transform:translate(0,0) scale(1);}
     50%{transform:translate(46px,-34px) scale(1.18);}
@@ -143,9 +143,9 @@
     z-index:5;
   }
   .node-box.depth-0::before{
-    content:"";position:absolute;inset:-22px;border-radius:50%;z-index:-1;
-    background:conic-gradient(from 0deg, #00e5ff, #ff2fb0, #ffd23f, #39ff88, #8c52ff, #00e5ff);
-    filter:blur(18px);opacity:.35;animation:auraSpin 14s linear infinite;
+    content:"";position:absolute;inset:-20px;border-radius:50%;z-index:-1;
+    background:conic-gradient(from 0deg, #0891b2, #a21caf, #b45309, #15803d, #5b21b6, #0891b2);
+    filter:blur(20px);opacity:.22;animation:auraSpin 18s linear infinite;
   }
   .node-box.depth-1{width:172px;height:54px;font-weight:700;}
   .node-box.depth-2, .node-box.depth-3{width:142px;height:44px;font-size:12.5px;color:var(--muted);font-weight:600;}
@@ -209,6 +209,19 @@
   .savedTag{font-size:10.5px;color:var(--accent-2);opacity:0;transition:opacity .2s;font-weight:700;}
   .savedTag.show{opacity:1;}
 
+  #confirmOverlay{position:fixed;inset:0;z-index:50;padding:20px;}
+  #confirmOverlay:not([hidden]){
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(5,5,11,0.68);backdrop-filter:blur(3px);
+  }
+  #confirmBox{
+    width:100%;max-width:360px;background:var(--card);border:1px solid var(--border);
+    border-radius:12px;padding:22px;box-shadow:0 20px 50px rgba(0,0,0,0.55);
+  }
+  #confirmMessage{margin:0 0 18px;font-size:14px;line-height:1.55;color:var(--ink);}
+  #confirmActions{display:flex;justify-content:flex-end;gap:8px;}
+  #confirmActions button{padding:9px 14px;}
+
   @media (max-width:820px){
     aside#sidebar{width:170px;}
     header h1{font-size:14px;}
@@ -268,6 +281,16 @@
       <button id="deleteBtn" class="danger">Supprimer ce nœud</button>
     </div>
   </aside>
+
+  <div id="confirmOverlay" hidden>
+    <div id="confirmBox" role="alertdialog" aria-modal="true" aria-labelledby="confirmMessage">
+      <p id="confirmMessage"></p>
+      <div id="confirmActions">
+        <button id="confirmCancel">Annuler</button>
+        <button id="confirmOk"></button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -277,7 +300,7 @@
   var STORE_KEY = "cartographie-tentaculaire-store";
   var RADIUS_BASE = 190;
   var RADIUS_STEP = 175;
-  var PALETTE = ["#00e5ff","#ff2fb0","#ffd23f","#39ff88","#8c52ff","#ff6b3d","#3df2c0","#ff4d6d","#5ec8ff","#c9ff4d"];
+  var PALETTE = ["#22b8cf","#c026d3","#d97706","#16a34a","#7c5cff","#e8590c","#0ea5a5","#e11d6f","#2563eb","#65a30d"];
   var idCounter = 1;
 
   function newId(prefix){ return (prefix||"n") + (idCounter++) + "_" + Math.random().toString(36).slice(2,7); }
@@ -325,6 +348,40 @@
   var panelPath = document.getElementById("panelPath");
   var panelNotes = document.getElementById("panelNotes");
   var savedTag = document.getElementById("savedTag");
+  var confirmOverlay = document.getElementById("confirmOverlay");
+  var confirmMessage = document.getElementById("confirmMessage");
+  var confirmOk = document.getElementById("confirmOk");
+  var confirmCancel = document.getElementById("confirmCancel");
+
+  // ---------- confirm / alert dialogs ----------
+  // The artifact runs in a sandboxed frame that silently blocks native
+  // confirm()/alert() (they resolve as if the user hit cancel), so
+  // destructive actions need their own in-page dialog to actually fire.
+  var confirmResolver = null;
+  function askConfirm(message, okLabel, showCancel){
+    confirmMessage.textContent = message;
+    confirmOk.textContent = okLabel || "Confirmer";
+    confirmOk.className = showCancel===false ? "primary" : "danger";
+    confirmCancel.style.display = showCancel===false ? "none" : "";
+    confirmOverlay.hidden = false;
+    confirmOk.focus();
+    return new Promise(function(resolve){ confirmResolver = resolve; });
+  }
+  function closeConfirm(result){
+    confirmOverlay.hidden = true;
+    if(confirmResolver){ confirmResolver(result); confirmResolver = null; }
+  }
+  confirmOk.addEventListener("click", function(){ closeConfirm(true); });
+  confirmCancel.addEventListener("click", function(){ closeConfirm(false); });
+  confirmOverlay.addEventListener("click", function(e){ if(e.target===confirmOverlay) closeConfirm(false); });
+  window.addEventListener("keydown", function(e){
+    if(confirmOverlay.hidden) return;
+    if(e.key==="Escape") closeConfirm(false);
+    if(e.key==="Enter") closeConfirm(true);
+  });
+  function notify(message){
+    return askConfirm(message, "OK", false);
+  }
 
   // ---------- tree helpers ----------
   function findNode(id, node){
@@ -360,23 +417,50 @@
 
   // ---------- radial layout ----------
   var leafCursor = 0;
+  var NODE_GAP = 30;
   function assignLeaf(node){
     if(!node.children || node.children.length===0){
       node.leafIndex = leafCursor; leafCursor++;
+      node.leafCount = 1;
       return node.leafIndex;
     }
-    var sum = 0;
-    node.children.forEach(function(c){ sum += assignLeaf(c); });
+    var sum = 0, count = 0;
+    node.children.forEach(function(c){ sum += assignLeaf(c); count += c.leafCount; });
     node.leafIndex = sum / node.children.length;
+    node.leafCount = count;
     return node.leafIndex;
   }
   function computeLayout(){
     leafCursor = 0;
     assignLeaf(tree);
     var total = Math.max(leafCursor, 1);
+
+    // Each ring's radius must be wide enough that no two nodes sharing it
+    // (however many branches the user has added) overlap: the arc length
+    // given to a node has to fit its box, so the ring grows with sibling
+    // count instead of staying fixed and crowding wide trees.
+    var maxDepth = 0;
+    var neededByDepth = {};
+    (function scan(node, depth){
+      maxDepth = Math.max(maxDepth, depth);
+      if(depth > 0){
+        var angularWidth = (node.leafCount / total) * Math.PI * 2;
+        var need = (boxDims(depth).w + NODE_GAP) / Math.max(angularWidth, 0.001);
+        if(!neededByDepth[depth] || need > neededByDepth[depth]) neededByDepth[depth] = need;
+      }
+      (node.children||[]).forEach(function(c){ scan(c, depth+1); });
+    })(tree, 0);
+    var radiusByDepth = {0:0};
+    var prevR = 0;
+    for(var d=1; d<=maxDepth; d++){
+      var r = Math.max(prevR + RADIUS_STEP, RADIUS_BASE + (d-1)*RADIUS_STEP, neededByDepth[d]||0);
+      radiusByDepth[d] = r;
+      prevR = r;
+    }
+
     (function walk(node, depth){
       node.depth = depth;
-      var r = depth===0 ? 0 : RADIUS_BASE + (depth-1)*RADIUS_STEP;
+      var r = radiusByDepth[depth] || 0;
       var angle = (node.leafIndex/total) * Math.PI*2;
       node.angle = angle;
       node.x = depth===0 ? 0 : Math.cos(angle)*r;
@@ -454,8 +538,8 @@
       var seed = Math.abs(hashStr(node.id));
       var color = node.color || "#7c5cff";
       var d = tentaclePath(parent.x,parent.y,node.x,node.y,seed);
-      var strokeW = Math.max(1.4, 4.6 - node.depth*0.7);
-      var baseOpacity = Math.max(0.35, 0.9 - node.depth*0.14);
+      var strokeW = Math.max(1.3, 4 - node.depth*0.6);
+      var baseOpacity = Math.max(0.32, 0.78 - node.depth*0.12);
 
       var glow = document.createElementNS("http://www.w3.org/2000/svg","path");
       glow.setAttribute("class","edge-glow");
@@ -463,7 +547,7 @@
       glow.setAttribute("filter","url(#edgeGlow)");
       glow.style.stroke = color;
       glow.style.strokeWidth = (strokeW*2.4)+"px";
-      glow.style.opacity = baseOpacity*0.4;
+      glow.style.opacity = baseOpacity*0.32;
       edgesGlowLayer.appendChild(glow);
 
       var path = document.createElementNS("http://www.w3.org/2000/svg","path");
@@ -611,20 +695,22 @@
     scheduleSave();
   }
   function deleteDossier(id){
-    if(store.dossiers.length <= 1){ alert("Il doit rester au moins un dossier."); return; }
+    if(store.dossiers.length <= 1){ notify("Il doit rester au moins un dossier."); return; }
     var d = store.dossiers.find(function(x){ return x.id===id; });
-    if(!confirm('Supprimer le dossier "'+d.name+'" et tout son contenu ?')) return;
-    store.dossiers = store.dossiers.filter(function(x){ return x.id!==id; });
-    if(store.activeId === id){
-      store.activeId = store.dossiers[0].id;
-      tree = store.dossiers[0].tree;
-      selectedId = null;
-      panel.classList.remove("open");
-      panel.setAttribute("aria-hidden","true");
-    }
-    renderSidebar();
-    renderAll();
-    scheduleSave();
+    askConfirm('Supprimer le dossier "'+d.name+'" et tout son contenu ?', "Supprimer").then(function(ok){
+      if(!ok) return;
+      store.dossiers = store.dossiers.filter(function(x){ return x.id!==id; });
+      if(store.activeId === id){
+        store.activeId = store.dossiers[0].id;
+        tree = store.dossiers[0].tree;
+        selectedId = null;
+        panel.classList.remove("open");
+        panel.setAttribute("aria-hidden","true");
+      }
+      renderSidebar();
+      renderAll();
+      scheduleSave();
+    });
   }
 
   // ---------- persistence ----------
@@ -743,11 +829,14 @@
     if(!selectedId || selectedId==="root") return;
     var parent = findParent(selectedId);
     if(!parent) return;
-    if(!confirm('Supprimer "'+findNode(selectedId).label+'" et toutes ses sous-branches ?')) return;
-    parent.children = parent.children.filter(function(c){ return c.id!==selectedId; });
-    closePanel();
-    renderAll();
-    scheduleSave();
+    var label = findNode(selectedId).label;
+    askConfirm('Supprimer "'+label+'" et toutes ses sous-branches ?', "Supprimer").then(function(ok){
+      if(!ok) return;
+      parent.children = parent.children.filter(function(c){ return c.id!==selectedId; });
+      closePanel();
+      renderAll();
+      scheduleSave();
+    });
   });
   document.getElementById("addRootBtn").addEventListener("click", function(){
     var child = { id:newId(), label:"Nouvelle branche", notes:"", children:[] };
@@ -762,7 +851,7 @@
     var filename = (getActiveDossier().name || "cartographie").replace(/[^a-z0-9-_]+/gi,"-") + ".json";
     var json = JSON.stringify(tree, null, 2);
     downloadsReady.then(function(api){
-      if(!api){ alert("Export indisponible dans cette vue."); return; }
+      if(!api){ notify("Export indisponible dans cette vue."); return; }
       api.save({ filename:filename, data:json }).catch(function(err){
         if(err && err.code === "declined") return;
         console.error("Erreur d'export", err);
@@ -770,14 +859,16 @@
     });
   });
   document.getElementById("resetData").addEventListener("click", function(){
-    if(!confirm("Réinitialiser ce dossier ? Cette action efface toutes ses notes et branches.")) return;
-    var d = getActiveDossier();
-    d.tree = makeTree(d.name);
-    tree = d.tree;
-    lastCenteredFor = null;
-    closePanel();
-    renderAll();
-    persist();
+    askConfirm("Réinitialiser ce dossier ? Cette action efface toutes ses notes et branches.", "Réinitialiser").then(function(ok){
+      if(!ok) return;
+      var d = getActiveDossier();
+      d.tree = makeTree(d.name);
+      tree = d.tree;
+      lastCenteredFor = null;
+      closePanel();
+      renderAll();
+      persist();
+    });
   });
   document.getElementById("addDossierBtn").addEventListener("click", addDossier);
 
