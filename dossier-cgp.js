@@ -96,8 +96,13 @@ function seed() {
       else if (i % 4 === 0 && mast < 211) { store.srs[c.id + '#' + qi] = { b: 4, d: t + 12 + (qi % 20), ok: 3, ko: 0 }; mast++; }
     });
   });
-  var seedPct = { 'Les enveloppes': 82, 'Supports & actifs': 74, 'Fiscalité & transmission': 61, 'Retraite & protection': 47, 'Financement & levier': 39, 'Entreprise & ingénierie': 56, 'Métier & méthode': 68 };
-  poleNames().forEach(function (p) { store.poles[p] = { n: 20, ok: Math.round(20 * (seedPct[p] || 60) / 100) }; });
+  var seedPct = { 'Les enveloppes': 82, 'Supports & actifs': 74, 'Fiscalité & transmission': 61, 'Retraite & protection': 47, 'Financement & levier': 39, 'Entreprise & ingénierie': 56, 'Métier & méthode': 68, 'Culture financière': 58 };
+  var poleTotals = {};
+  cats.forEach(function (c) { poleTotals[c.pole] = (poleTotals[c.pole] || 0) + bank(c.id).length; });
+  poleNames().forEach(function (p) {
+    var n = Math.max(5, Math.min(20, poleTotals[p] || 5));
+    store.poles[p] = { n: n, ok: Math.round(n * (seedPct[p] || 60) / 100) };
+  });
   store.seen = 263;
   store.seeded = true;
   save();
@@ -312,8 +317,10 @@ function computeVals() {
 
   v.poles = pNames.map(function (p) {
     var cats = Dd.CATS.filter(function (c) { return c.pole === p; });
+    var pe = S.poles && S.poles[p];
     return {
       label: p, pct: pctOf(p), open: st.openPole === p,
+      ratio: pe && pe.n ? pe.ok + '/' + pe.n : '—',
       cats: cats.map(function (c) {
         return { label: c.label, id: c.id, badge: ((c.sub || []).filter(function (s) { return !s.theory; }).length) + ' séries' };
       })
@@ -689,9 +696,9 @@ function tplBrowse(v) {
     }).join('');
     return '<div class="stagger" style="animation-delay:' + (i * 0.05).toFixed(2) + 's;background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;">' +
       '<button data-action="poleToggle" data-pole="' + esc(p.label) + '" class="hv-c" style="width:100%;background:none;border:none;padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;">' +
-      '<span style="flex:1;font:500 13.5px \'Space Grotesk\',sans-serif;">' + esc(p.label) + '</span>' +
-      '<span style="width:52px;height:4px;border-radius:3px;background:var(--line);overflow:hidden;"><span style="display:block;width:' + p.pct + '%;height:4px;background:linear-gradient(90deg,var(--acc2),var(--acc));transition:width .5s cubic-bezier(.16,1,.3,1);"></span></span>' +
-      '<span style="font:500 10.5px \'JetBrains Mono\',monospace;color:var(--ink3);width:22px;text-align:right;">' + p.pct + '</span>' +
+      '<span style="flex:1;min-width:0;"><span style="display:block;font:500 13.5px \'Space Grotesk\',sans-serif;">' + esc(p.label) + '</span><span style="display:block;font:500 9px \'JetBrains Mono\',monospace;color:var(--dim);margin-top:3px;">' + esc(p.ratio) + '</span></span>' +
+      '<span style="width:52px;height:4px;border-radius:3px;background:var(--line);overflow:hidden;flex-shrink:0;"><span style="display:block;width:' + p.pct + '%;height:4px;background:linear-gradient(90deg,var(--acc2),var(--acc));transition:width .5s cubic-bezier(.16,1,.3,1);"></span></span>' +
+      '<span style="font:500 10.5px \'JetBrains Mono\',monospace;color:var(--ink3);width:26px;text-align:right;flex-shrink:0;">' + p.pct + '%</span>' +
       '<span style="font:400 13px Newsreader,serif;color:var(--ink3);transition:transform .25s;transform:rotate(' + (p.open ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
       (p.open ? '<div class="stagger" style="border-top:1px solid var(--line);padding:6px 0;">' + cats + '</div>' : '') + '</div>';
   }).join('');
@@ -924,9 +931,10 @@ function tplProgress(v) {
     return '<circle cx="' + d.x + '" cy="' + d.y + '" r="3.5" fill="var(--acc)" style="animation:kfPop .3s ease ' + (0.9 + i * 0.06).toFixed(2) + 's both;"></circle>';
   }).join('');
   var poles = v.poles.map(function (p, i) {
-    return '<div class="stagger" style="animation-delay:' + (i * 0.05).toFixed(2) + 's;display:flex;align-items:center;gap:12px;"><div style="flex:1;font:400 12.5px \'Space Grotesk\',sans-serif;">' + esc(p.label) + '</div>' +
-      '<div style="width:92px;height:5px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="width:' + p.pct + '%;height:5px;background:linear-gradient(90deg,var(--acc2),var(--acc));transform-origin:left;animation:kfFill 1.1s cubic-bezier(.16,1,.3,1) both;"></div></div>' +
-      '<div style="width:26px;text-align:right;font:500 10.5px \'JetBrains Mono\',monospace;color:var(--ink3);">' + p.pct + '</div></div>';
+    return '<div class="stagger" style="animation-delay:' + (i * 0.05).toFixed(2) + 's;display:flex;flex-direction:column;gap:7px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;"><span style="font:400 12.5px \'Space Grotesk\',sans-serif;">' + esc(p.label) + '</span><span style="font:500 9.5px \'JetBrains Mono\',monospace;color:var(--ink3);flex-shrink:0;">' + esc(p.ratio) + ' bonnes réponses</span></div>' +
+      '<div style="display:flex;align-items:center;gap:10px;"><div style="flex:1;height:5px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="width:' + p.pct + '%;height:5px;background:linear-gradient(90deg,var(--acc2),var(--acc));transform-origin:left;animation:kfFill 1.1s cubic-bezier(.16,1,.3,1) both;"></div></div>' +
+      '<div style="width:32px;text-align:right;font:500 10.5px \'JetBrains Mono\',monospace;color:var(--ink3);">' + p.pct + '%</div></div></div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:58px 24px 0;"><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.2em;color:var(--ink3);">PROGRESSION</div>' +
@@ -936,7 +944,7 @@ function tplProgress(v) {
     '<polygon points="150,63 225,106 225,193 150,237 75,193 75,106" fill="none" stroke="var(--line)" stroke-width="1"></polygon>' +
     '<polygon points="150,107 187,128 187,171 150,193 113,171 113,128" fill="none" stroke="var(--line)" stroke-width="1"></polygon>' +
     '<polygon class="v16draw" points="' + v.radarPts + '" fill="rgba(195,226,129,.2)" stroke="var(--acc)" stroke-width="2" style="stroke-dasharray:900;stroke-dashoffset:900;animation:v16draw 1.1s cubic-bezier(.16,1,.3,1) .15s forwards,kfIn .5s ease .15s forwards;"></polygon>' + dots + '</svg></div>' +
-    '<div style="margin:6px 24px 0;display:flex;flex-direction:column;gap:12px;">' + poles + '</div>' +
+    '<div style="margin:6px 24px 0;display:flex;flex-direction:column;gap:16px;">' + poles + '</div>' +
     '<div style="margin:26px 24px 0;padding-top:18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;">' +
     '<div><div style="font:300 28px/1 Newsreader,serif;"><span data-countup="' + v.xp + '">0</span></div><div style="font:500 9.5px \'JetBrains Mono\',monospace;letter-spacing:.12em;color:var(--ink3);margin-top:5px;">XP TOTAL</div></div>' +
     '<div><div style="font:300 28px/1 Newsreader,serif;"><span data-countup="' + v.answeredCount + '">0</span></div><div style="font:500 9.5px \'JetBrains Mono\',monospace;letter-spacing:.12em;color:var(--ink3);margin-top:5px;">QUESTIONS VUES</div></div>' +
