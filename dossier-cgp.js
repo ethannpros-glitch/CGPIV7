@@ -13,7 +13,7 @@ var state = {
   fiche: null, level: 1, onb: 0, confetti: false, notif: true,
   orderKey: null, orderCur: null,
   buildDom: ['all'], buildTypes: ['qcm', 'vf'], buildLevel: 'all', buildN: 15,
-  coursePoleSel: null, navStack: [], navDir: null, confirmReset: false, nameInput: null
+  coursePoleSel: null, navStack: [], navDir: null, confirmReset: false, nameInput: null, search: ''
 };
 var store = null;
 var confettiTimer = null;
@@ -81,6 +81,61 @@ function poleNames() {
   var seen = {}, out = [];
   D().CATS.forEach(function (c) { if (c.pole && !seen[c.pole]) { seen[c.pole] = true; out.push(c.pole); } });
   return out;
+}
+
+var _searchIdx = null;
+function searchIndex() {
+  if (_searchIdx) return _searchIdx;
+  var Dd = D(), idx = [];
+  Dd.CATS.forEach(function (c) {
+    (c.sub || []).forEach(function (s) {
+      if (s.theory) {
+        var t = Dd.THEORY[s.theory];
+        if (!t) return;
+        var heads = (t.sections || []).map(function (sec) { return sec.h || ''; }).join(' | ');
+        var bodies = (t.sections || []).map(function (sec) { return sec.body || ''; }).join(' | ');
+        idx.push({
+          kind: 'fiche', id: s.theory, catId: c.id, pole: c.pole, catLabel: c.label,
+          title: t.title || s.label,
+          titleN: normalize(t.title || s.label),
+          headN: normalize(heads),
+          bodyN: normalize(bodies)
+        });
+      } else if (bank(s.id).length) {
+        var qs = bank(s.id);
+        idx.push({
+          kind: 'quiz', id: s.id, catId: c.id, pole: c.pole, catLabel: c.label,
+          title: s.label, count: qs.length,
+          titleN: normalize(s.label),
+          headN: '',
+          bodyN: normalize(qs.map(function (q) { return q.q + ' ' + (q.options || []).join(' '); }).join(' | '))
+        });
+      }
+    });
+  });
+  _searchIdx = idx;
+  return idx;
+}
+function doSearch(query) {
+  var qn = normalize(query).trim();
+  if (qn.length < 2) return [];
+  var scored = [];
+  searchIndex().forEach(function (item) {
+    var score = 0;
+    if (item.titleN.indexOf(qn) >= 0) score = 100;
+    else if (item.headN.indexOf(qn) >= 0) score = 70;
+    else if (item.bodyN.indexOf(qn) >= 0) score = 40;
+    if (score > 0) scored.push({ item: item, score: score });
+  });
+  scored.sort(function (a, b) { return b.score - a.score || a.item.title.localeCompare(b.item.title); });
+  return scored.slice(0, 30).map(function (r) {
+    var it = r.item;
+    return {
+      kind: it.kind, id: it.id, catId: it.catId, title: it.title,
+      path: it.pole + ' › ' + it.catLabel,
+      meta: it.kind === 'fiche' ? 'Cours' : (it.count + (it.count > 1 ? ' questions' : ' question'))
+    };
+  });
 }
 
 function seed() {
@@ -298,8 +353,11 @@ function computeVals() {
     isExamResult: scr === 'examResult', isSrs: scr === 'srs', isCourses: scr === 'courses',
     isFiche: scr === 'fiche', isProgress: scr === 'progress', isProfile: scr === 'profile',
     isLabo: scr === 'labo', isMental: scr === 'mental', isBuilder: scr === 'builder',
-    showTabs: ['home', 'browse', 'cat', 'srs', 'courses', 'fiche', 'coursePole', 'progress', 'profile', 'examPick', 'labo', 'mental', 'builder'].indexOf(scr) >= 0,
+    isSearch: scr === 'search',
+    showTabs: ['home', 'browse', 'cat', 'srs', 'courses', 'fiche', 'coursePole', 'progress', 'profile', 'examPick', 'labo', 'mental', 'builder', 'search'].indexOf(scr) >= 0,
     mentalBest: S.mentalBest || 0,
+    searchQuery: st.search || '',
+    searchResults: (scr === 'search' && st.ready) ? doSearch(st.search || '') : [],
 
     onbName: st.onb === -1, onb0: st.onb === 0, onb1: st.onb === 1, onb2: st.onb === 2,
     onbStepLabel: st.onb >= 0 ? 'ÉTAPE ' + (st.onb + 1) + ' / 3' : 'BIENVENUE',
@@ -662,6 +720,35 @@ function tplOnb(v) {
   return out;
 }
 
+function tplSearch(v) {
+  var q = v.searchQuery, qTrim = q.trim();
+  var results = v.searchResults;
+  var list;
+  if (results.length) {
+    list = results.map(function (r, i) {
+      var icon = r.kind === 'fiche' ? '📘' : '✏️';
+      return '<button data-action="searchGo" data-kind="' + esc(r.kind) + '" data-id="' + esc(r.id) + '" class="hv-a stagger" style="animation-delay:' + (i * 0.03).toFixed(2) + 's;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);box-sizing:border-box;">' +
+        '<span style="font-size:18px;flex-shrink:0;">' + icon + '</span>' +
+        '<span style="flex:1;min-width:0;"><span style="display:block;font:500 9.5px \'JetBrains Mono\',monospace;letter-spacing:.05em;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(r.path) + '</span>' +
+        '<span style="display:block;font:500 13.5px \'Space Grotesk\',sans-serif;margin-top:3px;">' + esc(r.title) + '</span></span>' +
+        '<span style="font:500 9.5px \'JetBrains Mono\',monospace;color:var(--dim);flex-shrink:0;text-align:right;">' + esc(r.meta) + '</span></button>';
+    }).join('');
+  } else if (qTrim.length >= 2) {
+    list = '<div class="stagger" style="text-align:center;padding:44px 20px;color:var(--ink3);font:400 13px \'Space Grotesk\',sans-serif;">Aucun résultat pour « ' + esc(qTrim) + ' ».</div>';
+  } else if (qTrim.length === 1) {
+    list = '<div style="text-align:center;padding:44px 20px;color:var(--ink3);font:400 13px \'Space Grotesk\',sans-serif;">Continuez à taper…</div>';
+  } else {
+    list = '<div style="text-align:center;padding:44px 20px;color:var(--ink3);font:400 13px \'Space Grotesk\',sans-serif;">Cherchez un cours, une notion ou une catégorie de questions — par exemple « crypto », « lombard » ou « succession ».</div>';
+  }
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Retour</button>' +
+    '<div style="font:300 30px/1.15 Newsreader,serif;letter-spacing:-.02em;margin-top:16px;">Rechercher</div></div>' +
+    '<div style="margin:20px 24px 0;">' +
+    '<input id="searchInput" data-search-input value="' + esc(q) + '" placeholder="Crypto, PER, succession…" style="width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font:500 14px \'Space Grotesk\',sans-serif;color:var(--ink);outline:none;" /></div>' +
+    '<div style="margin:16px 24px 0;display:flex;flex-direction:column;gap:9px;">' + list + '</div>' +
+    '<div style="height:26px;"></div></div>';
+}
+
 function tplHome(v) {
   var weak = v.weakChips.map(function (w) {
     return '<button data-action="weakGo" data-pole="' + esc(w.label) + '" class="hv-a" style="background:none;border:1px solid var(--line);border-radius:999px;padding:8px 13px;font:500 12px \'Space Grotesk\',sans-serif;color:var(--ink);cursor:pointer;">' + esc(w.label) + ' <span style="font-family:\'JetBrains Mono\',monospace;font-size:10.5px;color:var(--warn);">' + w.pct + '</span></button>';
@@ -670,6 +757,7 @@ function tplHome(v) {
     '<div style="padding:58px 24px 0;display:flex;justify-content:space-between;align-items:center;">' +
     '<div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.2em;color:var(--ink3);">CGP</div>' +
     '<div style="display:flex;align-items:center;gap:14px;">' +
+    '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink2);cursor:pointer;">🔍</button>' +
     '<div style="display:flex;align-items:center;gap:7px;font:500 10.5px \'JetBrains Mono\',monospace;color:var(--acc);"><span style="width:7px;height:7px;border-radius:50%;background:var(--acc);animation:kfBreathe 2.6s ease-in-out infinite;"></span>JOUR ' + v.streak + '</div></div></div>' +
     '<div style="padding:24px 24px 0;"><div style="font:300 42px/1.02 Newsreader,serif;letter-spacing:-.025em;">' + esc(v.greeting) + '<br><span style="font-style:italic;background:linear-gradient(100deg,var(--acc),var(--gold),var(--acc2),var(--acc));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:kfSweep 9s linear infinite;">' + esc(v.userName) + '</span></div></div>' +
     '<div style="margin:30px 24px 0;border-radius:24px;padding:22px;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;gap:18px;">' +
@@ -711,8 +799,10 @@ function tplBrowse(v) {
       (p.open ? '<div class="stagger" style="border-top:1px solid var(--line);padding:6px 0;">' + cats + '</div>' : '') + '</div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;"><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.2em;color:var(--ink3);">BANQUE</div>' +
+    '<div style="padding:58px 24px 0;display:flex;justify-content:space-between;align-items:flex-start;">' +
+    '<div><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.2em;color:var(--ink3);">BANQUE</div>' +
     '<div style="font:300 34px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:14px;">' + v.poles.length + ' <span style="font-style:italic;">pôles</span></div></div>' +
+    '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink2);cursor:pointer;flex-shrink:0;margin-top:2px;">🔍</button></div>' +
     '<div style="margin:22px 24px 0;display:flex;flex-direction:column;gap:10px;">' + poles + '</div>' +
     '<div style="height:26px;"></div></div>';
 }
@@ -887,8 +977,10 @@ function tplCourses(v) {
       '<span style="font:400 18px Newsreader,serif;color:' + p.accent + ';">&#8250;</span></div></button>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;"><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.2em;color:var(--ink3);">FICHES</div>' +
+    '<div style="padding:58px 24px 0;display:flex;justify-content:space-between;align-items:flex-start;">' +
+    '<div><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.2em;color:var(--ink3);">FICHES</div>' +
     '<div style="font:300 34px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:14px;">' + v.ficheCount + ' <span style="font-style:italic;">cours</span>, ' + v.coursePoles.length + ' pôles</div></div>' +
+    '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink2);cursor:pointer;flex-shrink:0;margin-top:2px;">🔍</button></div>' +
     '<div style="margin:22px 24px 0;display:grid;grid-template-columns:1fr 1fr;gap:12px;">' + cards + '</div>' +
     '<div style="height:26px;"></div></div>';
 }
@@ -1481,8 +1573,13 @@ function render() {
   else if (v.isLabo) html = tplLabo(v);
   else if (v.isMental) html = tplMental(v);
   else if (v.isBuilder) html = tplBuilder(v);
+  else if (v.isSearch) html = tplSearch(v);
   screenEl.innerHTML = html;
 
+  if (v.isSearch && document.activeElement && !document.activeElement.matches('[data-search-input]')) {
+    var searchEl = document.getElementById('searchInput');
+    if (searchEl) { searchEl.focus(); searchEl.setSelectionRange(searchEl.value.length, searchEl.value.length); }
+  }
   if (v.isLabo) wireLabo();
   if (v.isMental) {
     var menStage = document.getElementById('menStage');
@@ -1601,6 +1698,11 @@ function onAppClick(e) {
       else startCat(d.sub, 12);
       break;
     case 'ficheGo': goChild('fiche', { fiche: d.fiche }); break;
+    case 'goSearch': goChild('search'); break;
+    case 'searchGo':
+      if (d.kind === 'fiche') goChild('fiche', { fiche: d.id });
+      else startCat(d.id, 12);
+      break;
     case 'startFicheQuiz': startFicheQ(state.fiche); break;
     case 'answerQcm': answerQcm(+d.i); break;
     case 'answerVf': answerVf(+d.i); break;
@@ -1663,6 +1765,13 @@ document.addEventListener('DOMContentLoaded', function () {
   appEl.addEventListener('input', function (e) {
     if (e.target.matches('[data-texte-input]')) state.texte = e.target.value;
     if (e.target.matches('[data-name-input]')) state.nameInput = e.target.value;
+    if (e.target.matches('[data-search-input]')) {
+      state.search = e.target.value;
+      var pos = e.target.selectionStart;
+      render();
+      var el = document.getElementById('searchInput');
+      if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (err) {} }
+    }
   });
   load();
   if (!store.seeded) { state.screen = 'onb'; state.onb = -1; }
