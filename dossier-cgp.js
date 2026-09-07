@@ -12,7 +12,8 @@ var state = {
   quiz: null, qi: 0, ans: null, pick: null, calc: '', texte: '', revealed: false, results: [],
   fiche: null, level: 1, onb: 0, confetti: false, notif: true,
   orderKey: null, orderCur: null,
-  buildDom: ['all'], buildTypes: ['qcm', 'vf'], buildLevel: 'all', buildN: 15
+  buildDom: ['all'], buildTypes: ['qcm', 'vf'], buildLevel: 'all', buildN: 15,
+  coursePoleSel: null, navStack: [], navDir: null
 };
 var store = null;
 var confettiTimer = null;
@@ -123,6 +124,8 @@ function qFromKey(k) {
 function startList(keys, meta) {
   var items = keys.map(qFromKey).filter(Boolean);
   if (!items.length) return;
+  state.navStack.push(navSnapshot());
+  state.navDir = 'fwd';
   state.quiz = { items: items, meta: meta };
   state.qi = 0; state.ans = null; state.pick = null;
   state.calc = ''; state.texte = ''; state.revealed = false; state.results = [];
@@ -227,11 +230,33 @@ function nextQ() {
   state.qi++; state.ans = null; state.pick = null; state.calc = ''; state.texte = ''; state.revealed = false;
   render();
 }
-function go(screen, patch) {
+function setScreen(screen, patch) {
   if (state.screen === 'mental' && screen !== 'mental' && mentalState.timer) {
     clearInterval(mentalState.timer); mentalState.timer = null;
   }
-  state.screen = screen; if (patch) Object.assign(state, patch); render();
+  state.screen = screen; if (patch) Object.assign(state, patch);
+}
+function navSnapshot() {
+  return { screen: state.screen, cat: state.cat, fiche: state.fiche, openPole: state.openPole, coursePoleSel: state.coursePoleSel };
+}
+function go(screen, patch) {
+  setScreen(screen, patch);
+  state.navStack = [];
+  state.navDir = null;
+  render();
+}
+function goChild(screen, patch) {
+  state.navStack.push(navSnapshot());
+  setScreen(screen, patch);
+  state.navDir = 'fwd';
+  render();
+}
+function goBack() {
+  var prev = state.navStack.pop();
+  if (!prev) { go('home'); return; }
+  setScreen(prev.screen, prev);
+  state.navDir = 'back';
+  render();
 }
 
 // ---- computed view values (mirrors the design's renderVals) --------------
@@ -239,7 +264,6 @@ function computeVals() {
   var st = state, S = store || { srs: {}, poles: {}, best: {} };
   var Dd = D();
   var scr = st.screen;
-  var dark = st.theme === 'dark';
   var levels = [
     { title: 'Débutant', sub: 'Je découvre les enveloppes' },
     { title: 'Intermédiaire', sub: 'Je connais les bases, je consolide' },
@@ -249,8 +273,6 @@ function computeVals() {
   var pctOf = function (p) { return polePct(p); };
 
   var v = {
-    theme: st.theme, themeIcon: dark ? '☀' : '☾',
-    themeLabel: dark ? 'Encre' : 'Papier',
     screenKey: scr + ':' + st.qi + ':' + (st.cat || '') + ':' + (st.fiche || ''),
     userName: userName,
     greeting: 'Bonsoir',
@@ -271,7 +293,7 @@ function computeVals() {
     isExamResult: scr === 'examResult', isSrs: scr === 'srs', isCourses: scr === 'courses',
     isFiche: scr === 'fiche', isProgress: scr === 'progress', isProfile: scr === 'profile',
     isLabo: scr === 'labo', isMental: scr === 'mental', isBuilder: scr === 'builder',
-    showTabs: ['home', 'browse', 'cat', 'srs', 'courses', 'fiche', 'progress', 'profile', 'examPick', 'labo', 'mental', 'builder'].indexOf(scr) >= 0,
+    showTabs: ['home', 'browse', 'cat', 'srs', 'courses', 'fiche', 'coursePole', 'progress', 'profile', 'examPick', 'labo', 'mental', 'builder'].indexOf(scr) >= 0,
     mentalBest: S.mentalBest || 0,
 
     onb0: st.onb === 0, onb1: st.onb === 1, onb2: st.onb === 2,
@@ -283,7 +305,7 @@ function computeVals() {
       { label: 'Jouer', k: 'home' }, { label: 'Réviser', k: 'srs' }, { label: 'Cours', k: 'courses' },
       { label: 'Stats', k: 'progress' }, { label: 'Profil', k: 'profile' }
     ].map(function (t) {
-      var on = scr === t.k || (t.k === 'home' && (scr === 'browse' || scr === 'cat' || scr === 'examPick' || scr === 'labo' || scr === 'mental' || scr === 'builder')) || (t.k === 'courses' && scr === 'fiche');
+      var on = scr === t.k || (t.k === 'home' && (scr === 'browse' || scr === 'cat' || scr === 'examPick' || scr === 'labo' || scr === 'mental' || scr === 'builder')) || (t.k === 'courses' && (scr === 'fiche' || scr === 'coursePole'));
       return { label: t.label, k: t.k, on: on, off: !on };
     })
   };
@@ -320,6 +342,15 @@ function computeVals() {
   v.fichesByPole = pNames.map(function (p) {
     return { label: p, fiches: v.fiches.filter(function (f) { return f.pole === p; }) };
   }).filter(function (g) { return g.fiches.length; });
+  var poleAccents = ['var(--acc)', 'var(--gold)', 'var(--acc2)', 'var(--warn)'];
+  v.coursePoles = v.fichesByPole.map(function (g, i) {
+    var avgPct = g.fiches.length ? pctOf(g.label) : 0;
+    return { label: g.label, count: g.fiches.length, accent: poleAccents[i % poleAccents.length], pct: avgPct };
+  });
+  v.isCoursePole = scr === 'coursePole';
+  v.coursePoleLabel = st.coursePoleSel || '';
+  var selGroup = v.fichesByPole.find(function (g) { return g.label === st.coursePoleSel; });
+  v.coursePoleFichesList = selGroup ? selGroup.fiches : [];
   var fi = Dd.THEORY ? Dd.THEORY[st.fiche] : null;
   v.ficheTitle = fi ? fi.title : '';
   v.ficheIcon = fi ? (fi.icon || '📘') : '📘';
@@ -497,21 +528,21 @@ function esc(s) {
 }
 
 function tplOption(o) {
-  var out = '';
-  if (o.pending) out += '<button data-action="answerQcm" data-i="' + o.i + '" class="hv-b" style="display:flex;gap:13px;align-items:flex-start;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;font:400 13px/1.55 \'Space Grotesk\',sans-serif;color:var(--ink);cursor:pointer;"><span style="font:400 15px Newsreader,serif;color:var(--acc);">' + o.letter + '</span><span>' + esc(o.text) + '</span></button>';
-  if (o.good) out += '<div style="display:flex;gap:13px;align-items:flex-start;border-radius:16px;padding:15px;font:400 13px/1.55 \'Space Grotesk\',sans-serif;color:var(--on);background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 12s linear infinite,kfPop .3s ease both;"><span style="font:400 15px Newsreader,serif;opacity:.75;">' + o.letter + '</span><span>' + esc(o.text) + '</span></div>';
-  if (o.bad) out += '<div style="display:flex;gap:13px;align-items:flex-start;border-radius:16px;padding:15px;font:400 13px/1.55 \'Space Grotesk\',sans-serif;color:var(--warn);border:1px solid var(--warn);"><span style="font:400 15px Newsreader,serif;">' + o.letter + '</span><span>' + esc(o.text) + '</span></div>';
-  if (o.mute) out += '<div style="display:flex;gap:13px;align-items:flex-start;border-radius:16px;padding:15px;font:400 13px/1.55 \'Space Grotesk\',sans-serif;color:var(--ink3);border:1px solid var(--line);"><span style="font:400 15px Newsreader,serif;">' + o.letter + '</span><span>' + esc(o.text) + '</span></div>';
-  if (o.sel) out += '<div style="display:flex;gap:13px;align-items:flex-start;border-radius:16px;padding:15px;font:400 13px/1.55 \'Space Grotesk\',sans-serif;color:var(--ink);border:1px solid var(--ink3);background:var(--panel2);"><span style="font:400 15px Newsreader,serif;color:var(--ink3);">' + o.letter + '</span><span>' + esc(o.text) + '</span></div>';
+  var out = '', delay = (o.i * 0.05).toFixed(2) + 's';
+  if (o.pending) out += '<button data-action="answerQcm" data-i="' + o.i + '" class="hv-b stagger" style="animation-delay:' + delay + ';display:flex;gap:13px;align-items:flex-start;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;font:400 13px/1.55 \'Space Grotesk\',sans-serif;color:var(--ink);cursor:pointer;"><span style="font:400 15px Newsreader,serif;color:var(--acc);">' + o.letter + '</span><span>' + esc(o.text) + '</span></button>';
+  if (o.good) out += '<div class="stagger" style="animation-delay:' + delay + ';display:flex;gap:13px;align-items:flex-start;border-radius:16px;padding:15px;font:400 13px/1.55 \'Space Grotesk\',sans-serif;color:var(--on);background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 12s linear infinite,kfPop .3s ease both,kfPulseRing 1s ease-out .3s both;"><span style="font:400 15px Newsreader,serif;opacity:.75;">' + o.letter + '</span><span>' + esc(o.text) + '</span></div>';
+  if (o.bad) out += '<div class="shake" style="display:flex;gap:13px;align-items:flex-start;border-radius:16px;padding:15px;font:400 13px/1.55 \'Space Grotesk\',sans-serif;color:var(--warn);border:1px solid var(--warn);"><span style="font:400 15px Newsreader,serif;">' + o.letter + '</span><span>' + esc(o.text) + '</span></div>';
+  if (o.mute) out += '<div class="stagger" style="animation-delay:' + delay + ';display:flex;gap:13px;align-items:flex-start;border-radius:16px;padding:15px;font:400 13px/1.55 \'Space Grotesk\',sans-serif;color:var(--ink3);border:1px solid var(--line);"><span style="font:400 15px Newsreader,serif;">' + o.letter + '</span><span>' + esc(o.text) + '</span></div>';
+  if (o.sel) out += '<div class="shake" style="display:flex;gap:13px;align-items:flex-start;border-radius:16px;padding:15px;font:400 13px/1.55 \'Space Grotesk\',sans-serif;color:var(--ink);border:1px solid var(--ink3);background:var(--panel2);"><span style="font:400 15px Newsreader,serif;color:var(--ink3);">' + o.letter + '</span><span>' + esc(o.text) + '</span></div>';
   return out;
 }
 function tplVf(b) {
-  var out = '';
-  if (b.pending) out += '<button data-action="answerVf" data-i="' + b.i + '" class="hv-b" style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:26px 0;font:400 25px Newsreader,serif;color:var(--ink);cursor:pointer;">' + esc(b.label) + '</button>';
-  if (b.good) out += '<div style="flex:1;border-radius:22px;padding:26px 0;text-align:center;font:400 25px Newsreader,serif;color:var(--on);background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 12s linear infinite;">' + esc(b.label) + '</div>';
-  if (b.bad) out += '<div style="flex:1;border-radius:22px;padding:26px 0;text-align:center;font:400 25px Newsreader,serif;color:var(--warn);border:1px solid var(--warn);">' + esc(b.label) + '</div>';
+  var out = '', delay = (b.i * 0.06).toFixed(2) + 's';
+  if (b.pending) out += '<button data-action="answerVf" data-i="' + b.i + '" class="hv-b stagger" style="animation-delay:' + delay + ';flex:1;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:26px 0;font:400 25px Newsreader,serif;color:var(--ink);cursor:pointer;">' + esc(b.label) + '</button>';
+  if (b.good) out += '<div style="flex:1;border-radius:22px;padding:26px 0;text-align:center;font:400 25px Newsreader,serif;color:var(--on);background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 12s linear infinite,kfPop .3s ease both;">' + esc(b.label) + '</div>';
+  if (b.bad) out += '<div class="shake" style="flex:1;border-radius:22px;padding:26px 0;text-align:center;font:400 25px Newsreader,serif;color:var(--warn);border:1px solid var(--warn);">' + esc(b.label) + '</div>';
   if (b.mute) out += '<div style="flex:1;border-radius:22px;padding:26px 0;text-align:center;font:400 25px Newsreader,serif;color:var(--dim);border:1px solid var(--line);">' + esc(b.label) + '</div>';
-  if (b.sel) out += '<div style="flex:1;border-radius:22px;padding:26px 0;text-align:center;font:400 25px Newsreader,serif;color:var(--ink);border:1px solid var(--ink3);background:var(--panel2);">' + esc(b.label) + '</div>';
+  if (b.sel) out += '<div class="shake" style="flex:1;border-radius:22px;padding:26px 0;text-align:center;font:400 25px Newsreader,serif;color:var(--ink);border:1px solid var(--ink3);background:var(--panel2);">' + esc(b.label) + '</div>';
   return out;
 }
 function tplCalc(v) {
@@ -624,8 +655,7 @@ function tplHome(v) {
     '<div style="padding:58px 24px 0;display:flex;justify-content:space-between;align-items:center;">' +
     '<div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.2em;color:var(--ink3);">CGP</div>' +
     '<div style="display:flex;align-items:center;gap:14px;">' +
-    '<div style="display:flex;align-items:center;gap:7px;font:500 10.5px \'JetBrains Mono\',monospace;color:var(--acc);"><span style="width:7px;height:7px;border-radius:50%;background:var(--acc);animation:kfBreathe 2.6s ease-in-out infinite;"></span>JOUR ' + v.streak + '</div>' +
-    '<button data-action="toggleTheme" style="background:none;border:1px solid var(--line);border-radius:999px;width:28px;height:28px;color:var(--ink3);font-size:12px;cursor:pointer;">' + v.themeIcon + '</button></div></div>' +
+    '<div style="display:flex;align-items:center;gap:7px;font:500 10.5px \'JetBrains Mono\',monospace;color:var(--acc);"><span style="width:7px;height:7px;border-radius:50%;background:var(--acc);animation:kfBreathe 2.6s ease-in-out infinite;"></span>JOUR ' + v.streak + '</div></div></div>' +
     '<div style="padding:24px 24px 0;"><div style="font:300 42px/1.02 Newsreader,serif;letter-spacing:-.025em;">' + esc(v.greeting) + '<br><span style="font-style:italic;background:linear-gradient(100deg,var(--acc),var(--gold),var(--acc2),var(--acc));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:kfSweep 9s linear infinite;">' + esc(v.userName) + '</span></div></div>' +
     '<div style="margin:30px 24px 0;border-radius:24px;padding:22px;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;gap:18px;">' +
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;"><div>' +
@@ -653,20 +683,21 @@ function tplHome(v) {
 }
 
 function tplBrowse(v) {
-  var poles = v.poles.map(function (p) {
+  var poles = v.poles.map(function (p, i) {
     var cats = p.cats.map(function (c) {
       return '<button data-action="catGo" data-cat="' + esc(c.id) + '" class="hv-c" style="width:100%;background:none;border:none;padding:12px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;font:400 12.5px/1.4 \'Space Grotesk\',sans-serif;">' + esc(c.label) + '</span><span style="font:500 10px \'JetBrains Mono\',monospace;color:var(--dim);">' + esc(c.badge) + '</span></button>';
     }).join('');
-    return '<div style="background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;">' +
-      '<button data-action="poleToggle" data-pole="' + esc(p.label) + '" style="width:100%;background:none;border:none;padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;">' +
+    return '<div class="stagger" style="animation-delay:' + (i * 0.05).toFixed(2) + 's;background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;">' +
+      '<button data-action="poleToggle" data-pole="' + esc(p.label) + '" class="hv-c" style="width:100%;background:none;border:none;padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;">' +
       '<span style="flex:1;font:500 13.5px \'Space Grotesk\',sans-serif;">' + esc(p.label) + '</span>' +
-      '<span style="width:52px;height:4px;border-radius:3px;background:var(--line);overflow:hidden;"><span style="display:block;width:' + p.pct + '%;height:4px;background:linear-gradient(90deg,var(--acc2),var(--acc));"></span></span>' +
-      '<span style="font:500 10.5px \'JetBrains Mono\',monospace;color:var(--ink3);width:22px;text-align:right;">' + p.pct + '</span></button>' +
-      (p.open ? '<div style="border-top:1px solid var(--line);padding:6px 0;">' + cats + '</div>' : '') + '</div>';
+      '<span style="width:52px;height:4px;border-radius:3px;background:var(--line);overflow:hidden;"><span style="display:block;width:' + p.pct + '%;height:4px;background:linear-gradient(90deg,var(--acc2),var(--acc));transition:width .5s cubic-bezier(.16,1,.3,1);"></span></span>' +
+      '<span style="font:500 10.5px \'JetBrains Mono\',monospace;color:var(--ink3);width:22px;text-align:right;">' + p.pct + '</span>' +
+      '<span style="font:400 13px Newsreader,serif;color:var(--ink3);transition:transform .25s;transform:rotate(' + (p.open ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
+      (p.open ? '<div class="stagger" style="border-top:1px solid var(--line);padding:6px 0;">' + cats + '</div>' : '') + '</div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:58px 24px 0;"><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.2em;color:var(--ink3);">BANQUE</div>' +
-    '<div style="font:300 34px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:14px;">Sept <span style="font-style:italic;">pôles</span></div></div>' +
+    '<div style="font:300 34px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:14px;">' + v.poles.length + ' <span style="font-style:italic;">pôles</span></div></div>' +
     '<div style="margin:22px 24px 0;display:flex;flex-direction:column;gap:10px;">' + poles + '</div>' +
     '<div style="height:26px;"></div></div>';
 }
@@ -676,7 +707,7 @@ function tplCat(v) {
     return '<button data-action="subGo" data-sub="' + esc(s.id) + '"' + (s.theory ? ' data-theory="' + esc(s.theory) + '"' : '') + ' class="hv-a" style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;font:500 13px/1.4 \'Space Grotesk\',sans-serif;">' + esc(s.label) + '</span><span style="font:500 10px \'JetBrains Mono\',monospace;color:var(--dim);letter-spacing:.08em;">' + esc(s.badge) + '</span></button>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;"><button data-action="goBrowse" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; ' + esc(v.catPole) + '</button>' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; ' + esc(v.catPole) + '</button>' +
     '<div style="font:300 32px/1.14 Newsreader,serif;letter-spacing:-.025em;margin-top:16px;">' + esc(v.catLabel) + '</div></div>' +
     '<div style="margin:20px 24px 0;display:flex;flex-direction:column;gap:9px;">' + subs + '</div>' +
     '<div style="height:26px;"></div></div>';
@@ -754,7 +785,7 @@ function tplBuilder(v) {
     return '<button data-action="buildType" data-t="' + t.id + '" class="hv-c" style="background:' + (t.on ? 'var(--ink)' : 'var(--panel)') + ';color:' + (t.on ? 'var(--bg)' : 'var(--ink)') + ';border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:500 12px \'Space Grotesk\',sans-serif;cursor:pointer;text-align:left;">' + (t.on ? '✓ ' : '') + esc(t.label) + ' <span style="opacity:.6;font-family:\'JetBrains Mono\',monospace;font-size:10px;">(' + t.count + ')</span></button>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;"><button data-action="goHome" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Accueil</button>' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Retour</button>' +
     '<div style="font:300 32px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:16px;">Créer <span style="font-style:italic;">ma session</span></div>' +
     '<div style="font:400 12.5px/1.6 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:10px;">Choisis tes domaines, tes formats, ton niveau et le nombre de questions. On pioche au hasard dans toute la banque.</div></div>' +
     '<div style="margin:22px 24px 0;">' +
@@ -772,14 +803,15 @@ function tplBuilder(v) {
 }
 
 function tplExamPick(v) {
-  var lvs = v.examLevels.map(function (e) {
-    return '<button data-action="examGo" data-key="' + esc(e.key) + '" data-label="' + esc(e.label) + '" class="hv-a" style="background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;">' +
+  var lvs = v.examLevels.map(function (e, ei) {
+    return '<button data-action="examGo" data-key="' + esc(e.key) + '" data-label="' + esc(e.label) + '" class="hv-a stagger" style="animation-delay:' + (ei * 0.06).toFixed(2) + 's;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;">' +
       '<span style="font:300 30px/1 Newsreader,serif;color:var(--acc);">' + e.n + '</span>' +
       '<span style="flex:1;"><span style="display:block;font:500 14px \'Space Grotesk\',sans-serif;">' + esc(e.label) + '</span><span style="display:block;font:400 11.5px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(e.sub) + '</span></span>' +
       '<span style="font:500 10px \'JetBrains Mono\',monospace;color:var(--ink3);">' + esc(e.best) + '</span></button>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;padding:58px 24px 0;">' +
-    '<div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.2em;color:var(--ink3);">EXAMEN BLANC</div>' +
+    '<button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Retour</button>' +
+    '<div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.2em;color:var(--ink3);margin-top:16px;">EXAMEN BLANC</div>' +
     '<div style="font:300 34px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:14px;">Trois <span style="font-style:italic;">niveaux</span></div>' +
     '<div style="font:400 13px/1.7 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:12px;">40 questions tirées au sort, sans correction avant la fin. Seuil de réussite : 60 %.</div>' +
     '<div style="margin-top:24px;display:flex;flex-direction:column;gap:10px;">' + lvs + '</div>' +
@@ -832,19 +864,28 @@ function tplFicheCard(f) {
 }
 
 function tplCourses(v) {
-  var groups = v.fichesByPole.map(function (g, gi) {
-    var cards = g.fiches.map(tplFicheCard).join('');
-    return '<div style="margin-top:' + (gi === 0 ? '4' : '26') + 'px;">' +
-      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">' +
-      '<span style="font:500 11px \'Space Grotesk\',sans-serif;color:var(--ink2);">' + esc(g.label) + '</span>' +
-      '<span style="flex:1;height:1px;background:var(--line);"></span>' +
-      '<span style="font:500 9.5px \'JetBrains Mono\',monospace;color:var(--dim);">' + g.fiches.length + '</span></div>' +
-      '<div style="display:flex;flex-direction:column;gap:9px;">' + cards + '</div></div>';
+  var cards = v.coursePoles.map(function (p, i) {
+    return '<button data-action="coursePoleGo" data-pole="' + esc(p.label) + '" class="hv-a stagger" style="animation-delay:' + (i * 0.04).toFixed(2) + 's;background:var(--panel);border:1px solid var(--line);border-left:3px solid ' + p.accent + ';border-radius:16px;padding:17px;text-align:left;cursor:pointer;color:var(--ink);display:flex;flex-direction:column;gap:14px;box-sizing:border-box;">' +
+      '<div style="font:300 15px/1.3 Newsreader,serif;">' + esc(p.label) + '</div>' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;">' +
+      '<span style="font:500 9.5px \'JetBrains Mono\',monospace;letter-spacing:.06em;color:var(--ink3);">' + p.count + ' FICHE' + (p.count > 1 ? 'S' : '') + '</span>' +
+      '<span style="font:400 18px Newsreader,serif;color:' + p.accent + ';">&#8250;</span></div></button>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:58px 24px 0;"><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.2em;color:var(--ink3);">FICHES</div>' +
-    '<div style="font:300 34px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:14px;">' + v.ficheCount + ' <span style="font-style:italic;">cours</span></div></div>' +
-    '<div style="margin:22px 24px 0;">' + groups + '</div>' +
+    '<div style="font:300 34px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:14px;">' + v.ficheCount + ' <span style="font-style:italic;">cours</span>, ' + v.coursePoles.length + ' pôles</div></div>' +
+    '<div style="margin:22px 24px 0;display:grid;grid-template-columns:1fr 1fr;gap:12px;">' + cards + '</div>' +
+    '<div style="height:26px;"></div></div>';
+}
+
+function tplCoursePole(v) {
+  var cards = v.coursePoleFichesList.map(function (f, i) {
+    return '<div class="stagger" style="animation-delay:' + (i * 0.04).toFixed(2) + 's;">' + tplFicheCard(f) + '</div>';
+  }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Fiches</button>' +
+    '<div style="font:300 32px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:16px;">' + esc(v.coursePoleLabel) + '</div></div>' +
+    '<div style="margin:20px 24px 0;display:flex;flex-direction:column;gap:9px;">' + cards + '</div>' +
     '<div style="height:26px;"></div></div>';
 }
 
@@ -863,10 +904,10 @@ function tplFiche(v) {
     var body = s.paras.map(tplPara).join('') + (s.svg ? '<div style="margin-top:14px;border-radius:14px;overflow:hidden;background:#faf8f3;padding:8px;">' + s.svg + '</div>' : '');
     return '<div class="thsec' + (i === 0 ? ' open' : '') + '" style="margin-top:12px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--panel);animation:kfIn .4s cubic-bezier(.16,1,.3,1) both;animation-delay:' + (i * 0.05).toFixed(2) + 's;">' +
       '<button data-fold-head style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;color:var(--acc);font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.12em;text-align:left;"><span>' + esc(s.h) + '</span><span class="fold-arr" style="flex-shrink:0;transition:transform .25s;transform:rotate(' + (i === 0 ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
-      '<div class="fold-body" style="display:' + (i === 0 ? 'block' : 'none') + ';padding:0 16px 16px;">' + body + '</div></div>';
+      '<div class="fold-body' + (i === 0 ? '' : ' fold-closed') + '"><div style="padding:0 16px 16px;">' + body + '</div></div></div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:56px 26px 0;"><button data-action="goCourses" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Fiches</button>' +
+    '<div style="padding:56px 26px 0;"><button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Retour</button>' +
     '<div style="display:flex;align-items:center;gap:14px;margin-top:18px;">' +
     '<span style="flex-shrink:0;width:52px;height:52px;border-radius:16px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:23px;">' + esc(v.ficheIcon) + '</span>' +
     '<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;align-items:center;font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);"><div>' + esc(v.ficheIdx) + '</div><div style="color:var(--acc);">' + v.ficheMin + ' MIN</div></div>' +
@@ -909,10 +950,10 @@ function tplProfile(v) {
     '<div style="font:300 34px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:14px;">' + esc(v.userName) + '</div>' +
     '<div style="font:400 12.5px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:8px;">Niveau ' + esc(v.levelLabel) + ' · ' + v.xp + ' XP · série de ' + v.streak + ' jours</div></div>' +
     '<div style="margin:24px 24px 0;background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;">' +
-    '<button data-action="toggleTheme" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;font:500 13px \'Space Grotesk\',sans-serif;">Apparence</span><span style="font:500 11px \'JetBrains Mono\',monospace;color:var(--acc);">' + esc(v.themeLabel) + '</span></button>' +
     '<button data-action="toggleNotif" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;"><span style="display:block;font:500 13px \'Space Grotesk\',sans-serif;">Rappel quotidien</span><span style="display:block;font:400 11px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(v.notifSub) + '</span></span>' + notifSwitch + '</button>' +
     '<button data-action="goExamPick" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;font:500 13px \'Space Grotesk\',sans-serif;">Examens blancs</span><span style="font:400 15px Newsreader,serif;color:var(--acc);">&#8250;</span></button>' +
-    '<button data-action="restartOnb" style="width:100%;background:none;border:none;padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;font:500 13px \'Space Grotesk\',sans-serif;">Refaire le diagnostic</span><span style="font:400 15px Newsreader,serif;color:var(--acc);">&#8250;</span></button></div>' +
+    '<button data-action="restartOnb" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;font:500 13px \'Space Grotesk\',sans-serif;">Refaire le diagnostic</span><span style="font:400 15px Newsreader,serif;color:var(--acc);">&#8250;</span></button>' +
+    '<button data-action="resetProgress" style="width:100%;background:none;border:none;padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--warn);text-align:left;"><span style="flex:1;font:500 13px \'Space Grotesk\',sans-serif;">Réinitialiser ma progression</span></button></div>' +
     (v.notifOn ? '<div style="margin:16px 24px 0;background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;gap:12px;align-items:flex-start;">' +
       '<div style="width:9px;height:9px;border-radius:50%;background:var(--acc);margin-top:5px;animation:kfBreathe 2.6s ease-in-out infinite;"></div>' +
       '<div><div style="font:500 12.5px \'Space Grotesk\',sans-serif;">Dossier CGP · 19:30</div><div style="font:400 12px/1.6 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:4px;">' + v.dueCount + ' questions arrivent à échéance. Trois minutes suffisent.</div></div></div>' : '') +
@@ -1058,7 +1099,7 @@ function tplLabo() {
     '<div id="pxBreak" style="margin-top:6px;"></div>' + laboNote('pxNote');
 
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;"><button data-action="goHome" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Accueil</button>' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Retour</button>' +
     '<div style="font:300 34px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:16px;">Labo <span style="font-style:italic;">interactif</span></div>' +
     '<div style="font:400 13px/1.6 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:10px;">5 simulateurs, 5 usages distincts. Chiffres élevés supportés — adapte-les à tes clients.</div></div>' +
     '<div style="margin:0 24px;">' +
@@ -1245,7 +1286,7 @@ function mentalGen() { return _pick(MEN_GENS)(); }
 
 function tplMental(v) {
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;"><button data-action="goHome" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Accueil</button>' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Retour</button>' +
     '<div style="font:300 34px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:16px;text-align:center;">Calcul <span style="font-style:italic;">mental</span></div>' +
     '<div style="font:400 13px/1.6 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:10px;text-align:center;">' + mentalState.total + ' questions, ' + MEN_TIME + ' s chacune. À chaque réponse, une astuce de calcul — et un récapitulatif complet à la fin.</div></div>' +
     '<div id="menStage" style="margin:22px 24px 0;"></div><div style="height:32px;"></div></div>';
@@ -1365,7 +1406,7 @@ function ensureSkeleton() {
 function render() {
   if (!appEl) ensureSkeleton();
   var v = computeVals();
-  appEl.setAttribute('data-theme', v.theme);
+  appEl.setAttribute('data-theme', 'dark');
   confettiEl.innerHTML = v.isConfetti ? confettiHtml() : '';
   tabsEl.innerHTML = v.showTabs ? tplTabs(v) : '';
 
@@ -1380,6 +1421,7 @@ function render() {
   else if (v.isExamResult) html = tplExamResult(v);
   else if (v.isSrs) html = tplSrs(v);
   else if (v.isCourses) html = tplCourses(v);
+  else if (v.isCoursePole) html = tplCoursePole(v);
   else if (v.isFiche) html = tplFiche(v);
   else if (v.isProgress) html = tplProgress(v);
   else if (v.isProfile) html = tplProfile(v);
@@ -1406,7 +1448,7 @@ function render() {
       hd.addEventListener('click', function () {
         var sec = hd.parentElement, body = sec.querySelector('.fold-body'), arr = hd.querySelector('.fold-arr');
         var open = sec.classList.toggle('open');
-        body.style.display = open ? 'block' : 'none';
+        body.classList.toggle('fold-closed', !open);
         arr.style.transform = 'rotate(' + (open ? '90deg' : '0deg') + ')';
       });
     });
@@ -1414,9 +1456,11 @@ function render() {
 
   if (v.screenKey !== lastScreenKey) {
     lastScreenKey = v.screenKey;
-    screenEl.classList.remove('kfin');
+    var animClass = state.navDir === 'fwd' ? 'kfin-fwd' : state.navDir === 'back' ? 'kfin-back' : 'kfin';
+    state.navDir = null;
+    screenEl.classList.remove('kfin', 'kfin-fwd', 'kfin-back');
     void screenEl.offsetWidth;
-    screenEl.classList.add('kfin');
+    screenEl.classList.add(animClass);
   }
 }
 
@@ -1426,7 +1470,12 @@ function onAppClick(e) {
   if (!btn) return;
   var d = btn.dataset;
   switch (d.action) {
-    case 'toggleTheme': state.theme = state.theme === 'dark' ? 'light' : 'dark'; render(); break;
+    case 'resetProgress':
+      if (confirm('Réinitialiser toute ta progression ? Cette action est irréversible.')) {
+        try { localStorage.removeItem(KEY); } catch (e) {}
+        location.reload();
+      }
+      break;
     case 'toggleNotif': state.notif = !state.notif; render(); break;
     case 'goTab': go(d.k); break;
     case 'restartOnb': state.screen = 'onb'; state.onb = 0; render(); break;
@@ -1436,13 +1485,15 @@ function onAppClick(e) {
     case 'startDaily': startDailyQuiz(); break;
     case 'startSrs': startSrsQuiz(); break;
     case 'goHome': go('home'); break;
-    case 'goBrowse': go('browse'); break;
+    case 'goBack': goBack(); break;
+    case 'goBrowse': goChild('browse'); break;
     case 'goSrs': go('srs'); break;
     case 'goCourses': go('courses'); break;
-    case 'goExamPick': go('examPick'); break;
-    case 'goLabo': go('labo'); break;
-    case 'goMental': go('mental'); break;
-    case 'goBuilder': go('builder'); break;
+    case 'goExamPick': goChild('examPick'); break;
+    case 'goLabo': goChild('labo'); break;
+    case 'goMental': goChild('mental'); break;
+    case 'goBuilder': goChild('builder'); break;
+    case 'coursePoleGo': goChild('coursePole', { coursePoleSel: d.pole }); break;
     case 'buildLevel': state.buildLevel = d.lv; render(); break;
     case 'buildDom': {
       var domV = d.dom;
@@ -1469,12 +1520,12 @@ function onAppClick(e) {
       state.screen = 'browse';
       render();
       break;
-    case 'catGo': state.screen = 'cat'; state.cat = d.cat; render(); break;
+    case 'catGo': goChild('cat', { cat: d.cat }); break;
     case 'subGo':
-      if (d.theory) { state.screen = 'fiche'; state.fiche = d.theory; render(); }
+      if (d.theory) { goChild('fiche', { fiche: d.theory }); }
       else startCat(d.sub, 12);
       break;
-    case 'ficheGo': state.screen = 'fiche'; state.fiche = d.fiche; render(); break;
+    case 'ficheGo': goChild('fiche', { fiche: d.fiche }); break;
     case 'startFicheQuiz': startFicheQ(state.fiche); break;
     case 'answerQcm': answerQcm(+d.i); break;
     case 'answerVf': answerVf(+d.i); break;
@@ -1509,7 +1560,7 @@ function onAppClick(e) {
     case 'selfMid': grade(true, nextQ); break;
     case 'selfKo': grade(false, nextQ); break;
     case 'next': nextQ(); break;
-    case 'quitQuiz': go(state.quiz && state.quiz.meta.kind === 'exam' ? 'examPick' : 'home'); break;
+    case 'quitQuiz': goBack(); break;
     case 'doneAgain': {
       var meta = state.quiz ? state.quiz.meta : {};
       if (meta.kind === 'diag') go('progress'); else startDailyQuiz();
@@ -1522,7 +1573,7 @@ function onAppClick(e) {
       break;
     }
     case 'examGo': startExam(d.key, d.label); break;
-    case 'weakGo': state.screen = 'browse'; state.openPole = d.pole; render(); break;
+    case 'weakGo': goChild('browse', { openPole: d.pole }); break;
   }
 }
 
