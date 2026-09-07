@@ -49,6 +49,11 @@ input[type="number"]:disabled{opacity:.6}
 .lab-seg{background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:10px;font:500 11.5px 'Space Grotesk',sans-serif;color:var(--ink2);cursor:pointer}
 .lab-seg.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+@keyframes v16draw{to{stroke-dashoffset:0}}
+@keyframes v16bar{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+.v16svg{width:100%;max-width:320px;height:auto;display:block;margin:4px auto}
+.v16draw{stroke-dasharray:360;stroke-dashoffset:360;animation:v16draw 1.6s ease forwards .2s}
+.v16bar-anim{transform-box:fill-box;transform-origin:bottom;animation:v16bar .7s ease both}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.001s !important;animation-iteration-count:1 !important}}
 </style>
 </head>

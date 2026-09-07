@@ -10,7 +10,9 @@ var today = function () { return Math.floor(Date.now() / 86400000); };
 var state = {
   ready: false, theme: 'dark', screen: 'home', openPole: null, cat: null,
   quiz: null, qi: 0, ans: null, pick: null, calc: '', texte: '', revealed: false, results: [],
-  fiche: null, level: 1, onb: 0, confetti: false, notif: true
+  fiche: null, level: 1, onb: 0, confetti: false, notif: true,
+  orderKey: null, orderCur: null,
+  buildDom: ['all'], buildTypes: ['qcm', 'vf'], buildLevel: 'all', buildN: 15
 };
 var store = null;
 var confettiTimer = null;
@@ -37,6 +39,43 @@ function allCats() {
   return out;
 }
 function quizCats() { return allCats().filter(function (s) { return !s.theory && bank(s.id).length; }); }
+var _sub2cat = null;
+function sub2cat() {
+  if (_sub2cat) return _sub2cat;
+  _sub2cat = {};
+  D().CATS.forEach(function (c) { (c.sub || []).forEach(function (s) { _sub2cat[s.id] = c.id; }); });
+  return _sub2cat;
+}
+function qIsExpert(q, d) {
+  d = d || '';
+  if (/(_expert|_appro|_reseau|pointilleux|_v8|holding|150bter|dutreuil|lombard|struct_|lecture_contrat|^mc_|mccorp|lux_|^ing_|^soc_|mat_regimes|scpi_)/.test(d)) return true;
+  if (['spot', 'scenario', 'doc', 'open'].indexOf(q.type) >= 0) return true;
+  return false;
+}
+var BUILD_TYPES = [
+  ['qcm', 'QCM'], ['vf', 'Vrai / Faux'], ['calc', 'Calcul'], ['spot', 'Repère l’erreur'],
+  ['order', 'Priorisation'], ['scenario', 'Scénario'], ['doc', 'Lecture de document'],
+  ['open', 'Question ouverte'], ['texte', 'Texte libre'], ['memviz', 'Mémoire visuelle']
+];
+function buildPass(q, d) {
+  if (state.buildTypes.indexOf(q.type) < 0) return false;
+  var cat = sub2cat()[d] || d;
+  if (state.buildDom.indexOf('all') < 0 && state.buildDom.indexOf(cat) < 0) return false;
+  if (state.buildLevel === 'facile' && qIsExpert(q, d)) return false;
+  if (state.buildLevel === 'expert' && !qIsExpert(q, d)) return false;
+  return true;
+}
+function buildPool() {
+  var pool = [];
+  Object.keys(D().BANK).forEach(function (d) {
+    (bank(d) || []).forEach(function (q, i) { if (buildPass(q, d)) pool.push(d + '#' + i); });
+  });
+  return pool;
+}
+function startBuilder() {
+  var pool = buildPool().sort(function () { return Math.random() - 0.5; }).slice(0, state.buildN);
+  startList(pool, { kind: 'custom', title: 'Session personnalisée' });
+}
 function poleNames() {
   var seen = {}, out = [];
   D().CATS.forEach(function (c) { if (c.pole && !seen[c.pole]) { seen[c.pole] = true; out.push(c.pole); } });
@@ -87,6 +126,7 @@ function startList(keys, meta) {
   state.quiz = { items: items, meta: meta };
   state.qi = 0; state.ans = null; state.pick = null;
   state.calc = ''; state.texte = ''; state.revealed = false; state.results = [];
+  state.orderKey = null; state.orderCur = null;
   state.screen = 'quiz'; state.confetti = false;
   render();
 }
@@ -230,8 +270,8 @@ function computeVals() {
     isQuiz: scr === 'quiz', isDone: scr === 'done', isExamPick: scr === 'examPick',
     isExamResult: scr === 'examResult', isSrs: scr === 'srs', isCourses: scr === 'courses',
     isFiche: scr === 'fiche', isProgress: scr === 'progress', isProfile: scr === 'profile',
-    isLabo: scr === 'labo', isMental: scr === 'mental',
-    showTabs: ['home', 'browse', 'cat', 'srs', 'courses', 'fiche', 'progress', 'profile', 'examPick', 'labo', 'mental'].indexOf(scr) >= 0,
+    isLabo: scr === 'labo', isMental: scr === 'mental', isBuilder: scr === 'builder',
+    showTabs: ['home', 'browse', 'cat', 'srs', 'courses', 'fiche', 'progress', 'profile', 'examPick', 'labo', 'mental', 'builder'].indexOf(scr) >= 0,
     mentalBest: S.mentalBest || 0,
 
     onb0: st.onb === 0, onb1: st.onb === 1, onb2: st.onb === 2,
@@ -243,7 +283,7 @@ function computeVals() {
       { label: 'Jouer', k: 'home' }, { label: 'Réviser', k: 'srs' }, { label: 'Cours', k: 'courses' },
       { label: 'Stats', k: 'progress' }, { label: 'Profil', k: 'profile' }
     ].map(function (t) {
-      var on = scr === t.k || (t.k === 'home' && (scr === 'browse' || scr === 'cat' || scr === 'examPick' || scr === 'labo' || scr === 'mental')) || (t.k === 'courses' && scr === 'fiche');
+      var on = scr === t.k || (t.k === 'home' && (scr === 'browse' || scr === 'cat' || scr === 'examPick' || scr === 'labo' || scr === 'mental' || scr === 'builder')) || (t.k === 'courses' && scr === 'fiche');
       return { label: t.label, k: t.k, on: on, off: !on };
     })
   };
@@ -286,7 +326,14 @@ function computeVals() {
   v.ficheSource = fi ? (fi.source || '') : '';
   v.ficheIdx = fi ? 'FICHE ' + (tKeys.indexOf(st.fiche) + 1) + ' / ' + tKeys.length : '';
   v.ficheMin = fi ? Math.max(2, Math.round((fi.sections || []).length * 1.2)) : 0;
-  v.ficheSections = fi ? (fi.sections || []).map(function (s) { return { h: (s.h || '').toUpperCase(), body: s.body }; }) : [];
+  var calloutRe = /^(EXEMPLE|À RETENIR|ATTENTION|NUANCE DE CONSEIL|BON À SAVOIR|POINT DE VIGILANCE|À NE PAS DIRE AU CLIENT)\s*:?\s*/i;
+  v.ficheSections = fi ? (fi.sections || []).map(function (s) {
+    var paras = (s.body || '').split(/\n\n+/).map(function (p) {
+      var m = p.match(calloutRe);
+      return m ? { callout: true, label: m[1].toUpperCase(), text: p.slice(m[0].length) } : { callout: false, text: p };
+    });
+    return { h: (s.h || '').toUpperCase(), paras: paras, svg: s.svg || '' };
+  }) : [];
 
   var exLabels = [
     { k: 'facile', label: 'Niveau 1 · Fondamentaux', sub: 'Les réflexes de base' },
@@ -296,6 +343,26 @@ function computeVals() {
   v.examLevels = exLabels.map(function (e, i) {
     return { n: i + 1, key: e.k, label: e.label, sub: e.sub, best: (S.best && S.best[e.k]) ? 'RECORD ' + S.best[e.k] + '%' : '—' };
   });
+
+  if (st.ready) {
+    var typeCounts = {};
+    BUILD_TYPES.forEach(function (t) { typeCounts[t[0]] = 0; });
+    Object.values(Dd.BANK).forEach(function (arr) { (arr || []).forEach(function (q) { if (typeCounts[q.type] !== undefined) typeCounts[q.type]++; }); });
+    v.buildLevels = [['all', 'Tous'], ['facile', 'Facile'], ['expert', 'Expert ultime']].map(function (l) {
+      return { key: l[0], label: l[1], on: st.buildLevel === l[0] };
+    });
+    v.buildDoms = [{ id: 'all', label: 'Tous les domaines', on: st.buildDom.indexOf('all') >= 0 }].concat(
+      Dd.CATS.map(function (c) { return { id: c.id, label: c.label, on: st.buildDom.indexOf(c.id) >= 0 }; })
+    );
+    v.buildTypeOpts = BUILD_TYPES.map(function (t) {
+      return { id: t[0], label: t[1], count: typeCounts[t[0]] || 0, on: st.buildTypes.indexOf(t[0]) >= 0 };
+    });
+    var avail = buildPool().length;
+    v.buildMaxN = Math.max(1, Math.min(40, avail || 1));
+    if (st.buildN > v.buildMaxN) st.buildN = v.buildMaxN;
+    v.buildN = st.buildN;
+    v.buildAvail = avail;
+  }
 
   var it = cur();
   if (it) {
@@ -307,19 +374,26 @@ function computeVals() {
     v.qCat = (it.catLabel || '').toUpperCase();
     v.qText = q.q || q.titre || '';
     v.qUnit = q.unit || '';
-    v.qExplain = q.explain || '';
+    v.qExplain = q.explain || q.modele || '';
     v.qModele = q.modele || '';
     var examMode0 = st.quiz.meta.kind === 'exam';
-    var graded = done && !(q.type === 'texte' && ans === 'reveal');
+    var graded = done && !((q.type === 'texte' || q.type === 'open') && ans === 'reveal');
     v.answered = graded && !examMode0; v.wasOk = ans === 'ok'; v.wasKo = ans === 'ko';
     v.examAnswered = graded && examMode0;
     v.koNote = st.quiz.meta.kind === 'exam' ? 'NOTÉ' : 'REVOIR DEMAIN';
     var e = S.srs[it.key];
     v.nextIn = e ? IV[e.b] : 1;
-    var tl = { qcm: 'QCM', vf: 'VRAI / FAUX', calc: 'CALCUL', texte: 'RÉDACTION', memviz: 'MÉMORISATION' };
+    var tl = {
+      qcm: 'QCM', vf: 'VRAI / FAUX', calc: 'CALCUL', texte: 'RÉDACTION', memviz: 'MÉMORISATION',
+      scenario: 'SCÉNARIO', spot: 'REPÈRE L’ERREUR', doc: 'DOCUMENT', order: 'PRIORISATION', open: 'QUESTION OUVERTE'
+    };
     v.qTypeLabel = tl[q.type] || 'QUESTION';
     v.isQcm = q.type === 'qcm'; v.isVf = q.type === 'vf'; v.isCalc = q.type === 'calc';
     v.isTexte = q.type === 'texte'; v.isMemviz = q.type === 'memviz';
+    v.isScenario = q.type === 'scenario'; v.isSpot = q.type === 'spot'; v.isDoc = q.type === 'doc'; v.isOrder = q.type === 'order';
+    v.isOpen = q.type === 'open';
+    v.hasOptions = v.isQcm || v.isScenario || v.isSpot || v.isDoc;
+    v.qContexte = q.contexte || ''; v.qDoc = q.doc || '';
     var examMode = st.quiz.meta.kind === 'exam';
 
     v.qHasSvg = !!q.svg && q.type !== 'memviz' && done && !examMode0;
@@ -341,17 +415,38 @@ function computeVals() {
     v.calcOpen = !done;
     v.keys = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '−', '0', '⌫'];
 
-    v.texteOpen = !done; v.texteDone = done; v.texteVal = st.texte;
+    var isTexteLike = q.type === 'texte' || q.type === 'open';
+    v.texteOpen = isTexteLike && !done; v.texteDone = isTexteLike && done; v.texteVal = st.texte;
+    v.openWide = q.type === 'open';
+    if (q.type === 'open' && v.texteDone) {
+      var normTxt = normalize(st.texte || '');
+      v.openPoints = (q.points || []).map(function (p) {
+        var got = (p.syn || []).some(function (w) { return normTxt.indexOf(normalize(w)) >= 0; });
+        return { k: p.k, got: got };
+      });
+    }
+
+    if (q.type === 'order') {
+      if (state.orderKey !== st.qi) {
+        var oi = q.items.map(function (_x, i) { return i; });
+        for (var oz = oi.length - 1; oz > 0; oz--) { var ow = Math.floor(Math.random() * (oz + 1)); var otmp = oi[oz]; oi[oz] = oi[ow]; oi[ow] = otmp; }
+        if (oi.length > 1 && oi.every(function (vv, i) { return vv === i; })) { var ot0 = oi[0]; oi[0] = oi[1]; oi[1] = ot0; }
+        state.orderCur = oi; state.orderKey = st.qi;
+      }
+      v.orderConsigne = q.consigne || 'Remets les éléments dans le bon ordre (du premier au dernier).';
+      v.orderItems = state.orderCur.map(function (oidx, pos) { return { idx: oidx, pos: pos, text: q.items[oidx], isFirst: pos === 0, isLast: pos === state.orderCur.length - 1 }; });
+      v.orderCorrectList = done ? q.items : [];
+    }
 
     var holes = (q.svg || '').replace(/(<[^>]*data-hole="[^"]*"[^>]*)>/g, function (m, g) { return g + ' opacity="0">'; });
     v.memvizSvg = q.type === 'memviz' ? (st.revealed ? q.svg : holes) : '';
 
-    v.showValidate = !done && (q.type === 'calc' || q.type === 'texte' || q.type === 'memviz');
-    v.validateLabel = q.type === 'memviz' ? (st.revealed ? "Je l'ai mémorisé" : 'Révéler') : 'Valider';
-    v.showSelfGrade = q.type === 'texte' && ans === 'reveal';
-    v.showNext = done && q.type !== 'texte';
+    v.showValidate = !done && (q.type === 'calc' || q.type === 'texte' || q.type === 'memviz' || q.type === 'open' || q.type === 'order');
+    v.validateLabel = q.type === 'memviz' ? (st.revealed ? "Je l'ai mémorisé" : 'Révéler') : (q.type === 'order' ? 'Valider l’ordre' : 'Valider');
+    v.showSelfGrade = isTexteLike && ans === 'reveal';
+    v.showNext = done && !isTexteLike;
     v.nextLabel = st.qi + 1 >= st.quiz.items.length ? (examMode ? 'Voir le résultat' : 'Terminer') : 'Suivante';
-    v.showHint = !done && (q.type === 'qcm' || q.type === 'vf');
+    v.showHint = !done && (v.hasOptions || q.type === 'vf');
   }
 
   var res = st.results, n = res.length || 1, okN = res.filter(function (r) { return r.ok; }).length;
@@ -394,6 +489,7 @@ function computeVals() {
 }
 
 // ---- markup helpers --------------------------------------------------------
+function normalize(s) { return (s || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -432,11 +528,39 @@ function tplCalc(v) {
 }
 function tplTexte(v) {
   var out = '<div style="margin-top:20px;">';
-  if (v.texteOpen) out += '<textarea data-texte-input placeholder="Structurez votre réponse en 4-5 phrases…" style="width:100%;box-sizing:border-box;min-height:150px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;font:400 13px/1.65 \'Space Grotesk\',sans-serif;color:var(--ink);resize:none;">' + esc(v.texteVal) + '</textarea>';
-  if (v.texteDone) out += '<div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;font:400 12.5px/1.7 \'Space Grotesk\',sans-serif;color:var(--ink2);">' + esc(v.texteVal) + '</div>' +
-    '<div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--acc);margin:18px 0 8px;">RÉPONSE MODÈLE</div>' +
-    '<div style="font:400 13px/1.75 \'Space Grotesk\',sans-serif;color:var(--ink);">' + esc(v.qModele) + '</div>';
+  var placeholder = v.isOpen ? 'Réponds comme si tu étais face à un client…' : 'Structurez votre réponse en 4-5 phrases…';
+  if (v.texteOpen) out += '<textarea data-texte-input placeholder="' + placeholder + '" style="width:100%;box-sizing:border-box;min-height:150px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;font:400 13px/1.65 \'Space Grotesk\',sans-serif;color:var(--ink);resize:none;">' + esc(v.texteVal) + '</textarea>';
+  if (v.texteDone) {
+    out += '<div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;font:400 12.5px/1.7 \'Space Grotesk\',sans-serif;color:var(--ink2);">' + (v.texteVal ? esc(v.texteVal) : '<i>(réponse vide)</i>') + '</div>' +
+      '<div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--acc);margin:18px 0 8px;">RÉPONSE MODÈLE</div>' +
+      '<div style="font:400 13px/1.75 \'Space Grotesk\',sans-serif;color:var(--ink);">' + esc(v.qModele) + '</div>';
+    if (v.isOpen && v.openPoints) {
+      out += '<div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);margin:18px 0 8px;">POINTS CLÉS ATTENDUS</div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px;">' + v.openPoints.map(function (p) {
+          return '<div style="display:flex;gap:9px;align-items:flex-start;font:400 12.5px/1.5 \'Space Grotesk\',sans-serif;color:' + (p.got ? 'var(--ink)' : 'var(--ink3)') + ';"><span style="color:' + (p.got ? 'var(--acc)' : 'var(--dim)') + ';flex-shrink:0;">' + (p.got ? '✓' : '○') + '</span><span>' + esc(p.k) + '</span></div>';
+        }).join('') + '</div>';
+    }
+  }
   out += '</div>';
+  return out;
+}
+
+function tplOrder(v) {
+  var items = v.orderItems.map(function (it) {
+    return '<div style="display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 13px;">' +
+      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font:500 11px \'JetBrains Mono\',monospace;color:var(--ink3);">' + (it.pos + 1) + '</span>' +
+      '<span style="flex:1;font:400 12.5px/1.4 \'Space Grotesk\',sans-serif;">' + esc(it.text) + '</span>' +
+      (v.showValidate ? '<span style="display:flex;flex-direction:column;gap:2px;flex-shrink:0;">' +
+        '<button data-action="orderUp" data-pos="' + it.pos + '"' + (it.isFirst ? ' disabled' : '') + ' style="background:none;border:none;color:var(--ink2);cursor:pointer;padding:2px 6px;font-size:11px;' + (it.isFirst ? 'opacity:.3;' : '') + '">▲</button>' +
+        '<button data-action="orderDown" data-pos="' + it.pos + '"' + (it.isLast ? ' disabled' : '') + ' style="background:none;border:none;color:var(--ink2);cursor:pointer;padding:2px 6px;font-size:11px;' + (it.isLast ? 'opacity:.3;' : '') + '">▼</button></span>' : '') +
+      '</div>';
+  }).join('');
+  var out = '<div style="margin-top:14px;font:400 12px/1.5 \'Space Grotesk\',sans-serif;color:var(--ink2);">' + esc(v.orderConsigne) + '</div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">' + items + '</div>';
+  if (!v.showValidate && v.orderCorrectList && v.orderCorrectList.length) {
+    out += '<div style="margin-top:18px;"><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);">ORDRE ATTENDU</div>' +
+      '<ol style="margin:8px 0 0;padding-left:20px;font:400 12.5px/1.7 \'Space Grotesk\',sans-serif;color:var(--ink2);">' + v.orderCorrectList.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ol></div>';
+  }
   return out;
 }
 
@@ -519,7 +643,10 @@ function tplHome(v) {
     '<button data-action="goBrowse" class="hv-a" style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;cursor:pointer;color:var(--ink);"><div style="font:300 26px/1 Newsreader,serif;">19</div><div style="font:400 11.5px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:7px;">Catégories</div></button>' +
     '<button data-action="goExamPick" class="hv-a" style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;cursor:pointer;color:var(--ink);"><div style="font:300 26px/1 Newsreader,serif;">40</div><div style="font:400 11.5px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:7px;">Examen blanc</div></button></div>' +
     '<div style="margin:26px 24px 0;"><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);">OUTILS</div>' +
-    '<div style="margin-top:12px;display:flex;gap:10px;">' +
+    '<button data-action="goBuilder" class="hv-a" style="width:100%;margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;align-items:center;gap:14px;text-align:left;cursor:pointer;color:var(--ink);box-sizing:border-box;">' +
+    '<span style="font:400 24px Newsreader,serif;color:var(--acc);">◎</span><span style="flex:1;"><span style="display:block;font:500 13.5px \'Space Grotesk\',sans-serif;">Créer ma session</span><span style="display:block;font:400 11.5px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:3px;">Domaines, formats et niveau au choix</span></span>' +
+    '<span style="font:400 15px Newsreader,serif;color:var(--acc);">&#8250;</span></button>' +
+    '<div style="margin-top:10px;display:flex;gap:10px;">' +
     '<button data-action="goLabo" class="hv-a" style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;cursor:pointer;color:var(--ink);"><div style="font:400 22px Newsreader,serif;color:var(--acc);">∑</div><div style="font:500 13px \'Space Grotesk\',sans-serif;margin-top:9px;">Labo</div><div style="font:400 11px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:2px;">5 simulateurs</div></button>' +
     '<button data-action="goMental" class="hv-a" style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;cursor:pointer;color:var(--ink);"><div style="font:400 22px Newsreader,serif;color:var(--gold);">⏱</div><div style="font:500 13px \'Space Grotesk\',sans-serif;margin-top:9px;">Calcul mental</div><div style="font:400 11px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:2px;">10 questions chrono</div></button></div></div>' +
     '<div style="height:26px;"></div></div>';
@@ -559,11 +686,15 @@ function tplQuiz(v) {
   var mid = '<div style="display:flex;justify-content:space-between;margin-top:16px;font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);"><div>' + esc(v.qCat) + '</div><div style="color:var(--acc);">' + esc(v.qTypeLabel) + '</div></div>' +
     '<div style="font:300 25px/1.3 Newsreader,serif;letter-spacing:-.01em;margin-top:16px;text-wrap:pretty;">' + esc(v.qText) + '</div>';
   if (v.qHasSvg) mid += '<div style="margin-top:16px;border-radius:16px;overflow:hidden;background:#faf8f3;">' + v.qSvg + '</div>';
-  if (v.isQcm) mid += '<div style="display:flex;flex-direction:column;gap:9px;margin-top:22px;">' + v.options.map(tplOption).join('') + '</div>';
+  if (v.isScenario) mid += '<div style="margin-top:16px;background:var(--panel2);border-left:3px solid var(--acc);border-radius:10px;padding:13px 15px;font:400 12.5px/1.6 \'Space Grotesk\',sans-serif;color:var(--ink2);"><b style="color:var(--ink);">Scénario —</b> ' + esc(v.qContexte) + '</div>';
+  if (v.isSpot) mid += '<div style="margin-top:14px;font:400 12px/1.5 \'Space Grotesk\',sans-serif;color:var(--warn);">Une seule affirmation est fausse. Repère-la.</div>';
+  if (v.isDoc) mid += '<div style="margin-top:16px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;font:400 12px/1.7 \'JetBrains Mono\',monospace;color:var(--ink2);white-space:pre-line;">' + esc(v.qDoc) + '</div>';
+  if (v.hasOptions) mid += '<div style="display:flex;flex-direction:column;gap:9px;margin-top:22px;">' + v.options.map(tplOption).join('') + '</div>';
   if (v.isVf) mid += '<div style="display:flex;gap:12px;margin-top:26px;">' + v.vfBtns.map(tplVf).join('') + '</div>';
   if (v.isCalc) mid += tplCalc(v);
-  if (v.isTexte) mid += tplTexte(v);
+  if (v.isTexte || v.isOpen) mid += tplTexte(v);
   if (v.isMemviz) mid += '<div style="margin-top:18px;border-radius:16px;overflow:hidden;background:#faf8f3;">' + v.memvizSvg + '</div>';
+  if (v.isOrder) mid += tplOrder(v);
   if (v.examAnswered) mid += '<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line);animation:kfIn .3s ease both;"><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);">RÉPONSE ENREGISTRÉE · CORRECTION À LA FIN DE L\'ÉPREUVE</div></div>';
   if (v.answered) {
     mid += '<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line);animation:kfIn .3s ease both;">';
@@ -576,7 +707,9 @@ function tplQuiz(v) {
 
   var footer = '<div style="padding:12px 24px 40px;border-top:1px solid var(--line);background:var(--bg);">';
   if (v.showValidate) footer += '<button data-action="validate" style="width:100%;border:none;border-radius:999px;padding:16px;font:600 13.5px \'Space Grotesk\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + esc(v.validateLabel) + '</button>';
-  if (v.showSelfGrade) footer += '<div style="display:flex;gap:10px;"><button data-action="selfKo" style="flex:1;background:none;border:1px solid var(--warn);border-radius:999px;padding:15px;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--warn);cursor:pointer;">À revoir</button><button data-action="selfOk" style="flex:1;background:none;border:1px solid var(--acc);border-radius:999px;padding:15px;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">Maîtrisé</button></div>';
+  if (v.showSelfGrade) footer += '<div style="display:flex;gap:10px;"><button data-action="selfKo" style="flex:1;background:none;border:1px solid var(--warn);border-radius:999px;padding:15px;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--warn);cursor:pointer;">À revoir</button>' +
+    (v.openWide ? '<button data-action="selfMid" style="flex:1;background:none;border:1px solid var(--gold);border-radius:999px;padding:15px;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--gold);cursor:pointer;">En partie</button>' : '') +
+    '<button data-action="selfOk" style="flex:1;background:none;border:1px solid var(--acc);border-radius:999px;padding:15px;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">Maîtrisé</button></div>';
   if (v.showNext) footer += '<button data-action="next" style="width:100%;border:none;border-radius:999px;padding:16px;font:600 13.5px \'Space Grotesk\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + esc(v.nextLabel) + '</button>';
   if (v.showHint) footer += '<div style="text-align:center;font:400 11px \'Space Grotesk\',sans-serif;color:var(--ink3);padding:4px 0;">Touchez une réponse.</div>';
   footer += '</div>';
@@ -608,6 +741,34 @@ function tplDone(v) {
     '<div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">' +
     '<button data-action="doneAgain" style="border:none;border-radius:999px;padding:17px;font:600 14px \'Space Grotesk\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + esc(v.doneCta) + '</button>' +
     '<button data-action="goHome" style="background:none;border:1px solid var(--line);border-radius:999px;padding:15px;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--ink2);cursor:pointer;">Retour à l\'accueil</button></div></div>';
+}
+
+function tplBuilder(v) {
+  var levels = v.buildLevels.map(function (l) {
+    return '<button data-action="buildLevel" data-lv="' + l.key + '" class="lab-seg' + (l.on ? ' on' : '') + '" style="flex:1;">' + l.label + '</button>';
+  }).join('');
+  var doms = v.buildDoms.map(function (d) {
+    return '<button data-action="buildDom" data-dom="' + esc(d.id) + '" class="hv-c" style="background:' + (d.on ? 'var(--ink)' : 'var(--panel)') + ';color:' + (d.on ? 'var(--bg)' : 'var(--ink)') + ';border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:500 12px \'Space Grotesk\',sans-serif;cursor:pointer;text-align:left;">' + (d.on ? '✓ ' : '') + esc(d.label) + '</button>';
+  }).join('');
+  var types = v.buildTypeOpts.map(function (t) {
+    return '<button data-action="buildType" data-t="' + t.id + '" class="hv-c" style="background:' + (t.on ? 'var(--ink)' : 'var(--panel)') + ';color:' + (t.on ? 'var(--bg)' : 'var(--ink)') + ';border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:500 12px \'Space Grotesk\',sans-serif;cursor:pointer;text-align:left;">' + (t.on ? '✓ ' : '') + esc(t.label) + ' <span style="opacity:.6;font-family:\'JetBrains Mono\',monospace;font-size:10px;">(' + t.count + ')</span></button>';
+  }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;"><button data-action="goHome" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Accueil</button>' +
+    '<div style="font:300 32px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:16px;">Créer <span style="font-style:italic;">ma session</span></div>' +
+    '<div style="font:400 12.5px/1.6 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:10px;">Choisis tes domaines, tes formats, ton niveau et le nombre de questions. On pioche au hasard dans toute la banque.</div></div>' +
+    '<div style="margin:22px 24px 0;">' +
+    '<div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);">NIVEAU</div>' +
+    '<div style="display:flex;gap:8px;margin-top:10px;">' + levels + '</div>' +
+    '<div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);margin-top:22px;">DOMAINES</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">' + doms + '</div>' +
+    '<div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);margin-top:22px;">FORMATS</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">' + types + '</div>' +
+    '<div style="margin-top:24px;"><div style="display:flex;justify-content:space-between;font:500 12px \'Space Grotesk\',sans-serif;color:var(--ink2);"><span>Nombre de questions</span><b id="bldNV" style="color:var(--ink);font-family:\'JetBrains Mono\',monospace;">' + v.buildN + '</b></div>' +
+    '<input type="range" id="bldN" min="1" max="' + v.buildMaxN + '" step="1" value="' + v.buildN + '"></div>' +
+    '<div style="font:400 11.5px \'Space Grotesk\',sans-serif;color:var(--ink3);margin-top:10px;">' + v.buildAvail + ' question' + (v.buildAvail > 1 ? 's' : '') + ' disponible' + (v.buildAvail > 1 ? 's' : '') + ' avec cette sélection' + (v.buildAvail === 0 ? ' — élargis tes critères.' : '.') + '</div>' +
+    '<button data-action="startBuilder"' + (v.buildAvail < 1 ? ' disabled style="opacity:.4;"' : '') + ' style="width:100%;margin-top:16px;border:none;border-radius:999px;padding:16px;font:600 13.5px \'Space Grotesk\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Lancer ma session →</button>' +
+    '</div><div style="height:32px;"></div></div>';
 }
 
 function tplExamPick(v) {
@@ -687,10 +848,22 @@ function tplCourses(v) {
     '<div style="height:26px;"></div></div>';
 }
 
+function tplPara(p) {
+  if (p.callout) {
+    return '<div style="margin:10px 0;background:var(--panel2);border-left:3px solid var(--gold);border-radius:10px;padding:11px 13px;">' +
+      '<div style="font:600 9.5px \'JetBrains Mono\',monospace;letter-spacing:.1em;color:var(--gold);">' + esc(p.label) + '</div>' +
+      '<div style="font:400 12.5px/1.65 \'Space Grotesk\',sans-serif;color:var(--ink);margin-top:5px;text-wrap:pretty;">' + esc(p.text.trim()) + '</div></div>';
+  }
+  if (!p.text.trim()) return '';
+  return '<div style="font:400 13px/1.8 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:10px;text-wrap:pretty;">' + esc(p.text.trim()) + '</div>';
+}
+
 function tplFiche(v) {
-  var sections = v.ficheSections.map(function (s) {
-    return '<div style="margin-top:24px;"><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--acc);">' + esc(s.h) + '</div>' +
-      '<div style="font:400 13px/1.8 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:9px;white-space:pre-line;text-wrap:pretty;">' + esc(s.body) + '</div></div>';
+  var sections = v.ficheSections.map(function (s, i) {
+    var body = s.paras.map(tplPara).join('') + (s.svg ? '<div style="margin-top:14px;border-radius:14px;overflow:hidden;background:#faf8f3;padding:8px;">' + s.svg + '</div>' : '');
+    return '<div class="thsec' + (i === 0 ? ' open' : '') + '" style="margin-top:12px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--panel);animation:kfIn .4s cubic-bezier(.16,1,.3,1) both;animation-delay:' + (i * 0.05).toFixed(2) + 's;">' +
+      '<button data-fold-head style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;color:var(--acc);font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.12em;text-align:left;"><span>' + esc(s.h) + '</span><span class="fold-arr" style="flex-shrink:0;transition:transform .25s;transform:rotate(' + (i === 0 ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
+      '<div class="fold-body" style="display:' + (i === 0 ? 'block' : 'none') + ';padding:0 16px 16px;">' + body + '</div></div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:56px 26px 0;"><button data-action="goCourses" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Fiches</button>' +
@@ -1105,8 +1278,17 @@ function mentalNext() {
   var qEl = document.getElementById('menQ'), inp = document.getElementById('menInp');
   qEl.textContent = mentalState.cur.q;
   try { inp.focus(); } catch (e) {}
-  document.getElementById('menValid').addEventListener('click', function () { mentalAnswer(false); });
-  inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') mentalAnswer(false); });
+  function trySubmit() {
+    if (String(inp.value).trim() === '') {
+      inp.style.borderColor = 'var(--warn)';
+      inp.placeholder = 'Réponse obligatoire';
+      setTimeout(function () { inp.style.borderColor = ''; }, 900);
+      return;
+    }
+    mentalAnswer(false);
+  }
+  document.getElementById('menValid').addEventListener('click', trySubmit);
+  inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); trySubmit(); } });
   mentalState.timer = setInterval(function () {
     if (state.screen !== 'mental') { clearInterval(mentalState.timer); mentalState.timer = null; return; }
     mentalState.left--;
@@ -1203,6 +1385,7 @@ function render() {
   else if (v.isProfile) html = tplProfile(v);
   else if (v.isLabo) html = tplLabo(v);
   else if (v.isMental) html = tplMental(v);
+  else if (v.isBuilder) html = tplBuilder(v);
   screenEl.innerHTML = html;
 
   if (v.isLabo) wireLabo();
@@ -1210,6 +1393,23 @@ function render() {
     var menStage = document.getElementById('menStage');
     if (menStage) menStage.innerHTML = mentalIntroHtml(v);
     wireMentalIntro();
+  }
+  if (v.isBuilder) {
+    var bldN = document.getElementById('bldN');
+    if (bldN) bldN.addEventListener('input', function () {
+      state.buildN = +bldN.value;
+      document.getElementById('bldNV').textContent = state.buildN;
+    });
+  }
+  if (v.isFiche) {
+    screenEl.querySelectorAll('[data-fold-head]').forEach(function (hd) {
+      hd.addEventListener('click', function () {
+        var sec = hd.parentElement, body = sec.querySelector('.fold-body'), arr = hd.querySelector('.fold-arr');
+        var open = sec.classList.toggle('open');
+        body.style.display = open ? 'block' : 'none';
+        arr.style.transform = 'rotate(' + (open ? '90deg' : '0deg') + ')';
+      });
+    });
   }
 
   if (v.screenKey !== lastScreenKey) {
@@ -1242,6 +1442,28 @@ function onAppClick(e) {
     case 'goExamPick': go('examPick'); break;
     case 'goLabo': go('labo'); break;
     case 'goMental': go('mental'); break;
+    case 'goBuilder': go('builder'); break;
+    case 'buildLevel': state.buildLevel = d.lv; render(); break;
+    case 'buildDom': {
+      var domV = d.dom;
+      if (domV === 'all') { state.buildDom = ['all']; }
+      else {
+        state.buildDom = state.buildDom.filter(function (x) { return x !== 'all'; });
+        var di = state.buildDom.indexOf(domV);
+        if (di >= 0) state.buildDom.splice(di, 1); else state.buildDom.push(domV);
+        if (!state.buildDom.length) state.buildDom = ['all'];
+      }
+      render();
+      break;
+    }
+    case 'buildType': {
+      var typV = d.t, ti = state.buildTypes.indexOf(typV);
+      if (ti >= 0) { if (state.buildTypes.length > 1) state.buildTypes.splice(ti, 1); }
+      else state.buildTypes.push(typV);
+      render();
+      break;
+    }
+    case 'startBuilder': if (buildPool().length) startBuilder(); break;
     case 'poleToggle':
       state.openPole = state.openPole === d.pole ? null : d.pole;
       state.screen = 'browse';
@@ -1265,11 +1487,26 @@ function onAppClick(e) {
     case 'validate': {
       var it = cur(); if (!it) break;
       if (it.q.type === 'calc') validateCalc();
-      else if (it.q.type === 'texte') { state.ans = 'reveal'; render(); }
+      else if (it.q.type === 'texte' || it.q.type === 'open') { state.ans = 'reveal'; render(); }
       else if (it.q.type === 'memviz') { if (state.revealed) grade(true); else { state.revealed = true; render(); } }
+      else if (it.q.type === 'order') {
+        var ok = !!(state.orderCur && state.orderCur.every(function (v, i) { return v === i; }));
+        grade(ok);
+      }
+      break;
+    }
+    case 'orderUp': {
+      var pos = +d.pos;
+      if (state.orderCur && pos > 0) { var tmp = state.orderCur[pos]; state.orderCur[pos] = state.orderCur[pos - 1]; state.orderCur[pos - 1] = tmp; render(); }
+      break;
+    }
+    case 'orderDown': {
+      var pos2 = +d.pos;
+      if (state.orderCur && pos2 < state.orderCur.length - 1) { var tmp2 = state.orderCur[pos2]; state.orderCur[pos2] = state.orderCur[pos2 + 1]; state.orderCur[pos2 + 1] = tmp2; render(); }
       break;
     }
     case 'selfOk': grade(true, nextQ); break;
+    case 'selfMid': grade(true, nextQ); break;
     case 'selfKo': grade(false, nextQ); break;
     case 'next': nextQ(); break;
     case 'quitQuiz': go(state.quiz && state.quiz.meta.kind === 'exam' ? 'examPick' : 'home'); break;
