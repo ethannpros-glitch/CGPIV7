@@ -665,8 +665,8 @@ function tplHome(v) {
     '<div style="height:3px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="width:62%;height:3px;background:linear-gradient(90deg,var(--acc2),var(--acc));transform-origin:left;animation:kfFill 1.1s cubic-bezier(.16,1,.3,1) both;"></div></div>' +
     '<button data-action="startDaily" style="border:none;background:var(--acc);color:var(--on);border-radius:999px;padding:14px;text-align:center;font:600 13.5px \'Space Grotesk\',sans-serif;cursor:pointer;animation:kfGlow 3.2s ease-in-out infinite;">Commencer · 3 min</button></div>' +
     '<div style="margin:26px 24px 0;display:flex;align-items:flex-end;gap:22px;">' +
-    '<div><div style="font:300 52px/0.9 Newsreader,serif;letter-spacing:-.03em;">' + v.mastery + '<span style="font-size:19px;">%</span></div><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);margin-top:6px;">MAÎTRISE</div></div>' +
-    '<button data-action="goSrs" style="background:none;border:none;border-left:1px solid var(--line);padding:0 0 0 22px;text-align:left;cursor:pointer;"><div style="font:300 52px/0.9 Newsreader,serif;letter-spacing:-.03em;color:var(--warn);">' + v.dueCount + '</div><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);margin-top:6px;">À REVOIR</div></button></div>' +
+    '<div><div style="font:300 52px/0.9 Newsreader,serif;letter-spacing:-.03em;"><span data-countup="' + v.mastery + '" data-countup-suffix="%">0%</span></div><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);margin-top:6px;">MAÎTRISE</div></div>' +
+    '<button data-action="goSrs" style="background:none;border:none;border-left:1px solid var(--line);padding:0 0 0 22px;text-align:left;cursor:pointer;"><div style="font:300 52px/0.9 Newsreader,serif;letter-spacing:-.03em;color:var(--warn);"><span data-countup="' + v.dueCount + '">0</span></div><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);margin-top:6px;">À REVOIR</div></button></div>' +
     '<div style="margin:26px 24px 0;"><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);">POINTS FAIBLES</div>' +
     '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">' + weak + '</div></div>' +
     '<div style="margin:26px 24px 0;display:flex;gap:10px;">' +
@@ -889,19 +889,20 @@ function tplCoursePole(v) {
     '<div style="height:26px;"></div></div>';
 }
 
-function tplPara(p) {
+function tplPara(p, i) {
+  var delay = ((i || 0) * 0.06).toFixed(2) + 's';
   if (p.callout) {
-    return '<div style="margin:10px 0;background:var(--panel2);border-left:3px solid var(--gold);border-radius:10px;padding:11px 13px;">' +
-      '<div style="font:600 9.5px \'JetBrains Mono\',monospace;letter-spacing:.1em;color:var(--gold);">' + esc(p.label) + '</div>' +
+    return '<div class="stagger" style="animation-delay:' + delay + ';margin:10px 0;background:var(--panel2);border-left:3px solid var(--gold);border-radius:10px;padding:11px 13px;">' +
+      '<div style="font:600 9.5px \'JetBrains Mono\',monospace;letter-spacing:.1em;color:var(--gold);display:flex;align-items:center;gap:6px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--gold);animation:kfBreathe 2s ease-in-out infinite;"></span>' + esc(p.label) + '</div>' +
       '<div style="font:400 12.5px/1.65 \'Space Grotesk\',sans-serif;color:var(--ink);margin-top:5px;text-wrap:pretty;">' + esc(p.text.trim()) + '</div></div>';
   }
   if (!p.text.trim()) return '';
-  return '<div style="font:400 13px/1.8 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:10px;text-wrap:pretty;">' + esc(p.text.trim()) + '</div>';
+  return '<div class="stagger" style="animation-delay:' + delay + ';font:400 13px/1.8 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:10px;text-wrap:pretty;">' + esc(p.text.trim()) + '</div>';
 }
 
 function tplFiche(v) {
   var sections = v.ficheSections.map(function (s, i) {
-    var body = s.paras.map(tplPara).join('') + (s.svg ? '<div style="margin-top:14px;border-radius:14px;overflow:hidden;background:#faf8f3;padding:8px;">' + s.svg + '</div>' : '');
+    var body = s.paras.map(tplPara).join('') + (s.svg ? '<div class="stagger" style="animation-delay:' + (s.paras.length * 0.06).toFixed(2) + 's;margin-top:14px;border-radius:14px;overflow:hidden;background:#faf8f3;padding:8px;">' + s.svg + '</div>' : '');
     return '<div class="thsec' + (i === 0 ? ' open' : '') + '" style="margin-top:12px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--panel);animation:kfIn .4s cubic-bezier(.16,1,.3,1) both;animation-delay:' + (i * 0.05).toFixed(2) + 's;">' +
       '<button data-fold-head style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;color:var(--acc);font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.12em;text-align:left;"><span>' + esc(s.h) + '</span><span class="fold-arr" style="flex-shrink:0;transition:transform .25s;transform:rotate(' + (i === 0 ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
       '<div class="fold-body' + (i === 0 ? '' : ' fold-closed') + '"><div style="padding:0 16px 16px;">' + body + '</div></div></div>';
@@ -919,25 +920,27 @@ function tplFiche(v) {
 }
 
 function tplProgress(v) {
-  var dots = v.radarDots.map(function (d) { return '<circle cx="' + d.x + '" cy="' + d.y + '" r="3.5" fill="var(--acc)"></circle>'; }).join('');
-  var poles = v.poles.map(function (p) {
-    return '<div style="display:flex;align-items:center;gap:12px;"><div style="flex:1;font:400 12.5px \'Space Grotesk\',sans-serif;">' + esc(p.label) + '</div>' +
+  var dots = v.radarDots.map(function (d, i) {
+    return '<circle cx="' + d.x + '" cy="' + d.y + '" r="3.5" fill="var(--acc)" style="animation:kfPop .3s ease ' + (0.9 + i * 0.06).toFixed(2) + 's both;"></circle>';
+  }).join('');
+  var poles = v.poles.map(function (p, i) {
+    return '<div class="stagger" style="animation-delay:' + (i * 0.05).toFixed(2) + 's;display:flex;align-items:center;gap:12px;"><div style="flex:1;font:400 12.5px \'Space Grotesk\',sans-serif;">' + esc(p.label) + '</div>' +
       '<div style="width:92px;height:5px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="width:' + p.pct + '%;height:5px;background:linear-gradient(90deg,var(--acc2),var(--acc));transform-origin:left;animation:kfFill 1.1s cubic-bezier(.16,1,.3,1) both;"></div></div>' +
       '<div style="width:26px;text-align:right;font:500 10.5px \'JetBrains Mono\',monospace;color:var(--ink3);">' + p.pct + '</div></div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:58px 24px 0;"><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.2em;color:var(--ink3);">PROGRESSION</div>' +
-    '<div style="font:300 34px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:14px;">' + v.mastery + ' <span style="font-size:18px;">%</span> de <span style="font-style:italic;">maîtrise</span></div></div>' +
+    '<div style="font:300 34px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:14px;"><span data-countup="' + v.mastery + '">0</span> <span style="font-size:18px;">%</span> de <span style="font-style:italic;">maîtrise</span></div></div>' +
     '<div style="padding:14px 20px 0;"><svg viewBox="0 0 300 300" style="width:100%;height:auto;">' +
     '<polygon points="150,20 262,85 262,215 150,280 38,215 38,85" fill="none" stroke="var(--line)" stroke-width="1"></polygon>' +
     '<polygon points="150,63 225,106 225,193 150,237 75,193 75,106" fill="none" stroke="var(--line)" stroke-width="1"></polygon>' +
     '<polygon points="150,107 187,128 187,171 150,193 113,171 113,128" fill="none" stroke="var(--line)" stroke-width="1"></polygon>' +
-    '<polygon points="' + v.radarPts + '" fill="rgba(185,221,122,.2)" stroke="var(--acc)" stroke-width="2"></polygon>' + dots + '</svg></div>' +
+    '<polygon class="v16draw" points="' + v.radarPts + '" fill="rgba(195,226,129,.2)" stroke="var(--acc)" stroke-width="2" style="stroke-dasharray:900;stroke-dashoffset:900;animation:v16draw 1.1s cubic-bezier(.16,1,.3,1) .15s forwards,kfIn .5s ease .15s forwards;"></polygon>' + dots + '</svg></div>' +
     '<div style="margin:6px 24px 0;display:flex;flex-direction:column;gap:12px;">' + poles + '</div>' +
     '<div style="margin:26px 24px 0;padding-top:18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;">' +
-    '<div><div style="font:300 28px/1 Newsreader,serif;">' + v.xp + '</div><div style="font:500 9.5px \'JetBrains Mono\',monospace;letter-spacing:.12em;color:var(--ink3);margin-top:5px;">XP TOTAL</div></div>' +
-    '<div><div style="font:300 28px/1 Newsreader,serif;">' + v.answeredCount + '</div><div style="font:500 9.5px \'JetBrains Mono\',monospace;letter-spacing:.12em;color:var(--ink3);margin-top:5px;">QUESTIONS VUES</div></div>' +
-    '<div><div style="font:300 28px/1 Newsreader,serif;">' + v.streak + '</div><div style="font:500 9.5px \'JetBrains Mono\',monospace;letter-spacing:.12em;color:var(--ink3);margin-top:5px;">JOURS DE SUITE</div></div></div>' +
+    '<div><div style="font:300 28px/1 Newsreader,serif;"><span data-countup="' + v.xp + '">0</span></div><div style="font:500 9.5px \'JetBrains Mono\',monospace;letter-spacing:.12em;color:var(--ink3);margin-top:5px;">XP TOTAL</div></div>' +
+    '<div><div style="font:300 28px/1 Newsreader,serif;"><span data-countup="' + v.answeredCount + '">0</span></div><div style="font:500 9.5px \'JetBrains Mono\',monospace;letter-spacing:.12em;color:var(--ink3);margin-top:5px;">QUESTIONS VUES</div></div>' +
+    '<div><div style="font:300 28px/1 Newsreader,serif;"><span data-countup="' + v.streak + '">0</span></div><div style="font:500 9.5px \'JetBrains Mono\',monospace;letter-spacing:.12em;color:var(--ink3);margin-top:5px;">JOURS DE SUITE</div></div></div>' +
     '<div style="height:26px;"></div></div>';
 }
 
@@ -1394,6 +1397,35 @@ function mentalEnd() {
 // ---- render loop -----------------------------------------------------------
 var appEl, confettiEl, screenEl, tabsEl;
 var lastScreenKey = null;
+var lastReadyFlag = false;
+
+function reviveSvgReveal(root) {
+  root.querySelectorAll('svg').forEach(function (svg) {
+    if (svg.querySelector('.v16bar-anim, .v16draw, [data-hole]')) return;
+    Array.prototype.forEach.call(svg.children, function (c, i) {
+      c.style.transformBox = 'fill-box';
+      c.style.transformOrigin = 'center';
+      c.style.animation = 'kfRise .4s cubic-bezier(.16,1,.3,1) both';
+      c.style.animationDelay = (i * 0.06).toFixed(2) + 's';
+    });
+  });
+}
+
+function animateCountUp(root) {
+  root.querySelectorAll('[data-countup]').forEach(function (el) {
+    var target = parseFloat(el.getAttribute('data-countup'));
+    if (!isFinite(target)) return;
+    var suffix = el.getAttribute('data-countup-suffix') || '';
+    var start = performance.now(), dur = 700;
+    function tick(now) {
+      var p = Math.min(1, (now - start) / dur);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * eased) + suffix;
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+}
 
 function ensureSkeleton() {
   appEl = document.getElementById('app');
@@ -1450,9 +1482,23 @@ function render() {
         var open = sec.classList.toggle('open');
         body.classList.toggle('fold-closed', !open);
         arr.style.transform = 'rotate(' + (open ? '90deg' : '0deg') + ')';
+        if (open) {
+          var inner = body.firstElementChild;
+          if (inner) {
+            var html = inner.innerHTML;
+            inner.innerHTML = '';
+            void inner.offsetWidth;
+            inner.innerHTML = html;
+          }
+        }
       });
     });
   }
+
+  reviveSvgReveal(screenEl);
+
+  var justBecameReady = state.ready && !lastReadyFlag;
+  lastReadyFlag = state.ready;
 
   if (v.screenKey !== lastScreenKey) {
     lastScreenKey = v.screenKey;
@@ -1461,6 +1507,9 @@ function render() {
     screenEl.classList.remove('kfin', 'kfin-fwd', 'kfin-back');
     void screenEl.offsetWidth;
     screenEl.classList.add(animClass);
+    animateCountUp(screenEl);
+  } else if (justBecameReady) {
+    animateCountUp(screenEl);
   }
 }
 
