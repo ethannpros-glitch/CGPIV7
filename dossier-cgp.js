@@ -4,7 +4,7 @@
 var IV = [1, 3, 7, 16, 35, 90];
 var LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 var KEY = 'cgp_proto_v2';
-var userName = 'Camille';
+function getUserName() { return (store && store.name) || 'Camille'; }
 var today = function () { return Math.floor(Date.now() / 86400000); };
 
 var state = {
@@ -13,7 +13,7 @@ var state = {
   fiche: null, level: 1, onb: 0, confetti: false, notif: true,
   orderKey: null, orderCur: null,
   buildDom: ['all'], buildTypes: ['qcm', 'vf'], buildLevel: 'all', buildN: 15,
-  coursePoleSel: null, navStack: [], navDir: null
+  coursePoleSel: null, navStack: [], navDir: null, confirmReset: false, nameInput: null
 };
 var store = null;
 var confettiTimer = null;
@@ -279,7 +279,7 @@ function computeVals() {
 
   var v = {
     screenKey: scr + ':' + st.qi + ':' + (st.cat || '') + ':' + (st.fiche || ''),
-    userName: userName,
+    userName: getUserName(), nameInput: state.nameInput != null ? state.nameInput : ((S && S.name) || ''),
     greeting: 'Bonsoir',
     isConfetti: !!st.confetti,
     streak: S.streak || 12, xp: S.xp || 0, mastery: st.ready ? masteryPct() : 0,
@@ -290,7 +290,7 @@ function computeVals() {
     unseenCount: st.ready ? Math.max(0, totalQ() - Object.keys(S.srs).length) : 0,
     dailyPct: 62, dailyTurn: '0.62turn',
     levelLabel: levels[st.level].title,
-    notifOn: !!st.notif, notifOff: !st.notif,
+    notifOn: !!st.notif, notifOff: !st.notif, confirmReset: !!st.confirmReset,
     notifSub: st.notif ? 'Tous les jours à 19:30' : 'Désactivé',
 
     isOnb: scr === 'onb', isHome: scr === 'home', isBrowse: scr === 'browse', isCat: scr === 'cat',
@@ -301,8 +301,8 @@ function computeVals() {
     showTabs: ['home', 'browse', 'cat', 'srs', 'courses', 'fiche', 'coursePole', 'progress', 'profile', 'examPick', 'labo', 'mental', 'builder'].indexOf(scr) >= 0,
     mentalBest: S.mentalBest || 0,
 
-    onb0: st.onb === 0, onb1: st.onb === 1, onb2: st.onb === 2,
-    onbStepLabel: 'ÉTAPE ' + (st.onb + 1) + ' / 3',
+    onbName: st.onb === -1, onb0: st.onb === 0, onb1: st.onb === 1, onb2: st.onb === 2,
+    onbStepLabel: st.onb >= 0 ? 'ÉTAPE ' + (st.onb + 1) + ' / 3' : 'BIENVENUE',
     levels: levels.map(function (l, i) { return { n: i + 1, title: l.title, sub: l.sub, on: st.level === i }; }),
     poleChips: pNames.map(function (p) { return { label: p }; }),
 
@@ -623,6 +623,14 @@ function confettiHtml() {
 function tplOnb(v) {
   var out = '<div style="flex:1;display:flex;flex-direction:column;padding:64px 26px 40px;overflow:auto;">' +
     '<div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.2em;color:var(--ink3);">DOSSIER CGP · ' + esc(v.onbStepLabel) + '</div>';
+  if (v.onbName) {
+    out += '<div style="font:300 38px/1.12 Newsreader,serif;letter-spacing:-.025em;margin-top:20px;">Comment doit-on<br><span style="font-style:italic;background:linear-gradient(100deg,var(--acc),var(--gold),var(--acc2),var(--acc));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:kfSweep 9s linear infinite;">vous appeler</span> ?</div>' +
+      '<div style="font:400 13.5px/1.7 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:16px;">Pour personnaliser vos rappels, votre tableau de bord et vos statistiques.</div>' +
+      '<input data-name-input value="' + esc(v.nameInput || '') + '" placeholder="Votre prénom" maxlength="24" style="margin-top:28px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:17px 18px;font:500 16px \'Space Grotesk\',sans-serif;color:var(--ink);outline:none;" />' +
+      '<div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">' +
+      '<button data-action="onbNameNext" style="border:none;border-radius:999px;padding:17px;font:600 14px \'Space Grotesk\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Continuer</button>' +
+      '<button data-action="onbNameSkip" style="background:none;border:none;padding:12px;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--ink3);cursor:pointer;">Passer</button></div>';
+  }
   if (v.onb0) {
     out += '<div style="font:300 42px/1.06 Newsreader,serif;letter-spacing:-.03em;margin-top:20px;">Préparez la<br><span style="font-style:italic;background:linear-gradient(100deg,var(--acc),var(--gold),var(--acc2),var(--acc));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:kfSweep 9s linear infinite;">certification</span><br>en dix minutes par jour.</div>' +
       '<div style="font:400 13.5px/1.7 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:18px;">905 questions, 44 fiches, 7 pôles. L\'application choisit à votre place ce qu\'il faut revoir.</div>' +
@@ -965,6 +973,11 @@ function tplProfile(v) {
     '<button data-action="goExamPick" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;font:500 13px \'Space Grotesk\',sans-serif;">Examens blancs</span><span style="font:400 15px Newsreader,serif;color:var(--acc);">&#8250;</span></button>' +
     '<button data-action="restartOnb" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;font:500 13px \'Space Grotesk\',sans-serif;">Refaire le diagnostic</span><span style="font:400 15px Newsreader,serif;color:var(--acc);">&#8250;</span></button>' +
     '<button data-action="resetProgress" style="width:100%;background:none;border:none;padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--warn);text-align:left;"><span style="flex:1;font:500 13px \'Space Grotesk\',sans-serif;">Réinitialiser ma progression</span></button></div>' +
+    (v.confirmReset ? '<div class="stagger" style="margin:16px 24px 0;background:var(--panel2);border:1px solid var(--warn);border-radius:18px;padding:16px;">' +
+      '<div style="font:500 13px \'Space Grotesk\',sans-serif;color:var(--ink);">Tout effacer ?</div>' +
+      '<div style="font:400 12px/1.6 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:6px;">XP, série, révisions et diagnostic seront définitivement remis à zéro sur cet appareil.</div>' +
+      '<div style="display:flex;gap:10px;margin-top:14px;"><button data-action="resetProgressCancel" style="flex:1;background:none;border:1px solid var(--line);border-radius:999px;padding:12px;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--ink2);cursor:pointer;">Annuler</button>' +
+      '<button data-action="resetProgressConfirm" style="flex:1;background:var(--warn);border:none;border-radius:999px;padding:12px;font:600 12.5px \'Space Grotesk\',sans-serif;color:var(--on);cursor:pointer;">Confirmer</button></div></div>' : '') +
     (v.notifOn ? '<div style="margin:16px 24px 0;background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;gap:12px;align-items:flex-start;">' +
       '<div style="width:9px;height:9px;border-radius:50%;background:var(--acc);margin-top:5px;animation:kfBreathe 2.6s ease-in-out infinite;"></div>' +
       '<div><div style="font:500 12.5px \'Space Grotesk\',sans-serif;">Dossier CGP · 19:30</div><div style="font:400 12px/1.6 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:4px;">' + v.dueCount + ' questions arrivent à échéance. Trois minutes suffisent.</div></div></div>' : '') +
@@ -1527,15 +1540,20 @@ function onAppClick(e) {
   if (!btn) return;
   var d = btn.dataset;
   switch (d.action) {
-    case 'resetProgress':
-      if (confirm('Réinitialiser toute ta progression ? Cette action est irréversible.')) {
-        try { localStorage.removeItem(KEY); } catch (e) {}
-        location.reload();
-      }
+    case 'resetProgress': state.confirmReset = true; render(); break;
+    case 'resetProgressCancel': state.confirmReset = false; render(); break;
+    case 'resetProgressConfirm':
+      try { localStorage.removeItem(KEY); } catch (e) {}
+      store = { srs: {}, xp: 1240, streak: 12, seen: 0, poles: {}, best: {}, seeded: false, name: null, mentalBest: 0 };
+      state.confirmReset = false;
+      seed();
+      go('home');
       break;
     case 'toggleNotif': state.notif = !state.notif; render(); break;
     case 'goTab': go(d.k); break;
     case 'restartOnb': state.screen = 'onb'; state.onb = 0; render(); break;
+    case 'onbNameNext': store.name = (state.nameInput || '').trim() || 'Camille'; save(); state.nameInput = null; state.onb = 0; render(); break;
+    case 'onbNameSkip': state.nameInput = null; state.onb = 0; render(); break;
     case 'onbNext': state.onb = Math.min(2, state.onb + 1); render(); break;
     case 'pickLevel': state.level = +d.idx; render(); break;
     case 'startDiag': startDiagQuiz(); break;
@@ -1644,8 +1662,10 @@ document.addEventListener('DOMContentLoaded', function () {
   appEl.addEventListener('click', onAppClick);
   appEl.addEventListener('input', function (e) {
     if (e.target.matches('[data-texte-input]')) state.texte = e.target.value;
+    if (e.target.matches('[data-name-input]')) state.nameInput = e.target.value;
   });
   load();
+  if (!store.seeded) { state.screen = 'onb'; state.onb = -1; }
   render();
   waitData();
 });
