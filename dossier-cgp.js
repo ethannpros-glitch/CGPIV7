@@ -24,6 +24,7 @@ function load() {
   store = s || { srs: {}, xp: 1240, streak: 12, seen: 0, poles: {}, best: {}, seeded: false };
   if (!store.poles) store.poles = {};
   if (!store.best) store.best = {};
+  if (store.examInstant == null) store.examInstant = false;
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
 
@@ -163,7 +164,7 @@ function seed() {
   save();
 }
 
-function polePct(p) { var e = store.poles[p]; return e && e.n ? Math.round(100 * e.ok / e.n) : 50; }
+function polePct(p) { var e = store.poles[p]; return e && e.n ? Math.round(100 * e.ok / e.n) : 0; }
 function masteryPct() {
   var ps = poleNames(); if (!ps.length) return 0;
   return Math.round(ps.reduce(function (a, p) { return a + polePct(p); }, 0) / ps.length);
@@ -288,6 +289,10 @@ function grade(ok, after) {
     p.n++; if (ok) p.ok++;
     s.poles[it.pole] = p;
   }
+  if (state.quiz && state.quiz.meta && state.quiz.meta.kind === 'daily') {
+    if (!s.daily || s.daily.d !== today()) s.daily = { d: today(), n: 0 };
+    s.daily.n = Math.min(5, s.daily.n + 1);
+  }
   save();
   state.results = state.results.concat([{ ok: ok, key: it.key, pole: it.pole }]);
   state.ans = ok ? 'ok' : 'ko';
@@ -371,16 +376,19 @@ function computeVals() {
     userName: getUserName(), nameInput: state.nameInput != null ? state.nameInput : ((S && S.name) || ''),
     greeting: 'Bonsoir',
     isConfetti: !!st.confetti,
-    streak: S.streak || 12, xp: S.xp || 0, mastery: st.ready ? masteryPct() : 0,
+    streak: S.streak || 0, xp: S.xp || 0, mastery: st.ready ? masteryPct() : 0,
     answeredCount: S.seen || 0, totalQ: st.ready ? totalQ() : 0,
     dueCount: st.ready ? dueKeys().length : 0,
     learnCount: st.ready ? boxCount(function (e) { return e.b >= 1 && e.b <= 3; }) : 0,
     masteredCount: st.ready ? boxCount(function (e) { return e.b >= 4; }) : 0,
     unseenCount: st.ready ? Math.max(0, totalQ() - Object.keys(S.srs).length) : 0,
-    dailyPct: 62, dailyTurn: '0.62turn',
+    dailyPct: (function () { var d = S.daily; return d && d.d === today() ? Math.round(100 * d.n / 5) : 0; })(),
+    dailyTurn: (function () { var d = S.daily; var n = d && d.d === today() ? d.n : 0; return (n / 5).toFixed(2) + 'turn'; })(),
     levelLabel: levels[st.level].title,
     notifOn: !!st.notif, notifOff: !st.notif, confirmReset: !!st.confirmReset,
     notifSub: st.notif ? 'Tous les jours à 19:30' : 'Désactivé',
+    examInstantOn: !!S.examInstant, examInstantOff: !S.examInstant,
+    examInstantSub: S.examInstant ? 'Réponse et explication après chaque question' : 'Correction uniquement à la fin de l\'examen',
 
     isOnb: scr === 'onb', isHome: scr === 'home', isBrowse: scr === 'browse', isCat: scr === 'cat',
     isQuiz: scr === 'quiz', isDone: scr === 'done', isExamPick: scr === 'examPick',
@@ -442,19 +450,35 @@ function computeVals() {
   v.fichesByPole = pNames.map(function (p) {
     return { label: p, fiches: v.fiches.filter(function (f) { return f.pole === p; }) };
   }).filter(function (g) { return g.fiches.length; });
-  var poleAccents = ['var(--acc)', 'var(--gold)', 'var(--acc2)', 'var(--warn)'];
-  v.coursePoles = v.fichesByPole.map(function (g, i) {
+  var poleStyle = {
+    'Les enveloppes': { accent: '#f2cd82', glyph: '🛡️' },
+    'Supports & actifs': { accent: '#4fcfa8', glyph: '📈' },
+    'Financement & levier': { accent: '#e2895f', glyph: '⚖️' },
+    'Retraite & protection': { accent: '#d98a9c', glyph: '🕰️' },
+    'Fiscalité & transmission': { accent: '#6fa8d0', glyph: '📜' },
+    'Entreprise & ingénierie': { accent: '#9db56a', glyph: '🏢' },
+    'Métier & méthode': { accent: '#dbb46f', glyph: '🎯' },
+    'Culture financière': { accent: '#a888c9', glyph: '🌐' }
+  };
+  function poleAccent(p) { return (poleStyle[p] && poleStyle[p].accent) || 'var(--acc)'; }
+  function poleGlyph(p) { return (poleStyle[p] && poleStyle[p].glyph) || '📘'; }
+  v.coursePoles = v.fichesByPole.map(function (g) {
     var avgPct = g.fiches.length ? pctOf(g.label) : 0;
-    return { label: g.label, count: g.fiches.length, accent: poleAccents[i % poleAccents.length], pct: avgPct };
+    return { label: g.label, count: g.fiches.length, accent: poleAccent(g.label), glyph: poleGlyph(g.label), pct: avgPct };
   });
   v.isCoursePole = scr === 'coursePole';
   v.coursePoleLabel = st.coursePoleSel || '';
+  v.coursePoleAccent = poleAccent(st.coursePoleSel || '');
+  v.coursePoleGlyph = poleGlyph(st.coursePoleSel || '');
   var selGroup = v.fichesByPole.find(function (g) { return g.label === st.coursePoleSel; });
   v.coursePoleFichesList = selGroup ? selGroup.fiches : [];
+  v.coursePolePct = selGroup ? pctOf(selGroup.label) : 0;
   var fi = Dd.THEORY ? Dd.THEORY[st.fiche] : null;
   v.ficheTitle = fi ? fi.title : '';
   v.ficheIcon = fi ? (fi.icon || '📘') : '📘';
   v.ficheSource = fi ? (fi.source || '') : '';
+  v.fichePole = theoryPole[st.fiche] || '';
+  v.ficheAccent = poleAccent(v.fichePole);
   v.ficheIdx = fi ? 'FICHE ' + (tKeys.indexOf(st.fiche) + 1) + ' / ' + tKeys.length : '';
   v.ficheMin = fi ? Math.max(2, Math.round((fi.sections || []).length * 1.2)) : 0;
   var calloutRe = /^(EXEMPLE|À RETENIR|ATTENTION|NUANCE DE CONSEIL|BON À SAVOIR|POINT DE VIGILANCE|À NE PAS DIRE AU CLIENT)\s*:?\s*/i;
@@ -463,8 +487,10 @@ function computeVals() {
       var m = p.match(calloutRe);
       return m ? { callout: true, label: m[1].toUpperCase(), text: p.slice(m[0].length) } : { callout: false, text: p };
     });
-    return { h: (s.h || '').toUpperCase(), paras: paras, svg: s.svg || '' };
+    var warnish = /attention|vigilance|risque|à ne pas dire/i.test(s.h || '') || paras.some(function (p) { return p.callout && /attention|vigilance/i.test(p.label); });
+    return { h: (s.h || '').toUpperCase(), paras: paras, svg: s.svg || '', warnish: warnish };
   }) : [];
+  v.ficheTocDots = v.ficheSections.map(function (s, i) { return { n: i + 1, warnish: s.warnish }; });
 
   var exLabels = [
     { k: 'facile', label: 'Niveau 1 · Fondamentaux', sub: 'Les réflexes de base' },
@@ -508,7 +534,7 @@ function computeVals() {
     v.qUnit = q.unit || '';
     v.qExplain = q.explain || q.modele || '';
     v.qModele = q.modele || '';
-    var examMode0 = st.quiz.meta.kind === 'exam';
+    var examMode0 = st.quiz.meta.kind === 'exam' && !S.examInstant;
     var graded = done && !((q.type === 'texte' || q.type === 'open') && ans === 'reveal');
     v.answered = graded && !examMode0; v.wasOk = ans === 'ok'; v.wasKo = ans === 'ko';
     v.examAnswered = graded && examMode0;
@@ -526,7 +552,7 @@ function computeVals() {
     v.isOpen = q.type === 'open';
     v.hasOptions = v.isQcm || v.isScenario || v.isSpot || v.isDoc;
     v.qContexte = q.contexte || ''; v.qDoc = q.doc || '';
-    var examMode = st.quiz.meta.kind === 'exam';
+    var examMode = examMode0;
 
     v.qHasSvg = !!q.svg && q.type !== 'memviz' && done && !examMode0;
     v.qSvg = q.svg || '';
@@ -622,6 +648,12 @@ function computeVals() {
 
 // ---- markup helpers --------------------------------------------------------
 function normalize(s) { return (s || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+function hexA(hex, a) {
+  var h = (hex || '').replace('#', '');
+  if (h.length !== 6) return 'rgba(219,180,111,' + a + ')';
+  var r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+  return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+}
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -801,7 +833,7 @@ function tplHome(v) {
     '<div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.16em;color:var(--ink3);">DÉFI DU JOUR</div>' +
     '<div style="font:300 40px/1 Newsreader,serif;margin-top:10px;">5 <span style="font-size:16px;font-family:\'Space Grotesk\',sans-serif;font-weight:500;color:var(--ink2);">questions</span></div></div>' +
     '<div style="width:58px;height:58px;border-radius:50%;background:conic-gradient(var(--acc) 0turn ' + v.dailyTurn + ',var(--line) ' + v.dailyTurn + ' 1turn);display:flex;align-items:center;justify-content:center;"><div style="width:46px;height:46px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font:500 12px \'JetBrains Mono\',monospace;">' + v.dailyPct + '%</div></div></div>' +
-    '<div style="height:3px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="width:62%;height:3px;background:linear-gradient(90deg,var(--acc2),var(--acc));transform-origin:left;animation:kfFill 1.1s cubic-bezier(.16,1,.3,1) both;"></div></div>' +
+    '<div style="height:3px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="width:' + v.dailyPct + '%;height:3px;background:linear-gradient(90deg,var(--acc2),var(--acc));transform-origin:left;animation:kfFill 1.1s cubic-bezier(.16,1,.3,1) both;"></div></div>' +
     '<button data-action="startDaily" style="border:none;background:var(--acc);color:var(--on);border-radius:999px;padding:14px;text-align:center;font:600 13.5px \'Space Grotesk\',sans-serif;cursor:pointer;animation:kfGlow 3.2s ease-in-out infinite;">Commencer · 3 min</button></div>' +
     '<div style="margin:26px 24px 0;display:flex;align-items:flex-end;gap:22px;">' +
     '<div><div style="font:300 52px/0.9 Newsreader,serif;letter-spacing:-.03em;"><span data-countup="' + v.mastery + '" data-countup-suffix="%">0%</span></div><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);margin-top:6px;">MAÎTRISE</div></div>' +
@@ -1005,46 +1037,56 @@ function tplSrs(v) {
     '<div style="height:26px;"></div></div>';
 }
 
-function tplFicheCard(f) {
+function tplFicheCard(f, idx, accent) {
   var pr = f.progress || 0;
-  var ringColor = pr >= 80 ? 'var(--acc2)' : pr > 0 ? 'var(--acc)' : 'var(--line)';
+  var acc = accent || 'var(--acc)';
+  var ringColor = pr >= 80 ? 'var(--acc2)' : pr > 0 ? acc : 'var(--line)';
   var badge = pr >= 80
     ? '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'JetBrains Mono\',monospace;letter-spacing:.08em;color:var(--acc2);margin-top:5px;">✓ MAÎTRISÉE</span>'
     : pr > 0
-      ? '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'JetBrains Mono\',monospace;letter-spacing:.08em;color:var(--acc);margin-top:5px;">' + pr + '% EN COURS</span>'
+      ? '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'JetBrains Mono\',monospace;letter-spacing:.08em;color:' + acc + ';margin-top:5px;">' + pr + '% EN COURS</span>'
       : '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'JetBrains Mono\',monospace;letter-spacing:.08em;color:var(--dim);margin-top:5px;">' + esc(f.meta) + '</span>';
-  return '<button data-action="ficheGo" data-fiche="' + esc(f.key) + '" class="hv-a" style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;box-sizing:border-box;">' +
+  var numTag = idx != null ? '<span style="flex-shrink:0;width:22px;font:500 11px \'JetBrains Mono\',monospace;color:var(--dim);text-align:center;">' + (idx < 9 ? '0' : '') + (idx + 1) + '</span>' : '';
+  return '<button data-action="ficheGo" data-fiche="' + esc(f.key) + '" class="hv-a" style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;box-sizing:border-box;">' +
+    numTag +
     '<span style="flex-shrink:0;position:relative;width:46px;height:46px;border-radius:50%;background:conic-gradient(' + ringColor + ' ' + (pr * 3.6) + 'deg,var(--line) ' + (pr * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
     '<span style="width:39px;height:39px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:17px;">' + esc(f.icon) + '</span></span>' +
     '<span style="flex:1;min-width:0;"><span style="display:block;font:500 13.5px/1.35 \'Space Grotesk\',sans-serif;">' + esc(f.title) + '</span>' + badge + '</span>' +
-    '<span style="flex-shrink:0;font:400 15px Newsreader,serif;color:var(--acc);">&#8250;</span></button>';
+    '<span style="flex-shrink:0;font:400 15px Newsreader,serif;color:' + acc + ';">&#8250;</span></button>';
 }
 
 function tplCourses(v) {
   var cards = v.coursePoles.map(function (p, i) {
-    return '<button data-action="coursePoleGo" data-pole="' + esc(p.label) + '" class="hv-a stagger" style="animation-delay:' + (i * 0.04).toFixed(2) + 's;background:var(--panel);border:1px solid var(--line);border-left:3px solid ' + p.accent + ';border-radius:16px;padding:17px;text-align:left;cursor:pointer;color:var(--ink);display:flex;flex-direction:column;gap:14px;box-sizing:border-box;">' +
-      '<div style="font:300 15px/1.3 Newsreader,serif;">' + esc(p.label) + '</div>' +
-      '<div style="display:flex;align-items:center;justify-content:space-between;">' +
-      '<span style="font:500 9.5px \'JetBrains Mono\',monospace;letter-spacing:.06em;color:var(--ink3);">' + p.count + ' FICHE' + (p.count > 1 ? 'S' : '') + '</span>' +
-      '<span style="font:400 18px Newsreader,serif;color:' + p.accent + ';">&#8250;</span></div></button>';
+    return '<button data-action="coursePoleGo" data-pole="' + esc(p.label) + '" class="hv-a stagger" style="animation-delay:' + (i * 0.04).toFixed(2) + 's;position:relative;overflow:hidden;width:100%;background:linear-gradient(120deg,' + hexA(p.accent, 0.16) + ',var(--panel) 60%);border:1px solid ' + hexA(p.accent, 0.35) + ';border-radius:20px;padding:19px 20px;text-align:left;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:16px;box-sizing:border-box;">' +
+      '<span style="position:absolute;right:-8px;top:-16px;font-size:68px;opacity:.13;transform:rotate(8deg);pointer-events:none;">' + p.glyph + '</span>' +
+      '<span style="flex-shrink:0;position:relative;width:56px;height:56px;border-radius:50%;background:conic-gradient(' + p.accent + ' ' + (p.pct * 3.6) + 'deg,var(--line) ' + (p.pct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
+      '<span style="width:47px;height:47px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:500 12px \'JetBrains Mono\',monospace;color:' + p.accent + ';">' + p.pct + '%</span></span>' +
+      '<span style="flex:1;min-width:0;position:relative;"><span style="display:block;font:300 17px/1.25 Newsreader,serif;">' + esc(p.label) + '</span>' +
+      '<span style="display:block;font:500 9.5px \'JetBrains Mono\',monospace;letter-spacing:.08em;color:var(--ink3);margin-top:6px;">' + p.count + ' FICHE' + (p.count > 1 ? 'S' : '') + ' · MAÎTRISE ' + p.pct + '%</span></span>' +
+      '<span style="flex-shrink:0;font:400 20px Newsreader,serif;color:' + p.accent + ';position:relative;">&#8250;</span></button>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:58px 24px 0;display:flex;justify-content:space-between;align-items:flex-start;">' +
     '<div><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.2em;color:var(--ink3);">FICHES</div>' +
     '<div style="font:300 34px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:14px;">' + v.ficheCount + ' <span style="font-style:italic;">cours</span>, ' + v.coursePoles.length + ' pôles</div></div>' +
     '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink2);cursor:pointer;flex-shrink:0;margin-top:2px;">🔍</button></div>' +
-    '<div style="margin:22px 24px 0;display:grid;grid-template-columns:1fr 1fr;gap:12px;">' + cards + '</div>' +
+    '<div style="margin:22px 24px 0;display:flex;flex-direction:column;gap:12px;">' + cards + '</div>' +
     '<div style="height:26px;"></div></div>';
 }
 
 function tplCoursePole(v) {
+  var acc = v.coursePoleAccent;
   var cards = v.coursePoleFichesList.map(function (f, i) {
-    return '<div class="stagger" style="animation-delay:' + (i * 0.04).toFixed(2) + 's;">' + tplFicheCard(f) + '</div>';
+    return '<div class="stagger" style="animation-delay:' + (i * 0.04).toFixed(2) + 's;">' + tplFicheCard(f, i, acc) + '</div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;"><button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Fiches</button>' +
-    '<div style="font:300 32px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:16px;">' + esc(v.coursePoleLabel) + '</div></div>' +
-    '<div style="margin:20px 24px 0;display:flex;flex-direction:column;gap:9px;">' + cards + '</div>' +
+    '<div style="padding:0 0 0;position:relative;background:linear-gradient(160deg,' + hexA(acc, 0.22) + ',transparent 65%);">' +
+    '<div style="padding:58px 24px 22px;"><button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:' + acc + ';cursor:pointer;">&#8249; Fiches</button>' +
+    '<div style="display:flex;align-items:center;gap:14px;margin-top:16px;">' +
+    '<span style="flex-shrink:0;width:50px;height:50px;border-radius:16px;background:' + hexA(acc, 0.18) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;font-size:22px;">' + v.coursePoleGlyph + '</span>' +
+    '<div><div style="font:300 28px/1.1 Newsreader,serif;letter-spacing:-.02em;">' + esc(v.coursePoleLabel) + '</div>' +
+    '<div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.1em;color:var(--ink3);margin-top:6px;">' + v.coursePoleFichesList.length + ' FICHES · MAÎTRISE ' + v.coursePolePct + '%</div></div></div></div></div>' +
+    '<div style="margin:6px 24px 0;display:flex;flex-direction:column;gap:9px;">' + cards + '</div>' +
     '<div style="height:26px;"></div></div>';
 }
 
@@ -1060,23 +1102,30 @@ function tplPara(p, i) {
 }
 
 function tplFiche(v) {
+  var acc = v.ficheAccent;
+  var toc = v.ficheTocDots.map(function (d) {
+    var col = d.warnish ? 'var(--warn)' : acc;
+    return '<button data-action="ficheJump" data-i="' + (d.n - 1) + '" style="flex-shrink:0;width:30px;height:30px;border-radius:50%;background:' + hexA(col, 0.14) + ';border:1px solid ' + hexA(col, 0.4) + ';color:' + col + ';font:500 11px \'JetBrains Mono\',monospace;cursor:pointer;">' + d.n + '</button>';
+  }).join('');
   var sections = v.ficheSections.map(function (s, i) {
+    var col = s.warnish ? 'var(--warn)' : acc;
     var body = s.paras.map(tplPara).join('') + (s.svg ? '<div class="stagger" style="animation-delay:' + (s.paras.length * 0.06).toFixed(2) + 's;margin-top:14px;border-radius:14px;overflow:hidden;background:#faf8f3;padding:8px;">' + s.svg + '</div>' : '');
-    return '<div class="thsec' + (i === 0 ? ' open' : '') + '" style="margin-top:12px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--panel);animation:kfIn .4s cubic-bezier(.16,1,.3,1) both;animation-delay:' + (i * 0.05).toFixed(2) + 's;">' +
-      '<button data-fold-head style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--acc);font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.12em;text-align:left;">' +
-      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font:500 10px \'JetBrains Mono\',monospace;color:var(--acc);">' + (i + 1) + '</span>' +
+    return '<div id="sec-' + i + '" class="thsec' + (i === 0 ? ' open' : '') + '" style="margin-top:12px;border:1px solid var(--line);border-left:3px solid ' + hexA(col, 0.6) + ';border-radius:16px;overflow:hidden;background:var(--panel);animation:kfIn .4s cubic-bezier(.16,1,.3,1) both;animation-delay:' + (i * 0.05).toFixed(2) + 's;">' +
+      '<button data-fold-head style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:' + col + ';font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.12em;text-align:left;">' +
+      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + hexA(col, 0.16) + ';border:1px solid ' + hexA(col, 0.4) + ';display:flex;align-items:center;justify-content:center;font:500 10px \'JetBrains Mono\',monospace;color:' + col + ';">' + (s.warnish ? '!' : (i + 1)) + '</span>' +
       '<span style="flex:1;">' + esc(s.h) + '</span><span class="fold-arr" style="flex-shrink:0;transition:transform .25s;transform:rotate(' + (i === 0 ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
       '<div class="fold-body' + (i === 0 ? '' : ' fold-closed') + '"><div style="padding:0 16px 16px;">' + body + '</div></div></div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;position:relative;">' +
     '<div style="position:sticky;top:0;left:0;right:0;height:3px;background:var(--line);z-index:5;"><div id="ficheProgressFill" style="height:3px;width:0%;background:linear-gradient(90deg,var(--acc2),var(--acc),var(--gold));"></div></div>' +
-    '<div style="padding:40px 26px 0;"><button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Retour</button>' +
+    '<div style="padding:32px 26px 22px;background:linear-gradient(160deg,' + hexA(acc, 0.2) + ',transparent 70%);">' +
+    '<button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:' + acc + ';cursor:pointer;">&#8249; Retour</button>' +
     '<div style="display:flex;align-items:center;gap:14px;margin-top:18px;">' +
-    '<span style="flex-shrink:0;width:52px;height:52px;border-radius:16px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:23px;">' + esc(v.ficheIcon) + '</span>' +
-    '<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;align-items:center;font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);"><div>' + esc(v.ficheIdx) + '</div><div style="color:var(--acc);">' + v.ficheMin + ' MIN</div></div>' +
+    '<span style="flex-shrink:0;width:52px;height:52px;border-radius:16px;background:' + hexA(acc, 0.18) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;font-size:23px;">' + esc(v.ficheIcon) + '</span>' +
+    '<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;align-items:center;font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);"><div>' + esc(v.ficheIdx) + '</div><div style="color:' + acc + ';">' + v.ficheMin + ' MIN</div></div>' +
     '<div style="font:300 26px/1.15 Newsreader,serif;letter-spacing:-.02em;margin-top:6px;">' + esc(v.ficheTitle) + '</div></div></div>' +
-    '<div style="margin-top:16px;height:1px;background:linear-gradient(90deg,var(--acc),var(--acc2),transparent);"></div>' +
-    '<div style="font:400 10px/1.6 \'JetBrains Mono\',monospace;color:var(--dim);margin-top:14px;">' + esc(v.ficheSource) + '</div></div>' +
+    '<div style="font:400 10px/1.6 \'JetBrains Mono\',monospace;color:var(--dim);margin-top:16px;">' + esc(v.ficheSource) + '</div>' +
+    '<div style="margin-top:16px;display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;">' + toc + '</div></div>' +
     '<div style="padding:6px 26px 0;">' + sections + '</div>' +
     '<div style="padding:26px 26px 30px;"><button data-action="startFicheQuiz" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Space Grotesk\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Tester la fiche</button></div></div>';
 }
@@ -1111,12 +1160,16 @@ function tplProfile(v) {
   var notifSwitch = v.notifOn
     ? '<span style="width:42px;height:24px;border-radius:999px;background:var(--acc);display:flex;align-items:center;justify-content:flex-end;padding:2px;box-sizing:border-box;"><span style="width:20px;height:20px;border-radius:50%;background:var(--on);"></span></span>'
     : '<span style="width:42px;height:24px;border-radius:999px;background:var(--line);display:flex;align-items:center;padding:2px;box-sizing:border-box;"><span style="width:20px;height:20px;border-radius:50%;background:var(--dim);"></span></span>';
+  var examInstantSwitch = v.examInstantOn
+    ? '<span style="width:42px;height:24px;border-radius:999px;background:var(--acc);display:flex;align-items:center;justify-content:flex-end;padding:2px;box-sizing:border-box;flex-shrink:0;"><span style="width:20px;height:20px;border-radius:50%;background:var(--on);"></span></span>'
+    : '<span style="width:42px;height:24px;border-radius:999px;background:var(--line);display:flex;align-items:center;padding:2px;box-sizing:border-box;flex-shrink:0;"><span style="width:20px;height:20px;border-radius:50%;background:var(--dim);"></span></span>';
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:58px 24px 0;"><div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.2em;color:var(--ink3);">PROFIL</div>' +
     '<div style="font:300 34px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:14px;">' + esc(v.userName) + '</div>' +
     '<div style="font:400 12.5px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:8px;">Niveau ' + esc(v.levelLabel) + ' · ' + v.xp + ' XP · série de ' + v.streak + ' jours</div></div>' +
     '<div style="margin:24px 24px 0;background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;">' +
     '<button data-action="toggleNotif" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;"><span style="display:block;font:500 13px \'Space Grotesk\',sans-serif;">Rappel quotidien</span><span style="display:block;font:400 11px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(v.notifSub) + '</span></span>' + notifSwitch + '</button>' +
+    '<button data-action="toggleExamInstant" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;min-width:0;"><span style="display:block;font:500 13px \'Space Grotesk\',sans-serif;">Correction immédiate en examen blanc</span><span style="display:block;font:400 11px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(v.examInstantSub) + '</span></span>' + examInstantSwitch + '</button>' +
     '<button data-action="goExamPick" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;font:500 13px \'Space Grotesk\',sans-serif;">Examens blancs</span><span style="font:400 15px Newsreader,serif;color:var(--acc);">&#8250;</span></button>' +
     '<button data-action="restartOnb" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;font:500 13px \'Space Grotesk\',sans-serif;">Refaire le diagnostic</span><span style="font:400 15px Newsreader,serif;color:var(--acc);">&#8250;</span></button>' +
     '<button data-action="resetProgress" style="width:100%;background:none;border:none;padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--warn);text-align:left;"><span style="flex:1;font:500 13px \'Space Grotesk\',sans-serif;">Réinitialiser ma progression</span></button></div>' +
@@ -1704,12 +1757,13 @@ function onAppClick(e) {
     case 'resetProgressCancel': state.confirmReset = false; render(); break;
     case 'resetProgressConfirm':
       try { localStorage.removeItem(KEY); } catch (e) {}
-      store = { srs: {}, xp: 1240, streak: 12, seen: 0, poles: {}, best: {}, seeded: false, name: null, mentalBest: 0 };
+      store = { srs: {}, xp: 0, streak: 0, seen: 0, poles: {}, best: {}, seeded: true, name: null, mentalBest: 0, daily: null, examInstant: store ? store.examInstant : false };
       state.confirmReset = false;
-      seed();
+      save();
       go('home');
       break;
     case 'toggleNotif': state.notif = !state.notif; render(); break;
+    case 'toggleExamInstant': store.examInstant = !store.examInstant; save(); render(); break;
     case 'goTab': go(d.k); break;
     case 'restartOnb': state.screen = 'onb'; state.onb = 0; render(); break;
     case 'onbNameNext': store.name = (state.nameInput || '').trim() || 'Camille'; save(); state.nameInput = null; state.onb = 0; render(); break;
@@ -1762,6 +1816,14 @@ function onAppClick(e) {
       break;
     case 'ficheGo': goChild('fiche', { fiche: d.fiche }); break;
     case 'goSearch': goChild('search'); break;
+    case 'ficheJump': {
+      var sec = document.getElementById('sec-' + d.i);
+      if (sec) {
+        if (!sec.classList.contains('open')) sec.querySelector('[data-fold-head]').click();
+        sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      break;
+    }
     case 'searchGo':
       if (d.kind === 'fiche') goChild('fiche', { fiche: d.id });
       else startCat(d.id, 12);
