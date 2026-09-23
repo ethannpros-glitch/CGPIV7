@@ -224,10 +224,44 @@ function startDiagQuiz() {
   startList(keys, { kind: 'diag', title: 'Diagnostic' });
 }
 function startExam(levelKey, label) {
+  if (levelKey === 'niveau_general') { startNiveauGeneral(label); return; }
   var src = D().EXAM_LEVELS[levelKey] || [];
   var picked = src.slice().sort(function () { return Math.random() - 0.5; }).slice(0, 40);
   var keys = picked.map(function (e) { return e.d + '#' + e.i; });
   startList(keys, { kind: 'exam', title: 'Examen · ' + label, levelKey: levelKey, label: label });
+}
+function startNiveauGeneral(label) {
+  var byPole = {};
+  quizCats().forEach(function (c) {
+    if (!c.pole) return;
+    (byPole[c.pole] = byPole[c.pole] || []).push(c.id);
+  });
+  var keys = [];
+  Object.keys(byPole).forEach(function (pole) {
+    var pool = [];
+    byPole[pole].forEach(function (id) {
+      bank(id).forEach(function (q, i) {
+        if ((q.type === 'qcm' || q.type === 'vf') && !qIsExpert(q, id)) pool.push(id + '#' + i);
+      });
+    });
+    pool.sort(function () { return Math.random() - 0.5; });
+    keys = keys.concat(pool.slice(0, 3));
+  });
+  keys.sort(function () { return Math.random() - 0.5; });
+  startList(keys, { kind: 'exam', title: 'Mise à niveau générale', levelKey: 'niveau_general', label: label || 'Mise à niveau générale' });
+}
+function fichePct(theoryId) {
+  var cat = allCats().find(function (c) { return c.theory === theoryId; });
+  if (!cat) return 0;
+  var sib = quizCats().filter(function (c) { return c.parentId === cat.parentId; });
+  var total = 0, seen = 0;
+  sib.forEach(function (c) {
+    bank(c.id).forEach(function (q, i) {
+      total++;
+      if (store.srs[c.id + '#' + i]) seen++;
+    });
+  });
+  return total ? Math.round(100 * seen / total) : 0;
 }
 function startFicheQ(theoryId) {
   var cat = allCats().find(function (c) { return c.theory === theoryId; });
@@ -401,7 +435,8 @@ function computeVals() {
     var t = Dd.THEORY[k];
     return {
       key: k, title: t.title, icon: t.icon || '📘', pole: theoryPole[k] || '',
-      meta: ((t.sections || []).length) + ' SECTIONS · ' + Math.max(2, Math.round((t.sections || []).length * 1.2)) + ' MIN'
+      meta: ((t.sections || []).length) + ' SECTIONS · ' + Math.max(2, Math.round((t.sections || []).length * 1.2)) + ' MIN',
+      progress: st.ready ? fichePct(k) : 0
     };
   });
   v.fichesByPole = pNames.map(function (p) {
@@ -439,6 +474,7 @@ function computeVals() {
   v.examLevels = exLabels.map(function (e, i) {
     return { n: i + 1, key: e.k, label: e.label, sub: e.sub, best: (S.best && S.best[e.k]) ? 'RECORD ' + S.best[e.k] + '%' : '—' };
   });
+  v.niveauGeneral = { key: 'niveau_general', label: 'Mise à niveau générale', sub: 'Les bases de chaque pôle : PER, assurance-vie, succession…', best: (S.best && S.best.niveau_general) ? 'RECORD ' + S.best.niveau_general + '%' : '—' };
 
   if (st.ready) {
     var typeCounts = {};
@@ -662,16 +698,16 @@ function tplOrder(v) {
 
 function confettiHtml() {
   var pieces = [
-    ['8%', '0', '7px', '12px', '2px', '#b9dd7a', '2.4s', '.05s'],
-    ['18%', '0', '6px', '10px', '2px', '#e6c76a', '2.8s', '.3s'],
-    ['28%', '0', '8px', '8px', '50%', '#8fd0b0', '2.2s', '.18s'],
-    ['37%', '0', '6px', '13px', '2px', '#e6a06a', '3s', '.5s'],
-    ['46%', '0', '7px', '11px', '2px', '#b9dd7a', '2.6s', '.1s'],
-    ['55%', '0', '9px', '9px', '50%', '#e6c76a', '2.9s', '.42s'],
-    ['64%', '0', '6px', '12px', '2px', '#8fd0b0', '2.3s', '.24s'],
-    ['73%', '0', '7px', '10px', '2px', '#b9dd7a', '3.1s', '.6s'],
-    ['82%', '0', '8px', '8px', '50%', '#e6a06a', '2.5s', '.34s'],
-    ['91%', '0', '6px', '12px', '2px', '#e6c76a', '2.7s', '.14s']
+    ['8%', '0', '7px', '12px', '2px', '#f2cd82', '2.4s', '.05s'],
+    ['18%', '0', '6px', '10px', '2px', '#dbb46f', '2.8s', '.3s'],
+    ['28%', '0', '8px', '8px', '50%', '#4fcfa8', '2.2s', '.18s'],
+    ['37%', '0', '6px', '13px', '2px', '#ef8b7a', '3s', '.5s'],
+    ['46%', '0', '7px', '11px', '2px', '#f2cd82', '2.6s', '.1s'],
+    ['55%', '0', '9px', '9px', '50%', '#dbb46f', '2.9s', '.42s'],
+    ['64%', '0', '6px', '12px', '2px', '#4fcfa8', '2.3s', '.24s'],
+    ['73%', '0', '7px', '10px', '2px', '#f2cd82', '3.1s', '.6s'],
+    ['82%', '0', '8px', '8px', '50%', '#ef8b7a', '2.5s', '.34s'],
+    ['91%', '0', '6px', '12px', '2px', '#dbb46f', '2.7s', '.14s']
   ];
   return pieces.map(function (p) {
     return '<span style="position:absolute;left:' + p[0] + ';top:' + p[1] + ';width:' + p[2] + ';height:' + p[3] + ';border-radius:' + p[4] + ';background:' + p[5] + ';animation:kfFall ' + p[6] + ' linear ' + p[7] + ' both;"></span>';
@@ -908,6 +944,11 @@ function tplBuilder(v) {
 }
 
 function tplExamPick(v) {
+  var g = v.niveauGeneral;
+  var niveauBtn = '<button data-action="examGo" data-key="' + esc(g.key) + '" data-label="' + esc(g.label) + '" class="hv-a stagger" style="background:linear-gradient(135deg,var(--panel2),var(--panel));border:1px solid var(--gold);border-radius:18px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;">' +
+    '<span style="font-size:26px;">⚡</span>' +
+    '<span style="flex:1;"><span style="display:block;font:500 14px \'Space Grotesk\',sans-serif;">' + esc(g.label) + '</span><span style="display:block;font:400 11.5px \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(g.sub) + '</span></span>' +
+    '<span style="font:500 10px \'JetBrains Mono\',monospace;color:var(--gold);">' + esc(g.best) + '</span></button>';
   var lvs = v.examLevels.map(function (e, ei) {
     return '<button data-action="examGo" data-key="' + esc(e.key) + '" data-label="' + esc(e.label) + '" class="hv-a stagger" style="animation-delay:' + (ei * 0.06).toFixed(2) + 's;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;">' +
       '<span style="font:300 30px/1 Newsreader,serif;color:var(--acc);">' + e.n + '</span>' +
@@ -917,9 +958,12 @@ function tplExamPick(v) {
   return '<div style="flex:1;overflow:auto;min-height:0;padding:58px 24px 0;">' +
     '<button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Retour</button>' +
     '<div style="font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.2em;color:var(--ink3);margin-top:16px;">EXAMEN BLANC</div>' +
-    '<div style="font:300 34px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:14px;">Trois <span style="font-style:italic;">niveaux</span></div>' +
-    '<div style="font:400 13px/1.7 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:12px;">40 questions tirées au sort, sans correction avant la fin. Seuil de réussite : 60 %.</div>' +
-    '<div style="margin-top:24px;display:flex;flex-direction:column;gap:10px;">' + lvs + '</div>' +
+    '<div style="font:300 34px/1.1 Newsreader,serif;letter-spacing:-.025em;margin-top:14px;">Quatre <span style="font-style:italic;">formats</span></div>' +
+    '<div style="font:400 13px/1.7 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:12px;">Questions tirées au sort, sans correction avant la fin. Seuil de réussite : 60 %.</div>' +
+    '<div style="margin-top:24px;font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--gold);">CHECK RAPIDE</div>' +
+    '<div style="margin-top:10px;">' + niveauBtn + '</div>' +
+    '<div style="margin-top:22px;font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);">PROGRESSION PAR NIVEAU</div>' +
+    '<div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;">' + lvs + '</div>' +
     '<div style="height:26px;"></div></div>';
 }
 
@@ -962,9 +1006,17 @@ function tplSrs(v) {
 }
 
 function tplFicheCard(f) {
+  var pr = f.progress || 0;
+  var ringColor = pr >= 80 ? 'var(--acc2)' : pr > 0 ? 'var(--acc)' : 'var(--line)';
+  var badge = pr >= 80
+    ? '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'JetBrains Mono\',monospace;letter-spacing:.08em;color:var(--acc2);margin-top:5px;">✓ MAÎTRISÉE</span>'
+    : pr > 0
+      ? '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'JetBrains Mono\',monospace;letter-spacing:.08em;color:var(--acc);margin-top:5px;">' + pr + '% EN COURS</span>'
+      : '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'JetBrains Mono\',monospace;letter-spacing:.08em;color:var(--dim);margin-top:5px;">' + esc(f.meta) + '</span>';
   return '<button data-action="ficheGo" data-fiche="' + esc(f.key) + '" class="hv-a" style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;box-sizing:border-box;">' +
-    '<span style="flex-shrink:0;width:44px;height:44px;border-radius:14px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:19px;">' + esc(f.icon) + '</span>' +
-    '<span style="flex:1;min-width:0;"><span style="display:block;font:500 13.5px/1.35 \'Space Grotesk\',sans-serif;">' + esc(f.title) + '</span><span style="display:block;font:500 9.5px \'JetBrains Mono\',monospace;letter-spacing:.1em;color:var(--dim);margin-top:5px;">' + esc(f.meta) + '</span></span>' +
+    '<span style="flex-shrink:0;position:relative;width:46px;height:46px;border-radius:50%;background:conic-gradient(' + ringColor + ' ' + (pr * 3.6) + 'deg,var(--line) ' + (pr * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
+    '<span style="width:39px;height:39px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:17px;">' + esc(f.icon) + '</span></span>' +
+    '<span style="flex:1;min-width:0;"><span style="display:block;font:500 13.5px/1.35 \'Space Grotesk\',sans-serif;">' + esc(f.title) + '</span>' + badge + '</span>' +
     '<span style="flex-shrink:0;font:400 15px Newsreader,serif;color:var(--acc);">&#8250;</span></button>';
 }
 
@@ -1011,11 +1063,14 @@ function tplFiche(v) {
   var sections = v.ficheSections.map(function (s, i) {
     var body = s.paras.map(tplPara).join('') + (s.svg ? '<div class="stagger" style="animation-delay:' + (s.paras.length * 0.06).toFixed(2) + 's;margin-top:14px;border-radius:14px;overflow:hidden;background:#faf8f3;padding:8px;">' + s.svg + '</div>' : '');
     return '<div class="thsec' + (i === 0 ? ' open' : '') + '" style="margin-top:12px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--panel);animation:kfIn .4s cubic-bezier(.16,1,.3,1) both;animation-delay:' + (i * 0.05).toFixed(2) + 's;">' +
-      '<button data-fold-head style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;color:var(--acc);font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.12em;text-align:left;"><span>' + esc(s.h) + '</span><span class="fold-arr" style="flex-shrink:0;transition:transform .25s;transform:rotate(' + (i === 0 ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
+      '<button data-fold-head style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--acc);font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.12em;text-align:left;">' +
+      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font:500 10px \'JetBrains Mono\',monospace;color:var(--acc);">' + (i + 1) + '</span>' +
+      '<span style="flex:1;">' + esc(s.h) + '</span><span class="fold-arr" style="flex-shrink:0;transition:transform .25s;transform:rotate(' + (i === 0 ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
       '<div class="fold-body' + (i === 0 ? '' : ' fold-closed') + '"><div style="padding:0 16px 16px;">' + body + '</div></div></div>';
   }).join('');
-  return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:56px 26px 0;"><button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Retour</button>' +
+  return '<div style="flex:1;overflow:auto;min-height:0;position:relative;">' +
+    '<div style="position:sticky;top:0;left:0;right:0;height:3px;background:var(--line);z-index:5;"><div id="ficheProgressFill" style="height:3px;width:0%;background:linear-gradient(90deg,var(--acc2),var(--acc),var(--gold));"></div></div>' +
+    '<div style="padding:40px 26px 0;"><button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Space Grotesk\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Retour</button>' +
     '<div style="display:flex;align-items:center;gap:14px;margin-top:18px;">' +
     '<span style="flex-shrink:0;width:52px;height:52px;border-radius:16px;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:23px;">' + esc(v.ficheIcon) + '</span>' +
     '<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;align-items:center;font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.14em;color:var(--ink3);"><div>' + esc(v.ficheIdx) + '</div><div style="color:var(--acc);">' + v.ficheMin + ' MIN</div></div>' +
@@ -1594,6 +1649,14 @@ function render() {
     });
   }
   if (v.isFiche) {
+    var ficheScroll = screenEl.firstElementChild, ficheFill = document.getElementById('ficheProgressFill');
+    if (ficheScroll && ficheFill) {
+      ficheScroll.addEventListener('scroll', function () {
+        var max = ficheScroll.scrollHeight - ficheScroll.clientHeight;
+        var pct = max > 0 ? Math.min(100, (ficheScroll.scrollTop / max) * 100) : 0;
+        ficheFill.style.width = pct + '%';
+      });
+    }
     screenEl.querySelectorAll('[data-fold-head]').forEach(function (hd) {
       hd.addEventListener('click', function () {
         var sec = hd.parentElement, body = sec.querySelector('.fold-body'), arr = hd.querySelector('.fold-arr');
