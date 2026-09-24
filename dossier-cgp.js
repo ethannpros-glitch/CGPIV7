@@ -76,6 +76,8 @@ function load() {
   if (!store.best) store.best = {};
   if (store.examInstant == null) store.examInstant = false;
   if (!store.fichesSeen) store.fichesSeen = {};
+  if (!store.ficheSectionsSeen) store.ficheSectionsSeen = {};
+  if (!store.ficheTested) store.ficheTested = {};
   if (store.programStart === undefined) store.programStart = null;
   if (!store.parcoursMinutesDay) store.parcoursMinutesDay = 30;
   if (!store.parcoursObjectiveDays) store.parcoursObjectiveDays = 63;
@@ -334,7 +336,18 @@ function startFicheQ(theoryId) {
   var keys = [];
   sib.forEach(function (c) { bank(c.id).forEach(function (q, i) { keys.push(c.id + '#' + i); }); });
   if (!keys.length) { startDailyQuiz(); return; }
-  startList(keys.sort(function () { return Math.random() - 0.5; }).slice(0, 8), { kind: 'cat', title: 'Test de la fiche' });
+  startList(keys.sort(function () { return Math.random() - 0.5; }).slice(0, 8), { kind: 'cat', title: 'Test de la fiche', theoryId: theoryId });
+}
+function maybeCompleteFiche(id) {
+  var t = D().THEORY[id];
+  if (!t) return;
+  var total = (t.sections || []).length;
+  var seenMap = store.ficheSectionsSeen && store.ficheSectionsSeen[id];
+  var seenCount = seenMap ? Object.keys(seenMap).length : 0;
+  if (total && seenCount < total) return;
+  if (!(store.ficheTested && store.ficheTested[id])) return;
+  if (!store.fichesSeen) store.fichesSeen = {};
+  store.fichesSeen[id] = true;
 }
 
 function cur() { return state.quiz ? state.quiz.items[state.qi] : null; }
@@ -384,6 +397,12 @@ function nextQ() {
       state.screen = 'examResult'; state.confetti = pct >= 60;
     } else {
       state.screen = 'done'; state.confetti = pct >= 70;
+      if (q.meta.theoryId) {
+        if (!store.ficheTested) store.ficheTested = {};
+        store.ficheTested[q.meta.theoryId] = true;
+        maybeCompleteFiche(q.meta.theoryId);
+        save();
+      }
     }
     if (confettiTimer) clearTimeout(confettiTimer);
     confettiTimer = setTimeout(function () { state.confetti = false; render(); }, 3400);
@@ -534,15 +553,20 @@ function computeVals() {
   v.ficheIdx = fi ? 'FICHE ' + (tKeys.indexOf(st.fiche) + 1) + ' / ' + tKeys.length : '';
   v.ficheMin = fi ? Math.max(2, Math.round((fi.sections || []).length * 1.2)) : 0;
   var calloutRe = /^(EXEMPLE|À RETENIR|ATTENTION|NUANCE DE CONSEIL|BON À SAVOIR|POINT DE VIGILANCE|À NE PAS DIRE AU CLIENT)\s*:?\s*/i;
-  v.ficheSections = fi ? (fi.sections || []).map(function (s) {
+  v.ficheSections = fi ? (fi.sections || []).map(function (s, i) {
     var paras = (s.body || '').split(/\n\n+/).map(function (p) {
       var m = p.match(calloutRe);
       return m ? { callout: true, label: m[1].toUpperCase(), text: p.slice(m[0].length) } : { callout: false, text: p };
     });
     var warnish = /attention|vigilance|risque|à ne pas dire/i.test(s.h || '') || paras.some(function (p) { return p.callout && /attention|vigilance/i.test(p.label); });
-    return { h: (s.h || '').toUpperCase(), paras: paras, svg: s.svg || '', warnish: warnish };
+    var seenMap = S.ficheSectionsSeen && S.ficheSectionsSeen[st.fiche];
+    return { h: (s.h || '').toUpperCase(), paras: paras, svg: s.svg || '', warnish: warnish, seen: !!(seenMap && seenMap[i]) };
   }) : [];
   v.ficheTocDots = v.ficheSections.map(function (s, i) { return { n: i + 1, warnish: s.warnish }; });
+  v.ficheSectionsSeenCount = v.ficheSections.filter(function (s) { return s.seen; }).length;
+  v.ficheAllSectionsSeen = v.ficheSections.length > 0 && v.ficheSectionsSeenCount === v.ficheSections.length;
+  v.ficheTested = !!(S.ficheTested && S.ficheTested[st.fiche]);
+  v.ficheValidated = !!(S.fichesSeen && S.fichesSeen[st.fiche]);
 
   var exLabels = [
     { k: 'facile', label: 'Niveau 1 · Fondamentaux', sub: 'Les réflexes de base' },
@@ -951,7 +975,14 @@ function tplOnb(v) {
 function parcoursChip(action, v, label, selected) {
   return '<button data-action="' + action + '" data-v="' + v + '" style="flex:1;border:1px solid ' + (selected ? 'var(--acc)' : 'var(--line)') + ';background:' + (selected ? 'var(--acc)' : 'none') + ';color:' + (selected ? 'var(--on)' : 'var(--ink)') + ';border-radius:999px;padding:10px 6px;font:600 12px \'Inter\',sans-serif;cursor:pointer;text-align:center;">' + label + '</button>';
 }
-function parcoursTaskRow(t, isToday, acc) {
+function parcoursTaskRow(t, isToday, acc, locked) {
+  if (locked) {
+    var subL = t.type === 'quiz' ? (t.count + ' questions') : 'Fiche de cours';
+    return '<div style="width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:12px;padding:9px 10px;display:flex;align-items:center;gap:11px;color:var(--ink3);margin-top:3px;box-sizing:border-box;opacity:.5;">' +
+      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font:600 10px \'Inter\',sans-serif;color:var(--ink3);">🔒</span>' +
+      '<span style="flex:1;min-width:0;"><span style="display:block;font:500 12.5px \'Inter\',sans-serif;">' + esc(t.type === 'quiz' ? t.label : t.title) + '</span>' +
+      '<span style="display:block;font:400 10.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:2px;">' + subL + '</span></span></div>';
+  }
   var icon = t.done ? '✓' : (isToday ? '▶' : '');
   var iconBg = t.done ? acc : (isToday ? acc : 'var(--panel2)');
   var iconColor = t.done || isToday ? 'var(--on)' : 'var(--ink3)';
@@ -1022,7 +1053,11 @@ function tplParcours(v) {
           todayCard = '<div style="background:' + hexA(acc, 0.12) + ';border:1px solid ' + hexA(acc, 0.35) + ';border-radius:14px;padding:14px;margin-bottom:12px;font:400 12px/1.5 \'Inter\',sans-serif;color:var(--ink2);">🎉 Semaine terminée — elle va se valider et débloquer la suivante.</div>';
         }
       }
-      var rows = w.tasks.map(function (t) { return parcoursTaskRow(t, t === w.todayTask, acc); }).join('');
+      var todayIdx = w.todayTask ? w.tasks.indexOf(w.todayTask) : -1;
+      var rows = w.tasks.map(function (t, ti) {
+        var lockedTask = w.current && todayIdx >= 0 && ti > todayIdx;
+        return parcoursTaskRow(t, t === w.todayTask, acc, lockedTask);
+      }).join('');
       body = todayCard + '<div style="display:flex;flex-direction:column;">' + rows + '</div>';
     }
     return '<div style="margin-top:12px;border:1px solid var(--line);border-left:3px solid ' + acc + ';border-radius:16px;overflow:hidden;background:var(--panel);">' +
@@ -1410,10 +1445,15 @@ function tplFiche(v) {
     var body = s.paras.map(function (p, pi) { return tplPara(p, pi, acc); }).join('') + (s.svg ? '<div class="stagger" style="animation-delay:' + (s.paras.length * 0.06).toFixed(2) + 's;margin-top:14px;border-radius:14px;overflow:hidden;background:#faf8f3;padding:8px;">' + s.svg + '</div>' : '');
     return '<div id="sec-' + i + '" class="thsec' + (i === 0 ? ' open' : '') + '" style="margin-top:12px;border:1px solid var(--line);border-left:3px solid ' + hexA(col, 0.6) + ';border-radius:16px;overflow:hidden;background:var(--panel);animation:kfIn .4s cubic-bezier(.16,1,.3,1) both;animation-delay:' + (i * 0.05).toFixed(2) + 's;">' +
       '<button data-fold-head style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:' + col + ';font:500 10px \'Inter\',sans-serif;letter-spacing:.12em;text-align:left;">' +
-      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + hexA(col, 0.16) + ';border:1px solid ' + hexA(col, 0.4) + ';display:flex;align-items:center;justify-content:center;font:500 10px \'Inter\',sans-serif;color:' + col + ';">' + (s.warnish ? '!' : (i + 1)) + '</span>' +
+      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + (s.seen ? col : hexA(col, 0.16)) + ';border:1px solid ' + hexA(col, 0.4) + ';display:flex;align-items:center;justify-content:center;font:500 10px \'Inter\',sans-serif;color:' + (s.seen ? 'var(--on)' : col) + ';">' + (s.seen ? '✓' : (s.warnish ? '!' : (i + 1))) + '</span>' +
       '<span style="flex:1;">' + esc(s.h) + '</span><span class="fold-arr" style="flex-shrink:0;transition:transform .25s;transform:rotate(' + (i === 0 ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
       '<div class="fold-body' + (i === 0 ? '' : ' fold-closed') + '"><div style="padding:0 16px 16px;">' + body + '</div></div></div>';
   }).join('');
+  var completionBar = '<div style="margin:16px 26px 0;display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px;">' +
+    '<span id="ficheSecStatus" style="font:500 11.5px \'Inter\',sans-serif;color:' + (v.ficheAllSectionsSeen ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (v.ficheAllSectionsSeen ? '✓' : v.ficheSectionsSeenCount + '/' + v.ficheSections.length) + ' sections lues</span>' +
+    '<span style="width:1px;height:12px;background:var(--line);"></span>' +
+    '<span id="ficheTestStatus" style="font:500 11.5px \'Inter\',sans-serif;color:' + (v.ficheTested ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (v.ficheTested ? '✓ test fait' : 'test à faire') + '</span>' +
+    '<span id="ficheValidatedBadge" style="margin-left:auto;font:600 10.5px \'Inter\',sans-serif;color:var(--acc2);display:' + (v.ficheValidated ? '' : 'none') + ';">FICHE VALIDÉE</span></div>';
   return '<div style="flex:1;overflow:auto;min-height:0;position:relative;">' +
     '<div style="position:sticky;top:0;left:0;right:0;height:3px;background:var(--line);z-index:5;"><div id="ficheProgressFill" style="height:3px;width:0%;background:linear-gradient(90deg,var(--acc2),var(--acc),var(--gold));"></div></div>' +
     '<div style="padding:32px 26px 22px;background:linear-gradient(160deg,' + hexA(acc, 0.2) + ',transparent 70%);">' +
@@ -1424,6 +1464,7 @@ function tplFiche(v) {
     '<div style="font:300 26px/1.15 Fraunces,serif;letter-spacing:-.02em;margin-top:6px;">' + esc(v.ficheTitle) + '</div></div></div>' +
     '<div style="font:400 10px/1.6 \'Inter\',sans-serif;color:var(--dim);margin-top:16px;">' + esc(v.ficheSource) + '</div>' +
     '<div style="margin-top:16px;display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;">' + toc + '</div></div>' +
+    completionBar +
     '<div style="padding:6px 26px 0;">' + sections + '</div>' +
     '<div style="padding:26px 26px 30px;"><button data-action="startFicheQuiz" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Tester la fiche</button></div></div>';
 }
@@ -2108,7 +2149,7 @@ function render() {
         ficheFill.style.width = pct + '%';
       });
     }
-    screenEl.querySelectorAll('[data-fold-head]').forEach(function (hd) {
+    screenEl.querySelectorAll('[data-fold-head]').forEach(function (hd, idx) {
       hd.addEventListener('click', function () {
         var sec = hd.parentElement, body = sec.querySelector('.fold-body'), arr = hd.querySelector('.fold-arr');
         var open = sec.classList.toggle('open');
@@ -2121,6 +2162,27 @@ function render() {
             inner.innerHTML = '';
             void inner.offsetWidth;
             inner.innerHTML = html;
+          }
+          if (state.fiche != null) {
+            if (!store.ficheSectionsSeen) store.ficheSectionsSeen = {};
+            if (!store.ficheSectionsSeen[state.fiche]) store.ficheSectionsSeen[state.fiche] = {};
+            var wasSeen = !!store.ficheSectionsSeen[state.fiche][idx];
+            store.ficheSectionsSeen[state.fiche][idx] = true;
+            maybeCompleteFiche(state.fiche);
+            save();
+            if (!wasSeen) {
+              var iconSpan = hd.querySelector('span');
+              if (iconSpan) { iconSpan.textContent = '✓'; iconSpan.style.background = v.ficheAccent; iconSpan.style.color = 'var(--on)'; }
+              var total = v.ficheSections.length;
+              var seenCount = Object.keys(store.ficheSectionsSeen[state.fiche]).length;
+              var secStatus = document.getElementById('ficheSecStatus');
+              if (secStatus) {
+                secStatus.textContent = (seenCount >= total ? '✓' : seenCount + '/' + total) + ' sections lues';
+                secStatus.style.color = seenCount >= total ? 'var(--acc2)' : 'var(--ink2)';
+              }
+              var badge = document.getElementById('ficheValidatedBadge');
+              if (badge && store.fichesSeen && store.fichesSeen[state.fiche]) badge.style.display = '';
+            }
           }
         }
       });
@@ -2155,7 +2217,7 @@ function onAppClick(e) {
     case 'resetProgressCancel': state.confirmReset = false; render(); break;
     case 'resetProgressConfirm':
       try { localStorage.removeItem(KEY); } catch (e) {}
-      store = { srs: {}, xp: 0, streak: 0, seen: 0, poles: {}, best: {}, seeded: true, name: null, mentalBest: 0, daily: null, examInstant: store ? store.examInstant : false, fichesSeen: {}, programStart: null, parcoursMinutesDay: 30, parcoursObjectiveDays: 63, parcoursPriorityPoles: [], history: [] };
+      store = { srs: {}, xp: 0, streak: 0, seen: 0, poles: {}, best: {}, seeded: true, name: null, mentalBest: 0, daily: null, examInstant: store ? store.examInstant : false, fichesSeen: {}, ficheSectionsSeen: {}, ficheTested: {}, programStart: null, parcoursMinutesDay: 30, parcoursObjectiveDays: 63, parcoursPriorityPoles: [], history: [] };
       state.confirmReset = false;
       save();
       go('home');
@@ -2212,7 +2274,14 @@ function onAppClick(e) {
       if (d.theory) { goChild('fiche', { fiche: d.theory }); }
       else startCat(d.sub, 12);
       break;
-    case 'ficheGo': store.fichesSeen[d.fiche] = true; save(); goChild('fiche', { fiche: d.fiche }); break;
+    case 'ficheGo':
+      if (!store.ficheSectionsSeen) store.ficheSectionsSeen = {};
+      if (!store.ficheSectionsSeen[d.fiche]) store.ficheSectionsSeen[d.fiche] = {};
+      store.ficheSectionsSeen[d.fiche][0] = true;
+      maybeCompleteFiche(d.fiche);
+      save();
+      goChild('fiche', { fiche: d.fiche });
+      break;
     case 'goSearch': goChild('search'); break;
     case 'goParcours': goChild('parcours'); break;
     case 'parcoursSetMinutes': state.parcoursSetupMinutes = +d.v; render(); break;
