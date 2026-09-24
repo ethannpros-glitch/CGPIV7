@@ -970,7 +970,8 @@ function tplParcours(v) {
     var previewWeekLen = Math.max(4, Math.round(v.parcoursSetupObjective / 9));
     var poleChips = v.poleOptions.map(function (p) {
       var sel = v.parcoursSetupPriority.indexOf(p) >= 0;
-      return '<button data-action="parcoursTogglePriority" data-pole="' + esc(p) + '" style="border:1px solid ' + (sel ? poleAccent(p) : 'var(--line)') + ';background:' + (sel ? hexA(poleAccent(p), 0.18) : 'none') + ';color:' + (sel ? 'var(--ink)' : 'var(--ink2)') + ';border-radius:999px;padding:8px 13px;font:500 11.5px \'Inter\',sans-serif;cursor:pointer;">' + poleGlyph(p) + ' ' + esc(p) + '</button>';
+      return '<button data-action="parcoursTogglePriority" data-pole="' + esc(p) + '" style="width:100%;box-sizing:border-box;border:1px solid ' + (sel ? poleAccent(p) : 'var(--line)') + ';background:' + (sel ? hexA(poleAccent(p), 0.16) : 'var(--panel)') + ';color:' + (sel ? 'var(--ink)' : 'var(--ink2)') + ';border-radius:12px;padding:10px 12px;font:500 11.5px \'Inter\',sans-serif;cursor:pointer;text-align:left;display:flex;align-items:center;gap:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
+        '<span style="flex-shrink:0;">' + poleGlyph(p) + '</span><span style="overflow:hidden;text-overflow:ellipsis;">' + esc(p) + '</span></button>';
     }).join('');
     return '<div style="flex:1;overflow:auto;min-height:0;">' +
       '<div style="padding:58px 24px 0;"><button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Inter\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Retour</button>' +
@@ -983,7 +984,7 @@ function tplParcours(v) {
       '<div style="display:flex;gap:8px;margin-top:10px;">' + oChip(30, '1 mois') + oChip(60, '2 mois') + oChip(90, '3 mois') + oChip(63, 'À mon rythme') + '</div></div>' +
       '<div style="margin:22px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">THÉMATIQUES PRIORITAIRES <span style="color:var(--ink3);text-transform:none;letter-spacing:0;">(jusqu\'à 3, optionnel)</span></div>' +
       '<div style="font:400 11.5px/1.6 \'Inter\',sans-serif;color:var(--ink3);margin-top:6px;">Les semaines liées à ces thèmes passent en premier et reçoivent 50% de questions en plus par jour.</div>' +
-      '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">' + poleChips + '</div></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">' + poleChips + '</div></div>' +
       '<div style="margin:20px 24px 0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;font:400 12px/1.7 \'Inter\',sans-serif;color:var(--ink2);">≈ <b style="color:var(--ink);">' + previewQpd + ' questions/jour</b> et des semaines d\'environ <b style="color:var(--ink);">' + previewWeekLen + ' jours</b> pour tenir ton objectif.</div>' +
       '<div style="margin:20px 24px 0;"><button data-action="startParcours" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Commencer mon parcours</button></div>' +
       '<div style="height:26px;"></div></div>';
