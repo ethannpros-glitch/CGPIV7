@@ -7,13 +7,52 @@ var KEY = 'cgp_proto_v2';
 function getUserName() { return (store && store.name) || 'Camille'; }
 var today = function () { return Math.floor(Date.now() / 86400000); };
 
+var PROGRAM = [
+  { n: 1, title: 'Les bases du marché', poles: ['Culture financière'], accent: '#a888c9',
+    theory: ['th_mc_interets', 'th_mc_capi', 'th_mc_diversif', 'th_mc_risque', 'th_mc_oblig', 'th_mc_options', 'th_mc_macro', 'th_crypto'],
+    quiz: ['mc_interets', 'mc_oblig', 'mc_action', 'mc_risque', 'mc_options', 'mc_macro', 'mc_portefeuille', 'mc_produits', 'mc_analyse', 'mc_corpo', 'mc_cas', 'crypto_q'],
+    validation: 'Maîtrise du pôle Culture financière ≥ 70 %, toutes les fiches ouvertes au moins une fois.' },
+  { n: 2, title: 'Assurance-vie & capitalisation', poles: ['Les enveloppes'], accent: '#f2cd82',
+    theory: ['th_av', 'th_av_methodo', 'th_av_appro', 'th_capi', 'th_lux'],
+    quiz: ['av_fondamentaux', 'av_rachat', 'lecture_contrat', 'av_appro', 'av_expert', 'capi_fond', 'lux_fond'],
+    validation: '"Fondamentaux de l\'AV" et "Rachats & fiscalité" ≥ 75 %. Tu dois savoir citer de tête la règle des 8 ans.' },
+  { n: 3, title: 'PER, PEA, compte-titres', poles: ['Les enveloppes'], accent: '#f2cd82',
+    theory: ['th_per', 'th_per_methodo', 'th_per_appro', 'th_pee', 'th_bourse'],
+    quiz: ['per_fondamentaux', 'per_fiscalite', 'per_deblocage', 'per_percol', 'per_prefon', 'per_reseau', 'per_appro', 'pee_perco', 'bourse_pea', 'bourse_cto'],
+    validation: 'Session personnalisée "PER" seul, niveau Expert, 15 questions ≥ 75 %.' },
+  { n: 4, title: 'Le pôle le plus dense', poles: ['Supports & actifs'], accent: '#4fcfa8',
+    theory: ['th_fonds', 'th_lire_etf', 'th_etf_actif', 'th_struct_gen', 'th_struct', 'th_lire_structure', 'th_frais_struct', 'th_lire_dic', 'th_immo_levier', 'th_immo', 'th_scpi', 'th_pe', 'th_pe2'],
+    quiz: ['fonds_choix', 'fonds_etf', 'etf_actif', 'struct_dic', 'struct_action', 'struct_lecture', 'frais_struct', 'immo_patrimoine', 'scpi_pierre', 'soc_sci_struct', 'pe_fondamentaux', 'pe_structuration', 'pe_fiscalite', 'pe_strategie'],
+    validation: 'Maîtrise du pôle ≥ 65 % (le plus dur, repris en semaine 8). Sais expliquer une barrière de protection.' },
+  { n: 5, title: 'IR, IFI, succession, démembrement', poles: ['Fiscalité & transmission'], accent: '#6fa8d0',
+    theory: ['th_fisc', 'th_fisc_part_appro', 'th_fisc_patri_appro', 'th_succession', 'th_dutreil', 'th_dem', 'th_mat', 'th_quotient', 'th_ir_escalier', 'th_pvimmo_duree', 'th_av_horssucc'],
+    quiz: ['fisc_ir', 'fisc_part_appro', 'fisc_patri_appro', 'fisc_expert', 'succession', 'ing_donation', 'ing_dutreuil', 'dem_fondamentaux', 'dem_expert', 'mat_regimes'],
+    validation: '"Démembrement" et "Succession" ≥ 75 %. Sais citer de tête 2 tranches du barème art. 669.' },
+  { n: 6, title: 'Retraite, prévoyance, crédit', poles: ['Retraite & protection', 'Financement & levier'], accent: '#d98a9c',
+    theory: ['th_retraite', 'th_retraite_etages', 'th_prev', 'th_prevoyance', 'th_prev_trou', 'th_lombard', 'th_hypo'],
+    quiz: ['retraite_base', 'retraite_compl', 'prev_fondamentaux', 'prev_madelin', 'protection_sociale', 'credit_lombard', 'credit_hypo', 'ing_lombard', 'prev_emprunteur'],
+    validation: '"Crédit Lombard" ≥ 75 %. Sais expliquer un appel de marge sans relire le cours.' },
+  { n: 7, title: 'Ingénierie & réglementation', poles: ['Entreprise & ingénierie', 'Métier & méthode'], accent: '#9db56a',
+    theory: ['th_soc', 'th_gerance_appro', 'th_entreprise_appro', 'th_ing', 'th_holding_sci', 'th_holding_flux', 'th_reg', 'th_amf', 'th_grille_methode', 'th_grille_per', 'th_grille_struct', 'th_arbitrage', 'th_vocab', 'th_esg'],
+    quiz: ['soc_ei_micro', 'soc_sarl', 'soc_sas', 'soc_sel', 'gerance_appro', 'entreprise_appro', 'ing_expert', 'soc_holding', 'soc_holding_v8', 'soc_mbo', 'soc_holding_sci', 'ing_150bter', 'reg_mif', 'reg_lcb', 'amf', 'arbitrage', 'reg_esg'],
+    validation: '"Certification AMF" ≥ 80 %. "Holding" ≥ 70 %.' },
+  { n: 8, title: 'Rattrapage ciblé', poles: [], accent: '#e2895f', consolidation: true,
+    theory: [], quiz: [],
+    validation: 'Examen blanc Niveau 1 ≥ 85 %, Niveau 2 ≥ 75 %, aucun pôle sous 70 % dans Stats.' },
+  { n: 9, title: 'Conditions réelles', poles: [], accent: '#dbb46f', consolidation: true,
+    theory: [], quiz: [],
+    validation: 'Niveau 3 · Technique ≥ 80 % sur 2 tentatives. Mise à niveau générale ≥ 85 %.' }
+];
+var PROGRAM_ONGOING = ['fmt_spot', 'fmt_order', 'fmt_scenario', 'fmt_doc', 'fmt_open', 'fmt_texte', 'fmt_memviz', 'client_pointilleux', 'rentabilite_crm'];
+
 var state = {
   ready: false, theme: 'dark', screen: 'home', openPole: null, cat: null,
   quiz: null, qi: 0, ans: null, pick: null, calc: '', texte: '', revealed: false, results: [],
   fiche: null, level: 1, onb: 0, confetti: false, notif: true,
   orderKey: null, orderCur: null,
   buildDom: ['all'], buildTypes: ['qcm', 'vf'], buildLevel: 'all', buildN: 15,
-  coursePoleSel: null, navStack: [], navDir: null, confirmReset: false, nameInput: null, search: ''
+  coursePoleSel: null, navStack: [], navDir: null, confirmReset: false, nameInput: null, search: '',
+  parcoursOpenWeek: null
 };
 var store = null;
 var confettiTimer = null;
@@ -25,6 +64,8 @@ function load() {
   if (!store.poles) store.poles = {};
   if (!store.best) store.best = {};
   if (store.examInstant == null) store.examInstant = false;
+  if (!store.fichesSeen) store.fichesSeen = {};
+  if (store.programStart === undefined) store.programStart = null;
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
 
@@ -396,7 +437,7 @@ function computeVals() {
     isFiche: scr === 'fiche', isProgress: scr === 'progress', isProfile: scr === 'profile',
     isLabo: scr === 'labo', isMental: scr === 'mental', isBuilder: scr === 'builder',
     isSearch: scr === 'search',
-    showTabs: ['home', 'browse', 'cat', 'srs', 'courses', 'fiche', 'coursePole', 'progress', 'profile', 'examPick', 'labo', 'mental', 'builder', 'search'].indexOf(scr) >= 0,
+    showTabs: ['home', 'browse', 'cat', 'srs', 'courses', 'fiche', 'coursePole', 'progress', 'profile', 'examPick', 'labo', 'mental', 'builder', 'search', 'parcours'].indexOf(scr) >= 0,
     mentalBest: S.mentalBest || 0,
     searchQuery: st.search || '',
     searchResults: (scr === 'search' && st.ready) ? doSearch(st.search || '') : [],
@@ -643,6 +684,43 @@ function computeVals() {
   v.radarPts = pts.map(function (p) { return p.x + ',' + p.y; }).join(' ');
   v.radarDots = pts;
 
+  v.isParcours = scr === 'parcours';
+  if (v.isParcours) {
+    var pStart = S.programStart;
+    v.parcoursStarted = pStart != null;
+    var curWeek = pStart != null ? Math.min(9, Math.max(1, Math.floor((today() - pStart) / 7) + 1)) : 1;
+    v.parcoursCurrentWeek = curWeek;
+    var fmtDay = function (d) { var dt = new Date(d * 86400000); return ('0' + dt.getDate()).slice(-2) + '/' + ('0' + (dt.getMonth() + 1)).slice(-2); };
+    v.parcoursWeeks = PROGRAM.map(function (w) {
+      var fiches = w.theory.map(function (id) {
+        var t = Dd.THEORY[id];
+        return { id: id, title: t ? t.title : id, seen: !!(S.fichesSeen && S.fichesSeen[id]) };
+      });
+      var quizzes = w.quiz.map(function (id) {
+        var cat = allCats().find(function (c) { return c.id === id; });
+        var qs = bank(id), tot = qs.length, seen = 0;
+        qs.forEach(function (q, i) { if (S.srs[id + '#' + i]) seen++; });
+        return { id: id, label: cat ? cat.label : id, pct: tot ? Math.round(100 * seen / tot) : 0, count: tot };
+      });
+      var fichesSeenCount = fiches.filter(function (f) { return f.seen; }).length;
+      var quizAvg = quizzes.length ? Math.round(quizzes.reduce(function (a, q) { return a + q.pct; }, 0) / quizzes.length) : 0;
+      var pct = w.consolidation ? quizAvg : Math.round((fiches.length ? fichesSeenCount / fiches.length : 1) * 50 + quizAvg * 0.5);
+      var range = pStart != null ? fmtDay(pStart + (w.n - 1) * 7) + ' → ' + fmtDay(pStart + w.n * 7 - 1) : null;
+      return {
+        n: w.n, title: w.title, accent: w.accent, poles: w.poles, consolidation: !!w.consolidation,
+        fiches: fiches, quizzes: quizzes, pct: Math.min(100, pct), range: range, validation: w.validation,
+        open: state.parcoursOpenWeek != null ? state.parcoursOpenWeek === w.n : curWeek === w.n
+      };
+    });
+    v.parcoursOverallPct = Math.round(v.parcoursWeeks.reduce(function (a, w) { return a + w.pct; }, 0) / v.parcoursWeeks.length);
+    v.parcoursOngoing = PROGRAM_ONGOING.map(function (id) {
+      var cat = allCats().find(function (c) { return c.id === id; });
+      return { id: id, label: cat ? cat.label : id };
+    });
+  }
+  v.parcoursStartedFlag = !!(S.programStart != null);
+  v.parcoursWeekLabel = S.programStart != null ? 'Semaine ' + Math.min(9, Math.max(1, Math.floor((today() - S.programStart) / 7) + 1)) + ' / 9' : 'Pas encore commencé';
+
   return v;
 }
 
@@ -788,6 +866,65 @@ function tplOnb(v) {
   return out;
 }
 
+function tplParcours(v) {
+  if (!v.parcoursStarted) {
+    return '<div style="flex:1;overflow:auto;min-height:0;">' +
+      '<div style="padding:58px 24px 0;"><button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Inter\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Retour</button>' +
+      '<div style="font:500 10px \'Inter\',monospace;letter-spacing:.2em;color:var(--ink3);margin-top:16px;">MON PARCOURS</div>' +
+      '<div style="font:300 32px/1.15 Fraunces,serif;letter-spacing:-.02em;margin-top:14px;">9 semaines pour être <span style="font-style:italic;color:var(--acc);">prêt</span>.</div>' +
+      '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">Un programme semaine par semaine construit sur les 63 fiches et 1604 questions de l\'app. Chaque semaine se coche toute seule au fur et à mesure de ta progression réelle.</div></div>' +
+      '<div style="margin:24px 24px 0;"><button data-action="startParcours" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Commencer mon parcours</button></div>' +
+      '<div style="height:26px;"></div></div>';
+  }
+  var weeks = v.parcoursWeeks.map(function (w) {
+    var acc = w.accent;
+    var fiches = w.fiches.map(function (f) {
+      return '<button data-action="ficheGo" data-fiche="' + esc(f.id) + '" class="hv-a" style="text-align:left;background:' + (f.seen ? hexA(acc, 0.14) : 'var(--panel2)') + ';border:1px solid ' + (f.seen ? hexA(acc, 0.4) : 'var(--line)') + ';border-radius:12px;padding:9px 11px;font:500 11.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:6px;">' +
+        (f.seen ? '<span style="color:' + acc + ';">✓</span>' : '') + '<span>' + esc(f.title) + '</span></button>';
+    }).join('');
+    var quizzes = w.quizzes.map(function (q) {
+      return '<button data-action="subGo" data-sub="' + esc(q.id) + '" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:9px 11px;font:500 11.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:7px;">' +
+        '<span style="flex-shrink:0;width:26px;height:4px;border-radius:2px;background:var(--line);overflow:hidden;"><span style="display:block;width:' + q.pct + '%;height:4px;background:' + acc + ';"></span></span>' +
+        '<span>' + esc(q.label) + '</span></button>';
+    }).join('');
+    var body = w.consolidation
+      ? '<div style="display:flex;flex-direction:column;gap:9px;">' +
+        '<button data-action="examGo" data-key="facile" data-label="Niveau 1 · Fondamentaux" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Examen blanc · Niveau 1 Fondamentaux</button>' +
+        '<button data-action="examGo" data-key="avance" data-label="Niveau 2 · Avancé" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Examen blanc · Niveau 2 Avancé</button>' +
+        '<button data-action="examGo" data-key="technique" data-label="Niveau 3 · Technique" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Examen blanc · Niveau 3 Technique</button>' +
+        '<button data-action="examGo" data-key="niveau_general" data-label="Mise à niveau générale" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Mise à niveau générale</button>' +
+        '<button data-action="goTab" data-k="progress" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Voir Stats — repérer les pôles faibles</button>' +
+        '<button data-action="startSrs" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Réviser — vider les questions à revoir</button></div>'
+      : '<div><div style="font:500 9.5px \'Inter\',monospace;letter-spacing:.1em;color:var(--ink3);">' + w.fiches.length + ' FICHES</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:9px;">' + fiches + '</div>' +
+        '<div style="font:500 9.5px \'Inter\',monospace;letter-spacing:.1em;color:var(--ink3);margin-top:16px;">' + w.quizzes.length + ' SÉRIES DE QUESTIONS</div>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:9px;">' + quizzes + '</div></div>';
+    return '<div style="margin-top:12px;border:1px solid var(--line);border-left:3px solid ' + acc + ';border-radius:16px;overflow:hidden;background:var(--panel);">' +
+      '<button data-action="parcoursToggleWeek" data-n="' + w.n + '" style="width:100%;background:none;border:none;padding:15px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;">' +
+      '<span style="flex-shrink:0;position:relative;width:38px;height:38px;border-radius:50%;background:conic-gradient(' + acc + ' ' + (w.pct * 3.6) + 'deg,var(--line) ' + (w.pct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
+      '<span style="width:32px;height:32px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font:500 10px \'Inter\',monospace;color:' + acc + ';">' + w.n + '</span></span>' +
+      '<span style="flex:1;min-width:0;"><span style="display:block;font:500 9.5px \'Inter\',monospace;letter-spacing:.08em;color:' + acc + ';">SEMAINE ' + w.n + (w.range ? ' · ' + esc(w.range) : '') + '</span>' +
+      '<span style="display:block;font:500 13.5px \'Inter\',sans-serif;margin-top:3px;">' + esc(w.title) + '</span></span>' +
+      '<span style="flex-shrink:0;font:400 15px Fraunces,serif;color:' + acc + ';transition:transform .25s;transform:rotate(' + (w.open ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
+      (w.open ? '<div style="padding:0 16px 16px;">' + body + '<div style="margin-top:14px;background:var(--panel2);border-left:3px solid var(--acc2);border-radius:10px;padding:11px 13px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);"><b style="color:var(--ink);">Validation —</b> ' + esc(w.validation) + '</div></div>' : '') +
+      '</div>';
+  }).join('');
+  var ongoing = v.parcoursOngoing.map(function (o) {
+    return '<button data-action="subGo" data-sub="' + esc(o.id) + '" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 13px;font:500 11.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">' + esc(o.label) + '</button>';
+  }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;"><div style="font:500 10px \'Inter\',monospace;letter-spacing:.2em;color:var(--ink3);">MON PARCOURS</div>' +
+    '<div style="display:flex;align-items:center;gap:16px;margin-top:14px;">' +
+    '<div style="flex-shrink:0;position:relative;width:64px;height:64px;border-radius:50%;background:conic-gradient(var(--acc) ' + (v.parcoursOverallPct * 3.6) + 'deg,var(--line) ' + (v.parcoursOverallPct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
+    '<span style="width:54px;height:54px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:500 14px \'Inter\',monospace;color:var(--acc);">' + v.parcoursOverallPct + '%</span></div>' +
+    '<div><div style="font:300 26px/1.1 Fraunces,serif;letter-spacing:-.02em;">Semaine ' + v.parcoursCurrentWeek + ' <span style="font-style:italic;color:var(--ink3);font-size:18px;">/ 9</span></div>' +
+    '<div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:4px;">Progression globale du programme</div></div></div></div>' +
+    '<div style="margin:22px 24px 0;">' + weeks + '</div>' +
+    '<div style="margin:22px 24px 0;"><div style="font:500 9.5px \'Inter\',monospace;letter-spacing:.1em;color:var(--ink3);">ENTRAÎNEMENT CONTINU · TOUTE L\'ANNÉE</div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">' + ongoing + '</div></div>' +
+    '<div style="height:26px;"></div></div>';
+}
+
 function tplSearch(v) {
   var q = v.searchQuery, qTrim = q.trim();
   var results = v.searchResults;
@@ -828,7 +965,13 @@ function tplHome(v) {
     '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink2);cursor:pointer;">🔍</button>' +
     '<div style="display:flex;align-items:center;gap:7px;font:500 10.5px \'Inter\',sans-serif;color:var(--acc);"><span style="width:7px;height:7px;border-radius:50%;background:var(--acc);animation:kfBreathe 2.6s ease-in-out infinite;"></span>JOUR ' + v.streak + '</div></div></div>' +
     '<div style="padding:24px 24px 0;"><div style="font:300 42px/1.02 Fraunces,serif;letter-spacing:-.025em;">' + esc(v.greeting) + '<br><span style="font-style:italic;background:linear-gradient(100deg,var(--acc),var(--gold),var(--acc2),var(--acc));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:kfSweep 9s linear infinite;">' + esc(v.userName) + '</span></div></div>' +
-    '<div style="margin:30px 24px 0;border-radius:24px;padding:22px;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;gap:18px;">' +
+    '<div style="margin:22px 24px 0;"><button data-action="goParcours" class="hv-a" style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:15px 16px;display:flex;align-items:center;gap:13px;text-align:left;cursor:pointer;color:var(--ink);box-sizing:border-box;">' +
+    (v.parcoursStartedFlag
+      ? '<span style="flex-shrink:0;position:relative;width:38px;height:38px;border-radius:50%;background:conic-gradient(var(--acc) ' + (v.parcoursOverallPct * 3.6) + 'deg,var(--line) ' + (v.parcoursOverallPct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;"><span style="width:32px;height:32px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font:500 10px \'Inter\',monospace;color:var(--acc);">' + v.parcoursOverallPct + '%</span></span>'
+      : '<span style="font:400 22px Fraunces,serif;color:var(--acc);">◈</span>') +
+    '<span style="flex:1;"><span style="display:block;font:500 13.5px \'Inter\',sans-serif;">Mon parcours</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(v.parcoursWeekLabel) + '</span></span>' +
+    '<span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button></div>' +
+    '<div style="margin:22px 24px 0;border-radius:24px;padding:22px;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;gap:18px;">' +
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;"><div>' +
     '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.16em;color:var(--ink3);">DÉFI DU JOUR</div>' +
     '<div style="font:300 40px/1 Fraunces,serif;margin-top:10px;">5 <span style="font-size:16px;font-family:\'Inter\',sans-serif;font-weight:500;color:var(--ink2);">questions</span></div></div>' +
@@ -1195,6 +1338,7 @@ function tplProfile(v) {
     '<div style="margin:24px 24px 0;background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;">' +
     '<button data-action="toggleNotif" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Rappel quotidien</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(v.notifSub) + '</span></span>' + notifSwitch + '</button>' +
     '<button data-action="toggleExamInstant" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;min-width:0;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Correction immédiate en examen blanc</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(v.examInstantSub) + '</span></span>' + examInstantSwitch + '</button>' +
+    '<button data-action="goParcours" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Mon parcours · 9 semaines</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(v.parcoursWeekLabel) + '</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
     '<button data-action="goExamPick" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;font:500 13px \'Inter\',sans-serif;">Examens blancs</span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
     '<button data-action="restartOnb" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;font:500 13px \'Inter\',sans-serif;">Refaire le diagnostic</span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
     '<button data-action="resetProgress" style="width:100%;background:none;border:none;padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--warn);text-align:left;"><span style="flex:1;font:500 13px \'Inter\',sans-serif;">Réinitialiser ma progression</span></button></div>' +
@@ -1707,6 +1851,7 @@ function render() {
   else if (v.isMental) html = tplMental(v);
   else if (v.isBuilder) html = tplBuilder(v);
   else if (v.isSearch) html = tplSearch(v);
+  else if (v.isParcours) html = tplParcours(v);
   screenEl.innerHTML = html;
 
   if (v.isSearch && document.activeElement && !document.activeElement.matches('[data-search-input]')) {
@@ -1782,7 +1927,7 @@ function onAppClick(e) {
     case 'resetProgressCancel': state.confirmReset = false; render(); break;
     case 'resetProgressConfirm':
       try { localStorage.removeItem(KEY); } catch (e) {}
-      store = { srs: {}, xp: 0, streak: 0, seen: 0, poles: {}, best: {}, seeded: true, name: null, mentalBest: 0, daily: null, examInstant: store ? store.examInstant : false };
+      store = { srs: {}, xp: 0, streak: 0, seen: 0, poles: {}, best: {}, seeded: true, name: null, mentalBest: 0, daily: null, examInstant: store ? store.examInstant : false, fichesSeen: {}, programStart: null };
       state.confirmReset = false;
       save();
       go('home');
@@ -1839,8 +1984,16 @@ function onAppClick(e) {
       if (d.theory) { goChild('fiche', { fiche: d.theory }); }
       else startCat(d.sub, 12);
       break;
-    case 'ficheGo': goChild('fiche', { fiche: d.fiche }); break;
+    case 'ficheGo': store.fichesSeen[d.fiche] = true; save(); goChild('fiche', { fiche: d.fiche }); break;
     case 'goSearch': goChild('search'); break;
+    case 'goParcours': goChild('parcours'); break;
+    case 'startParcours': store.programStart = today(); save(); render(); break;
+    case 'parcoursToggleWeek': {
+      var n = +d.n;
+      state.parcoursOpenWeek = state.parcoursOpenWeek === n ? -1 : n;
+      render();
+      break;
+    }
     case 'ficheJump': {
       var sec = document.getElementById('sec-' + d.i);
       if (sec) {
