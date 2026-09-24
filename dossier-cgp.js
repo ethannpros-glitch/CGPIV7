@@ -52,7 +52,7 @@ var state = {
   orderKey: null, orderCur: null,
   buildDom: ['all'], buildTypes: ['qcm', 'vf'], buildLevel: 'all', buildN: 15,
   coursePoleSel: null, navStack: [], navDir: null, confirmReset: false, nameInput: null, search: '',
-  parcoursOpenWeek: null
+  parcoursOpenWeek: null, parcoursSetupMinutes: 30, parcoursSetupObjective: 60
 };
 var store = null;
 var confettiTimer = null;
@@ -66,6 +66,17 @@ function load() {
   if (store.examInstant == null) store.examInstant = false;
   if (!store.fichesSeen) store.fichesSeen = {};
   if (store.programStart === undefined) store.programStart = null;
+  if (!store.parcoursMinutesDay) store.parcoursMinutesDay = 30;
+  if (!store.parcoursObjectiveDays) store.parcoursObjectiveDays = 63;
+  if (!store.history) store.history = [];
+}
+function logHistory() {
+  var h = store.history, last = h[h.length - 1];
+  if (!last || last.d !== today()) {
+    h.push({ d: today(), mastery: masteryPct(), xp: store.xp || 0 });
+    if (h.length > 120) h.splice(0, h.length - 120);
+    save();
+  }
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
 
@@ -685,31 +696,54 @@ function computeVals() {
   v.radarDots = pts;
 
   v.isParcours = scr === 'parcours';
+  var objDays = S.parcoursObjectiveDays || 63;
+  var weekLenDays = Math.max(4, Math.round(objDays / 9));
+  var minutesDay = S.parcoursMinutesDay || 30;
+  var questionsPerDay = Math.max(3, Math.round(minutesDay / 1.5));
   if (v.isParcours) {
     var pStart = S.programStart;
     v.parcoursStarted = pStart != null;
-    var curWeek = pStart != null ? Math.min(9, Math.max(1, Math.floor((today() - pStart) / 7) + 1)) : 1;
+    v.parcoursSetupMinutes = st.parcoursSetupMinutes || 30;
+    v.parcoursSetupObjective = st.parcoursSetupObjective || 60;
+    var daysSince = pStart != null ? today() - pStart : 0;
+    var curWeek = pStart != null ? Math.min(9, Math.max(1, Math.floor(daysSince / weekLenDays) + 1)) : 1;
     v.parcoursCurrentWeek = curWeek;
+    var dayInWeek = Math.max(0, Math.min(weekLenDays - 1, daysSince - (curWeek - 1) * weekLenDays));
+    v.parcoursDayInWeek = dayInWeek + 1;
+    v.parcoursWeekLenDays = weekLenDays;
     var fmtDay = function (d) { var dt = new Date(d * 86400000); return ('0' + dt.getDate()).slice(-2) + '/' + ('0' + (dt.getMonth() + 1)).slice(-2); };
     v.parcoursWeeks = PROGRAM.map(function (w) {
-      var fiches = w.theory.map(function (id) {
+      var tasks = [];
+      w.theory.forEach(function (id) {
         var t = Dd.THEORY[id];
-        return { id: id, title: t ? t.title : id, seen: !!(S.fichesSeen && S.fichesSeen[id]) };
+        tasks.push({ type: 'fiche', id: id, title: t ? t.title : id, done: !!(S.fichesSeen && S.fichesSeen[id]) });
       });
-      var quizzes = w.quiz.map(function (id) {
+      w.quiz.forEach(function (id) {
         var cat = allCats().find(function (c) { return c.id === id; });
         var qs = bank(id), tot = qs.length, seen = 0;
         qs.forEach(function (q, i) { if (S.srs[id + '#' + i]) seen++; });
-        return { id: id, label: cat ? cat.label : id, pct: tot ? Math.round(100 * seen / tot) : 0, count: tot };
+        var pct = tot ? Math.round(100 * seen / tot) : 0;
+        tasks.push({ type: 'quiz', id: id, label: cat ? cat.label : id, pct: pct, count: tot, target: Math.min(tot, questionsPerDay), done: pct >= 100 });
       });
-      var fichesSeenCount = fiches.filter(function (f) { return f.seen; }).length;
-      var quizAvg = quizzes.length ? Math.round(quizzes.reduce(function (a, q) { return a + q.pct; }, 0) / quizzes.length) : 0;
-      var pct = w.consolidation ? quizAvg : Math.round((fiches.length ? fichesSeenCount / fiches.length : 1) * 50 + quizAvg * 0.5);
-      var range = pStart != null ? fmtDay(pStart + (w.n - 1) * 7) + ' → ' + fmtDay(pStart + w.n * 7 - 1) : null;
+      var doneCount = tasks.filter(function (t) { return t.done; }).length;
+      var quizTasks = tasks.filter(function (t) { return t.type === 'quiz'; });
+      var quizAvg = quizTasks.length ? Math.round(quizTasks.reduce(function (a, t) { return a + t.pct; }, 0) / quizTasks.length) : 0;
+      var fichesCount = tasks.length - quizTasks.length;
+      var fichesDone = doneCount - quizTasks.filter(function (t) { return t.done; }).length;
+      var pct = w.consolidation ? quizAvg : Math.round((fichesCount ? fichesDone / fichesCount : 1) * 50 + quizAvg * 0.5);
+      var range = pStart != null ? fmtDay(pStart + (w.n - 1) * weekLenDays) + ' → ' + fmtDay(pStart + w.n * weekLenDays - 1) : null;
+      var isCur = curWeek === w.n;
+      var dueCount = isCur && tasks.length ? Math.min(tasks.length, Math.ceil((dayInWeek + 1) / weekLenDays * tasks.length)) : 0;
+      var todayTask = null, aheadTask = null;
+      if (isCur && !w.consolidation) {
+        for (var ti = 0; ti < dueCount; ti++) { if (!tasks[ti].done) { todayTask = tasks[ti]; break; } }
+        if (!todayTask) { for (var tj = dueCount; tj < tasks.length; tj++) { if (!tasks[tj].done) { aheadTask = tasks[tj]; break; } } }
+      }
       return {
         n: w.n, title: w.title, accent: w.accent, poles: w.poles, consolidation: !!w.consolidation,
-        fiches: fiches, quizzes: quizzes, pct: Math.min(100, pct), range: range, validation: w.validation,
-        open: state.parcoursOpenWeek != null ? state.parcoursOpenWeek === w.n : curWeek === w.n
+        tasks: tasks, pct: Math.min(100, pct), range: range, validation: w.validation,
+        current: isCur, dueCount: dueCount, todayTask: todayTask, aheadTask: aheadTask,
+        open: state.parcoursOpenWeek != null ? state.parcoursOpenWeek === w.n : isCur
       };
     });
     v.parcoursOverallPct = Math.round(v.parcoursWeeks.reduce(function (a, w) { return a + w.pct; }, 0) / v.parcoursWeeks.length);
@@ -717,9 +751,22 @@ function computeVals() {
       var cat = allCats().find(function (c) { return c.id === id; });
       return { id: id, label: cat ? cat.label : id };
     });
+    v.parcoursQuestionsPerDay = questionsPerDay;
+    v.parcoursMinutesDay = minutesDay;
+    v.parcoursObjectiveDays = objDays;
+    v.parcoursDeadlineLabel = pStart != null ? fmtDay(pStart + objDays) : null;
+    if (pStart != null) {
+      var expectedPct = Math.min(100, Math.round(daysSince / objDays * 100));
+      var delta = v.parcoursOverallPct - expectedPct;
+      v.parcoursPaceDelta = delta;
+      v.parcoursPaceStatus = delta >= 5 ? 'avance' : delta <= -10 ? 'retard' : 'ok';
+      v.parcoursPaceLabel = delta >= 5 ? 'En avance de ' + delta + ' pts sur ton objectif' : delta <= -10 ? 'En retard de ' + Math.abs(delta) + ' pts sur ton objectif' : 'Dans les temps par rapport à ton objectif';
+    }
   }
+  var fmtDay2 = function (d) { var dt = new Date(d * 86400000); return ('0' + dt.getDate()).slice(-2) + '/' + ('0' + (dt.getMonth() + 1)).slice(-2); };
+  v.masteryHistory = (S.history || []).map(function (h) { return { d: h.d, mastery: h.mastery, label: fmtDay2(h.d) }; });
   v.parcoursStartedFlag = !!(S.programStart != null);
-  v.parcoursWeekLabel = S.programStart != null ? 'Semaine ' + Math.min(9, Math.max(1, Math.floor((today() - S.programStart) / 7) + 1)) + ' / 9' : 'Pas encore commencé';
+  v.parcoursWeekLabel = S.programStart != null ? 'Semaine ' + Math.min(9, Math.max(1, Math.floor((today() - S.programStart) / weekLenDays) + 1)) + ' / 9' : 'Pas encore commencé';
 
   return v;
 }
@@ -866,44 +913,83 @@ function tplOnb(v) {
   return out;
 }
 
+function parcoursChip(action, v, label, selected) {
+  return '<button data-action="' + action + '" data-v="' + v + '" style="flex:1;border:1px solid ' + (selected ? 'var(--acc)' : 'var(--line)') + ';background:' + (selected ? 'var(--acc)' : 'none') + ';color:' + (selected ? 'var(--on)' : 'var(--ink)') + ';border-radius:999px;padding:10px 6px;font:600 12px \'Inter\',sans-serif;cursor:pointer;text-align:center;">' + label + '</button>';
+}
+function parcoursTaskRow(t, isToday, acc) {
+  var icon = t.done ? '✓' : (isToday ? '▶' : '');
+  var iconBg = t.done ? acc : (isToday ? acc : 'var(--panel2)');
+  var iconColor = t.done || isToday ? 'var(--on)' : 'var(--ink3)';
+  var sub = t.type === 'quiz' ? (t.count + ' questions · ' + t.pct + '% déjà vues') : 'Fiche de cours';
+  var action = t.type === 'fiche' ? 'data-action="ficheGo" data-fiche="' + esc(t.id) + '"' : 'data-action="parcoursStartQuiz" data-sub="' + esc(t.id) + '" data-n="' + t.target + '"';
+  return '<button ' + action + ' class="hv-a" style="width:100%;text-align:left;background:' + (isToday ? hexA(acc, 0.14) : 'none') + ';border:1px solid ' + (isToday ? hexA(acc, 0.35) : 'transparent') + ';border-radius:12px;padding:9px 10px;display:flex;align-items:center;gap:11px;cursor:pointer;color:var(--ink);margin-top:3px;box-sizing:border-box;">' +
+    '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + iconBg + ';display:flex;align-items:center;justify-content:center;font:600 11px \'Inter\',sans-serif;color:' + iconColor + ';">' + icon + '</span>' +
+    '<span style="flex:1;min-width:0;"><span style="display:block;font:500 12.5px \'Inter\',sans-serif;' + (t.done ? 'color:var(--ink2);' : '') + '">' + esc(t.type === 'quiz' ? t.label : t.title) + '</span>' +
+    '<span style="display:block;font:400 10.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:2px;">' + sub + '</span></span></button>';
+}
 function tplParcours(v) {
   if (!v.parcoursStarted) {
+    var mChip = function (n) { return parcoursChip('parcoursSetMinutes', n, n + ' min', v.parcoursSetupMinutes === n); };
+    var oChip = function (n, l) { return parcoursChip('parcoursSetObjective', n, l, v.parcoursSetupObjective === n); };
+    var previewQpd = Math.max(3, Math.round(v.parcoursSetupMinutes / 1.5));
+    var previewWeekLen = Math.max(4, Math.round(v.parcoursSetupObjective / 9));
     return '<div style="flex:1;overflow:auto;min-height:0;">' +
       '<div style="padding:58px 24px 0;"><button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Inter\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Retour</button>' +
       '<div style="font:500 10px \'Inter\',monospace;letter-spacing:.2em;color:var(--ink3);margin-top:16px;">MON PARCOURS</div>' +
       '<div style="font:300 32px/1.15 Fraunces,serif;letter-spacing:-.02em;margin-top:14px;">9 semaines pour être <span style="font-style:italic;color:var(--acc);">prêt</span>.</div>' +
-      '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">Un programme semaine par semaine construit sur les 63 fiches et 1604 questions de l\'app. Chaque semaine se coche toute seule au fur et à mesure de ta progression réelle.</div></div>' +
-      '<div style="margin:24px 24px 0;"><button data-action="startParcours" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Commencer mon parcours</button></div>' +
+      '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">Un programme construit sur les 63 fiches et 1604 questions de l\'app. Chaque jour, une seule chose à faire — l\'app choisit pour toi et suit ta vraie progression.</div></div>' +
+      '<div style="margin:26px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">COMBIEN DE TEMPS PAR JOUR ?</div>' +
+      '<div style="display:flex;gap:8px;margin-top:10px;">' + mChip(15) + mChip(30) + mChip(45) + mChip(60) + '</div></div>' +
+      '<div style="margin:22px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">TON OBJECTIF</div>' +
+      '<div style="display:flex;gap:8px;margin-top:10px;">' + oChip(30, '1 mois') + oChip(60, '2 mois') + oChip(90, '3 mois') + oChip(63, 'À mon rythme') + '</div></div>' +
+      '<div style="margin:20px 24px 0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;font:400 12px/1.7 \'Inter\',sans-serif;color:var(--ink2);">≈ <b style="color:var(--ink);">' + previewQpd + ' questions/jour</b> et des semaines d\'environ <b style="color:var(--ink);">' + previewWeekLen + ' jours</b> pour tenir ton objectif.</div>' +
+      '<div style="margin:20px 24px 0;"><button data-action="startParcours" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Commencer mon parcours</button></div>' +
       '<div style="height:26px;"></div></div>';
   }
+  var curWeekGlobal = v.parcoursCurrentWeek;
   var weeks = v.parcoursWeeks.map(function (w) {
     var acc = w.accent;
-    var fiches = w.fiches.map(function (f) {
-      return '<button data-action="ficheGo" data-fiche="' + esc(f.id) + '" class="hv-a" style="text-align:left;background:' + (f.seen ? hexA(acc, 0.14) : 'var(--panel2)') + ';border:1px solid ' + (f.seen ? hexA(acc, 0.4) : 'var(--line)') + ';border-radius:12px;padding:9px 11px;font:500 11.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:6px;">' +
-        (f.seen ? '<span style="color:' + acc + ';">✓</span>' : '') + '<span>' + esc(f.title) + '</span></button>';
-    }).join('');
-    var quizzes = w.quizzes.map(function (q) {
-      return '<button data-action="subGo" data-sub="' + esc(q.id) + '" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:9px 11px;font:500 11.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:7px;">' +
-        '<span style="flex-shrink:0;width:26px;height:4px;border-radius:2px;background:var(--line);overflow:hidden;"><span style="display:block;width:' + q.pct + '%;height:4px;background:' + acc + ';"></span></span>' +
-        '<span>' + esc(q.label) + '</span></button>';
-    }).join('');
-    var body = w.consolidation
-      ? '<div style="display:flex;flex-direction:column;gap:9px;">' +
+    var statusTag = w.n < curWeekGlobal ? (w.pct >= 90 ? ' · terminée ✓' : ' · à rattraper') : (w.n > curWeekGlobal ? ' · à venir' : ' · en cours');
+    var body;
+    if (w.consolidation) {
+      body = '<div style="display:flex;flex-direction:column;gap:9px;">' +
         '<button data-action="examGo" data-key="facile" data-label="Niveau 1 · Fondamentaux" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Examen blanc · Niveau 1 Fondamentaux</button>' +
         '<button data-action="examGo" data-key="avance" data-label="Niveau 2 · Avancé" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Examen blanc · Niveau 2 Avancé</button>' +
         '<button data-action="examGo" data-key="technique" data-label="Niveau 3 · Technique" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Examen blanc · Niveau 3 Technique</button>' +
         '<button data-action="examGo" data-key="niveau_general" data-label="Mise à niveau générale" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Mise à niveau générale</button>' +
         '<button data-action="goTab" data-k="progress" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Voir Stats — repérer les pôles faibles</button>' +
-        '<button data-action="startSrs" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Réviser — vider les questions à revoir</button></div>'
-      : '<div><div style="font:500 9.5px \'Inter\',monospace;letter-spacing:.1em;color:var(--ink3);">' + w.fiches.length + ' FICHES</div>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:9px;">' + fiches + '</div>' +
-        '<div style="font:500 9.5px \'Inter\',monospace;letter-spacing:.1em;color:var(--ink3);margin-top:16px;">' + w.quizzes.length + ' SÉRIES DE QUESTIONS</div>' +
-        '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:9px;">' + quizzes + '</div></div>';
+        '<button data-action="startSrs" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Réviser — vider les questions à revoir</button></div>';
+    } else {
+      var todayCard = '';
+      if (w.current) {
+        if (w.todayTask) {
+          var tt = w.todayTask;
+          var ctaLabel = tt.type === 'fiche' ? 'Lire la fiche' : ('Faire ' + tt.target + ' questions');
+          var ctaAction = tt.type === 'fiche' ? 'data-action="ficheGo" data-fiche="' + esc(tt.id) + '"' : 'data-action="parcoursStartQuiz" data-sub="' + esc(tt.id) + '" data-n="' + tt.target + '"';
+          todayCard = '<div style="background:' + hexA(acc, 0.12) + ';border:1px solid ' + hexA(acc, 0.35) + ';border-radius:14px;padding:14px;margin-bottom:12px;">' +
+            '<div style="font:500 9.5px \'Inter\',monospace;letter-spacing:.1em;color:' + acc + ';">AUJOURD\'HUI · JOUR ' + v.parcoursDayInWeek + '/' + v.parcoursWeekLenDays + '</div>' +
+            '<div style="font:500 14px \'Inter\',sans-serif;margin-top:7px;">' + esc(tt.type === 'quiz' ? tt.label : tt.title) + '</div>' +
+            '<button ' + ctaAction + ' style="margin-top:11px;width:100%;border:none;border-radius:999px;padding:12px;font:600 12.5px \'Inter\',sans-serif;color:var(--on);background:' + acc + ';cursor:pointer;">' + ctaLabel + '</button></div>';
+        } else if (w.aheadTask) {
+          var at = w.aheadTask;
+          var ctaLabel2 = at.type === 'fiche' ? 'Lire la fiche suivante' : ('Continuer · ' + at.target + ' questions');
+          var ctaAction2 = at.type === 'fiche' ? 'data-action="ficheGo" data-fiche="' + esc(at.id) + '"' : 'data-action="parcoursStartQuiz" data-sub="' + esc(at.id) + '" data-n="' + at.target + '"';
+          todayCard = '<div style="background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;">' +
+            '<div style="font:500 9.5px \'Inter\',monospace;letter-spacing:.1em;color:var(--acc2);">TU ES À JOUR ✓</div>' +
+            '<div style="font:400 12px/1.5 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">Envie de prendre de l\'avance ?</div>' +
+            '<button ' + ctaAction2 + ' style="margin-top:10px;width:100%;border:1px solid var(--line);border-radius:999px;padding:11px;font:600 12px \'Inter\',sans-serif;color:var(--ink);background:none;cursor:pointer;">' + ctaLabel2 + '</button></div>';
+        } else {
+          todayCard = '<div style="background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;font:400 12px/1.5 \'Inter\',sans-serif;color:var(--ink2);">🎉 Semaine terminée. La suivante démarre automatiquement.</div>';
+        }
+      }
+      var rows = w.tasks.map(function (t) { return parcoursTaskRow(t, t === w.todayTask, acc); }).join('');
+      body = todayCard + '<div style="display:flex;flex-direction:column;">' + rows + '</div>';
+    }
     return '<div style="margin-top:12px;border:1px solid var(--line);border-left:3px solid ' + acc + ';border-radius:16px;overflow:hidden;background:var(--panel);">' +
       '<button data-action="parcoursToggleWeek" data-n="' + w.n + '" style="width:100%;background:none;border:none;padding:15px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;">' +
       '<span style="flex-shrink:0;position:relative;width:38px;height:38px;border-radius:50%;background:conic-gradient(' + acc + ' ' + (w.pct * 3.6) + 'deg,var(--line) ' + (w.pct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
       '<span style="width:32px;height:32px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font:500 10px \'Inter\',monospace;color:' + acc + ';">' + w.n + '</span></span>' +
-      '<span style="flex:1;min-width:0;"><span style="display:block;font:500 9.5px \'Inter\',monospace;letter-spacing:.08em;color:' + acc + ';">SEMAINE ' + w.n + (w.range ? ' · ' + esc(w.range) : '') + '</span>' +
+      '<span style="flex:1;min-width:0;"><span style="display:block;font:500 9.5px \'Inter\',monospace;letter-spacing:.08em;color:' + acc + ';">SEMAINE ' + w.n + (w.range ? ' · ' + esc(w.range) : '') + esc(statusTag) + '</span>' +
       '<span style="display:block;font:500 13.5px \'Inter\',sans-serif;margin-top:3px;">' + esc(w.title) + '</span></span>' +
       '<span style="flex-shrink:0;font:400 15px Fraunces,serif;color:' + acc + ';transition:transform .25s;transform:rotate(' + (w.open ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
       (w.open ? '<div style="padding:0 16px 16px;">' + body + '<div style="margin-top:14px;background:var(--panel2);border-left:3px solid var(--acc2);border-radius:10px;padding:11px 13px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);"><b style="color:var(--ink);">Validation —</b> ' + esc(w.validation) + '</div></div>' : '') +
@@ -912,13 +998,17 @@ function tplParcours(v) {
   var ongoing = v.parcoursOngoing.map(function (o) {
     return '<button data-action="subGo" data-sub="' + esc(o.id) + '" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 13px;font:500 11.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">' + esc(o.label) + '</button>';
   }).join('');
+  var paceColor = v.parcoursPaceStatus === 'avance' ? 'var(--acc2)' : v.parcoursPaceStatus === 'retard' ? 'var(--warn)' : 'var(--ink2)';
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:58px 24px 0;"><div style="font:500 10px \'Inter\',monospace;letter-spacing:.2em;color:var(--ink3);">MON PARCOURS</div>' +
     '<div style="display:flex;align-items:center;gap:16px;margin-top:14px;">' +
     '<div style="flex-shrink:0;position:relative;width:64px;height:64px;border-radius:50%;background:conic-gradient(var(--acc) ' + (v.parcoursOverallPct * 3.6) + 'deg,var(--line) ' + (v.parcoursOverallPct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
     '<span style="width:54px;height:54px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:500 14px \'Inter\',monospace;color:var(--acc);">' + v.parcoursOverallPct + '%</span></div>' +
     '<div><div style="font:300 26px/1.1 Fraunces,serif;letter-spacing:-.02em;">Semaine ' + v.parcoursCurrentWeek + ' <span style="font-style:italic;color:var(--ink3);font-size:18px;">/ 9</span></div>' +
-    '<div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:4px;">Progression globale du programme</div></div></div></div>' +
+    '<div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:4px;">Jour ' + v.parcoursDayInWeek + '/' + v.parcoursWeekLenDays + ' de cette semaine</div></div></div>' +
+    '<div style="margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;">' +
+    '<span style="font:500 12px \'Inter\',sans-serif;color:' + paceColor + ';">' + esc(v.parcoursPaceLabel || '') + '</span>' +
+    '<span style="font:400 11px \'Inter\',sans-serif;color:var(--ink3);flex-shrink:0;">Objectif · ' + esc(v.parcoursDeadlineLabel || '') + '</span></div></div>' +
     '<div style="margin:22px 24px 0;">' + weeks + '</div>' +
     '<div style="margin:22px 24px 0;"><div style="font:500 9.5px \'Inter\',monospace;letter-spacing:.1em;color:var(--ink3);">ENTRAÎNEMENT CONTINU · TOUTE L\'ANNÉE</div>' +
     '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">' + ongoing + '</div></div>' +
@@ -1298,6 +1388,34 @@ function tplFiche(v) {
     '<div style="padding:26px 26px 30px;"><button data-action="startFicheQuiz" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Tester la fiche</button></div></div>';
 }
 
+function tplMasteryChart(hist) {
+  if (!hist || hist.length < 2) {
+    return '<div style="margin:18px 24px 0;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:16px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);">Reviens demain pour voir ta courbe de progression réelle se dessiner ici.</div>';
+  }
+  var w = 300, h = 110, pad = 8;
+  var vals = hist.map(function (p) { return p.mastery; });
+  var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+  if (max === min) max = min + 10;
+  var n = hist.length;
+  var pts = hist.map(function (p, i) {
+    var x = pad + (n === 1 ? 0 : (i / (n - 1)) * (w - pad * 2));
+    var y = pad + (1 - (p.mastery - min) / (max - min)) * (h - pad * 2);
+    return x.toFixed(1) + ',' + y.toFixed(1);
+  });
+  var line = pts.join(' ');
+  var area = 'M' + pts[0] + ' L' + pts.join(' L') + ' L' + (w - pad) + ',' + (h - pad) + ' L' + pad + ',' + (h - pad) + ' Z';
+  var first = hist[0], last = hist[hist.length - 1];
+  var delta = last.mastery - first.mastery;
+  var deltaLabel = (delta >= 0 ? '+' : '') + delta + ' points depuis le ' + first.label;
+  return '<div style="margin:18px 24px 0;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:16px;">' +
+    '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;"><span style="font:500 10px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--ink3);">ÉVOLUTION RÉELLE</span><span style="font:500 11.5px \'Inter\',sans-serif;color:' + (delta >= 0 ? 'var(--acc2)' : 'var(--warn)') + ';flex-shrink:0;">' + esc(deltaLabel) + '</span></div>' +
+    '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%;height:auto;margin-top:10px;overflow:visible;">' +
+    '<defs><linearGradient id="mgGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" style="stop-color:var(--acc);stop-opacity:.5"></stop><stop offset="100%" style="stop-color:var(--acc);stop-opacity:0"></stop></linearGradient></defs>' +
+    '<path d="' + area + '" fill="url(#mgGrad)"></path>' +
+    '<polyline points="' + line + '" fill="none" stroke="var(--acc)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>' +
+    '</svg>' +
+    '<div style="display:flex;justify-content:space-between;margin-top:4px;"><span style="font:400 9.5px \'Inter\',sans-serif;color:var(--ink3);">' + esc(first.label) + '</span><span style="font:400 9.5px \'Inter\',sans-serif;color:var(--ink3);">' + esc(last.label) + '</span></div></div>';
+}
 function tplProgress(v) {
   var dots = v.radarDots.map(function (d, i) {
     return '<circle cx="' + d.x + '" cy="' + d.y + '" r="3.5" fill="var(--acc)" style="animation:kfPop .3s ease ' + (0.9 + i * 0.06).toFixed(2) + 's both;"></circle>';
@@ -1316,6 +1434,7 @@ function tplProgress(v) {
     '<polygon points="150,63 225,106 225,193 150,237 75,193 75,106" fill="none" stroke="var(--line)" stroke-width="1"></polygon>' +
     '<polygon points="150,107 187,128 187,171 150,193 113,171 113,128" fill="none" stroke="var(--line)" stroke-width="1"></polygon>' +
     '<polygon class="v16draw" points="' + v.radarPts + '" fill="rgba(195,226,129,.2)" stroke="var(--acc)" stroke-width="2" style="stroke-dasharray:900;stroke-dashoffset:900;animation:v16draw 1.1s cubic-bezier(.16,1,.3,1) .15s forwards,kfIn .5s ease .15s forwards;"></polygon>' + dots + '</svg></div>' +
+    tplMasteryChart(v.masteryHistory) +
     '<div style="margin:6px 24px 0;display:flex;flex-direction:column;gap:16px;">' + poles + '</div>' +
     '<div style="margin:26px 24px 0;padding-top:18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;">' +
     '<div><div style="font:300 28px/1 Fraunces,serif;"><span data-countup="' + v.xp + '">0</span></div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:5px;">XP TOTAL</div></div>' +
@@ -1385,7 +1504,15 @@ function partsOf(couple, enf) {
   return p;
 }
 
-var laboState = { ciFreq: 'mois', perCouple: false, perMode: 'libre', pxMode: 'ech' };
+var laboState = {
+  ciFreq: 'mois', perCouple: false, perMode: 'libre', pxMode: 'ech',
+  pxScenarios: [
+    { label: 'Scénario de tension', perf: -70 },
+    { label: 'Scénario défavorable', perf: -25 },
+    { label: 'Scénario modéré', perf: 10 },
+    { label: 'Scénario favorable', perf: 45 }
+  ]
+};
 
 function laboField(label, id, min, max, step, value, labelId) {
   return '<div style="margin-top:14px;"><div style="display:flex;justify-content:space-between;gap:10px;font:500 12px \'Inter\',sans-serif;color:var(--ink2);"><span' + (labelId ? ' id="' + labelId + '"' : '') + '>' + label + '</span><b id="' + id + 'V" style="color:var(--ink);font-family:\'Inter\',sans-serif;font-weight:500;font-size:11.5px;white-space:nowrap;">—</b></div>' +
@@ -1482,6 +1609,8 @@ function tplLabo() {
     laboField('Frais de gestion /an produit', 'pxGes', 0, 3, 0.1, 0.8) +
     '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--ink3);margin-top:18px;">FRAIS CÔTÉ CGP / ENVELOPPE (HORS DIC)</div>' +
     laboField('Frais d’entrée CGP / enveloppe', 'pxCgp', 0, 5, 0.1, 0) +
+    laboField('Valeur liquidative initiale de la part', 'pxPart', 10, 1000, 10, 100) +
+    '<div style="margin-top:10px;background:var(--panel2);border-left:3px solid var(--warn);border-radius:10px;padding:10px 12px;font:400 11px/1.55 \'Inter\',sans-serif;color:var(--ink2);">Ces frais sont prélevés avant l’achat des parts : ils réduisent le nominal qui travaille réellement dans le produit, pas seulement le résultat final.</div>' +
     '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--ink3);margin-top:18px;">👇 SCÉNARIO DE SORTIE</div>' +
     laboSeg3('scAuto', 'Remb. anticipé', 'scEch', 'À l’échéance', 'scVol', 'Sortie volontaire') +
     '<div id="pxScenHint" style="font:400 11px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;"></div>' +
@@ -1489,7 +1618,13 @@ function tplLabo() {
     '<div id="pxPerfRow" style="display:none;">' + laboField('Performance du sous-jacent (avant décrément)', 'pxPerf', -70, 40, 1, -30) + '</div>' +
     '<div id="pxSorRow" style="display:none;">' + laboField('Coûts de sortie (si tu retires)', 'pxSor', 0, 5, 0.1, 1) + '</div>' +
     laboKpiRow([{ id: 'pxCost', label: 'FRAIS DÉDUITS', color: 'var(--warn)' }, { id: 'pxRes', label: 'TU RÉCUPÈRES' }, { id: 'pxNet', label: 'RÉSULTAT /AN', color: 'var(--acc)' }]) +
-    '<div id="pxBreak" style="margin-top:6px;"></div>' + laboNote('pxNote');
+    '<div id="pxBreak" style="margin-top:6px;"></div>' + laboNote('pxNote') +
+    '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line);">' +
+    '<div style="font:500 13px \'Inter\',sans-serif;">🎯 Scénarios du DIC (PRIIPS)</div>' +
+    '<div style="font:400 11px/1.6 \'Inter\',sans-serif;color:var(--ink3);margin-top:5px;">Reporte les hypothèses de performance du sous-jacent des 4 scénarios réglementaires — ou ajoute les tiens — pour voir le montant net réellement perçu une fois les frais cabinet + produit déduits.</div>' +
+    '<div id="pxScenTable" style="margin-top:10px;"></div>' +
+    '<button type="button" id="pxScenAdd" style="width:100%;margin-top:10px;background:none;border:1px dashed var(--line);color:var(--ink2);border-radius:10px;padding:9px;font:500 11.5px \'Inter\',sans-serif;cursor:pointer;">+ Ajouter un scénario</button>' +
+    '</div>';
 
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:58px 24px 0;"><button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Inter\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Retour</button>' +
@@ -1558,42 +1693,78 @@ function wireLabo() {
     $('frNote').textContent = 'Sans frais tu aurais ' + euro(gross) + ' ; avec ' + pctv(fee) + ' de frais, il te reste ' + euro(net) + '. Coût : ' + euro(cost) + ' sur ' + y + ' ans.';
   }
   function st() {
-    var M = +$('pxCap').value, coup = +$('pxCoup').value, dec = +$('pxDec').value, N = +$('pxN').value, bar = +$('pxBar').value, ent = +$('pxEnt').value, ges = +$('pxGes').value, cgp = +$('pxCgp').value, sor = +$('pxSor').value;
+    var M = +$('pxCap').value, coup = +$('pxCoup').value, dec = +$('pxDec').value, N = +$('pxN').value, bar = +$('pxBar').value, ent = +$('pxEnt').value, ges = +$('pxGes').value, cgp = +$('pxCgp').value, sor = +$('pxSor').value, partVal = Math.max(1, +$('pxPart').value);
     var mode = laboState.pxMode;
     if (+$('pxYr').max !== N) { $('pxYr').max = N; if (+$('pxYr').value > N) $('pxYr').value = N; }
     var yr = Math.min(+$('pxYr').value, N), perf = +$('pxPerf').value;
     $('pxCapV').textContent = euro(M); $('pxCoupV').textContent = pctv(coup); $('pxDecV').textContent = (Math.round(dec * 10) / 10).toString().replace('.', ',') + ' pts';
     $('pxNV').textContent = N + ' ans'; $('pxBarV').textContent = bar + ' %'; $('pxEntV').textContent = pctv(ent); $('pxGesV').textContent = pctv(ges);
-    $('pxCgpV').textContent = pctv(cgp); $('pxSorV').textContent = pctv(sor); $('pxYrV').textContent = yr + ' ans'; $('pxPerfV').textContent = (perf > 0 ? '+' : '') + perf + ' %';
+    $('pxCgpV').textContent = pctv(cgp); $('pxSorV').textContent = pctv(sor); $('pxYrV').textContent = yr + ' ans'; $('pxPerfV').textContent = (perf > 0 ? '+' : '') + perf + ' %'; $('pxPartV').textContent = euro(partVal);
     var y = (mode === 'ech') ? N : yr;
-    var gest = M * ges / 100 * y, exit = (mode === 'vol') ? M * sor / 100 : 0, entryProduit = M * ent / 100, entryCGP = M * cgp / 100;
-    var netFees = entryCGP + gest + exit, cost = netFees, coupons = 0, capital = 0, valeur = 0, gain = 0, statut = '', extra = '';
+    var capInvested = M * (1 - cgp / 100), entryCGP = M - capInvested, entryProduit = capInvested * ent / 100;
+    var partsAvecFrais = capInvested / partVal, partsSansFrais = M / partVal;
+    var gest = capInvested * ges / 100 * y, exit = 0, coupons = 0, capital = 0, valeur = 0, gain = 0, statut = '', extra = '';
     if (mode === 'auto') {
-      coupons = M * coup / 100 * y; capital = M; valeur = Math.max(0, capital + coupons - netFees); gain = valeur - M;
-      statut = 'Remboursement anticipé à ' + yr + ' ans : tu récupères le nominal (' + euro(M) + ') + les coupons versés. Pas de perte en capital, pas de coûts de sortie.';
+      coupons = capInvested * coup / 100 * y; capital = capInvested; valeur = Math.max(0, capital + coupons - gest); gain = valeur - M;
+      statut = 'Remboursement anticipé à ' + yr + ' ans : tu récupères le nominal investi (' + euro(capInvested) + ') + les coupons versés. Pas de perte en capital, pas de coûts de sortie.';
     } else if (mode === 'ech') {
       var adj = perf - dec * N, lvl = 100 + adj;
-      if (lvl >= bar) { capital = M; coupons = M * coup / 100 * N; statut = 'À l’échéance : sous-jacent net de décrément à ' + Math.round(adj) + ' % → au-dessus de la barrière (' + bar + ' %). Capital protégé + coupons.'; }
-      else { capital = M * Math.max(0, lvl / 100); coupons = 0; statut = 'À l’échéance : sous-jacent net de décrément à ' + Math.round(adj) + ' % → sous la barrière (' + bar + ' %). Perte en capital : tu ne touches que ' + euro(capital) + '.'; }
-      valeur = Math.max(0, capital + coupons - netFees); gain = valeur - M;
+      if (lvl >= bar) { capital = capInvested; coupons = capInvested * coup / 100 * N; statut = 'À l’échéance : sous-jacent net de décrément à ' + Math.round(adj) + ' % → au-dessus de la barrière (' + bar + ' %). Capital protégé + coupons.'; }
+      else { capital = capInvested * Math.max(0, lvl / 100); coupons = 0; statut = 'À l’échéance : sous-jacent net de décrément à ' + Math.round(adj) + ' % → sous la barrière (' + bar + ' %). Perte en capital : tu ne touches que ' + euro(capital) + '.'; }
+      valeur = Math.max(0, capital + coupons - gest); gain = valeur - M;
       extra = 'Le décrément retire ' + pctv(dec) + '/an à l’indice, soit ~' + Math.round(dec * N) + ' pts sur ' + N + ' ans : la performance brute de ' + (perf > 0 ? '+' : '') + perf + ' % devient ' + Math.round(adj) + ' % nette.';
     } else {
-      var adj2 = perf - dec * yr, mkt = M * Math.max(0, (100 + adj2) / 100);
-      coupons = 0; capital = mkt; valeur = Math.max(0, mkt - netFees); gain = valeur - M;
+      var adj2 = perf - dec * yr, mkt = capInvested * Math.max(0, (100 + adj2) / 100);
+      exit = mkt * sor / 100; coupons = 0; capital = mkt; valeur = Math.max(0, mkt - gest - exit); gain = valeur - M;
       statut = 'Sortie volontaire à ' + yr + ' ans (produit non rappelé) : tu vends au prix de marché ≈ ' + euro(mkt) + ', puis tu paies ' + euro(exit) + ' de coûts de sortie et la gestion. La protection du capital ne s’applique pas avant l’échéance.';
     }
     var rendNet = (M > 0 && y > 0) ? (Math.pow(Math.max(0, valeur) / M, 1 / y) - 1) * 100 : 0;
-    $('pxCost').textContent = euro(cost); $('pxRes').textContent = euro(valeur); $('pxNet').textContent = pctv(rendNet);
-    var lines = laboLine('Marge de structuration (déjà comprise dans le prix)', euro(entryProduit), false);
-    if (entryCGP > 0) lines += laboLine('Frais d’entrée CGP / enveloppe', euro(entryCGP), false);
+    $('pxCost').textContent = euro(entryCGP + gest + exit); $('pxRes').textContent = euro(valeur); $('pxNet').textContent = pctv(rendNet);
+    var lines = '';
+    if (entryCGP > 0) lines += laboLine('Frais d’entrée cabinet — retenus avant achat des parts', euro(entryCGP), false);
+    lines += laboLine('Capital réellement investi dans le produit', euro(capInvested), false);
+    lines += laboLine('Parts souscrites (VL ' + euro(partVal) + ')', (Math.round(partsAvecFrais * 100) / 100) + (entryCGP > 0 ? ' au lieu de ' + (Math.round(partsSansFrais * 100) / 100) + ' sans frais d’entrée' : ''), false);
+    lines += laboLine('Marge de structuration (déjà comprise dans le prix)', euro(entryProduit), false);
     lines += laboLine('Frais de gestion cumulés (' + y + ' an' + (y > 1 ? 's' : '') + ')', euro(gest), false);
     if (mode === 'vol') lines += laboLine('Coûts de sortie', euro(exit), false);
     if (coupons > 0) lines += laboLine('Coupons perçus', '+' + euro(coupons), false);
     lines += laboLine('Capital récupéré', euro(capital), false);
-    lines += laboLine(gain >= 0 ? 'Gain net estimé' : 'Perte nette estimée', euro(gain), true);
+    lines += laboLine(gain >= 0 ? 'Gain net estimé (sur ton versement initial)' : 'Perte nette estimée (sur ton versement initial)', euro(gain), true);
     $('pxBreak').innerHTML = lines;
-    var incid = (M > 0 && y > 0) ? ((entryProduit + entryCGP + gest + exit) / M / y * 100) : 0;
+    var incid = (M > 0 && y > 0) ? ((entryCGP + entryProduit + gest + exit) / M / y * 100) : 0;
     $('pxNote').textContent = statut + (extra ? ' ' + extra : '') + ' · Incidence des coûts ≈ ' + pctv(incid) + '/an (toutes couches, comparable au DIC).';
+    renderPxScenTable();
+  }
+  function pxScenCompute(s) {
+    var M = +$('pxCap').value, N = +$('pxN').value, dec = +$('pxDec').value, bar = +$('pxBar').value, coup = +$('pxCoup').value, ges = +$('pxGes').value, cgp = +$('pxCgp').value;
+    var capInvested = M * (1 - cgp / 100);
+    var adj = s.perf - dec * N, lvl = 100 + adj;
+    var capital = lvl >= bar ? capInvested : capInvested * Math.max(0, lvl / 100);
+    var coupons = lvl >= bar ? capInvested * coup / 100 * N : 0;
+    var gest = capInvested * ges / 100 * N;
+    var valeur = Math.max(0, capital + coupons - gest);
+    var rendNet = (M > 0 && N > 0) ? (Math.pow(Math.max(0, valeur) / M, 1 / N) - 1) * 100 : 0;
+    return { valeur: valeur, rendNet: rendNet };
+  }
+  function renderPxScenTable() {
+    var head = '<div style="display:flex;align-items:center;gap:8px;padding-bottom:8px;font:500 9px \'Inter\',sans-serif;letter-spacing:.06em;color:var(--ink3);"><span style="flex:1;">SCÉNARIO</span><span style="width:60px;text-align:right;">S-JACENT</span><span style="width:76px;text-align:right;">NET REÇU</span><span style="width:52px;text-align:right;">/AN</span><span style="width:18px;"></span></div>';
+    var rows = laboState.pxScenarios.map(function (s, i) {
+      var c = pxScenCompute(s);
+      return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line);">' +
+        '<input data-pxrow="' + i + '" data-f="label" value="' + esc(s.label) + '" style="flex:1;min-width:0;background:none;border:none;color:var(--ink);font:500 11px \'Inter\',sans-serif;padding:0;">' +
+        '<span style="width:60px;display:flex;align-items:center;justify-content:flex-end;gap:2px;"><input data-pxrow="' + i + '" data-f="perf" type="number" value="' + s.perf + '" style="width:42px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font:500 11px \'Inter\',sans-serif;padding:4px 4px;text-align:right;"><span style="font:400 9.5px \'Inter\',sans-serif;color:var(--ink3);">%</span></span>' +
+        '<span id="pxScenVal_' + i + '" style="width:76px;text-align:right;font:500 11.5px \'Inter\',sans-serif;color:var(--ink);">' + euro(c.valeur) + '</span>' +
+        '<span id="pxScenRend_' + i + '" style="width:52px;text-align:right;font:500 11px \'Inter\',sans-serif;color:' + (c.rendNet >= 0 ? 'var(--acc2)' : 'var(--warn)') + ';">' + pctv(c.rendNet) + '</span>' +
+        '<button data-pxdel="' + i + '" type="button" style="width:18px;background:none;border:none;color:var(--ink3);cursor:pointer;font-size:12px;padding:0;">✕</button></div>';
+    }).join('');
+    $('pxScenTable').innerHTML = head + rows;
+  }
+  function pxScenUpdateRow(i) {
+    var s = laboState.pxScenarios[i]; if (!s) return;
+    var c = pxScenCompute(s);
+    var elV = $('pxScenVal_' + i), elR = $('pxScenRend_' + i);
+    if (elV) elV.textContent = euro(c.valeur);
+    if (elR) { elR.textContent = pctv(c.rendNet); elR.style.color = c.rendNet >= 0 ? 'var(--acc2)' : 'var(--warn)'; }
   }
   function pxMode(m) {
     laboState.pxMode = m;
@@ -1632,7 +1803,24 @@ function wireLabo() {
   $('perObj').addEventListener('click', function () { perMode('obj'); });
   ['crCap', 'crRate', 'crYr'].forEach(function (id) { $(id).addEventListener('input', cr); });
   ['frCap', 'frBrut', 'frFrais', 'frYr'].forEach(function (id) { $(id).addEventListener('input', fr); });
-  ['pxCap', 'pxCoup', 'pxDec', 'pxBar', 'pxN', 'pxEnt', 'pxGes', 'pxCgp', 'pxSor', 'pxYr', 'pxPerf'].forEach(function (id) { $(id).addEventListener('input', st); });
+  ['pxCap', 'pxCoup', 'pxDec', 'pxBar', 'pxN', 'pxEnt', 'pxGes', 'pxCgp', 'pxSor', 'pxYr', 'pxPerf', 'pxPart'].forEach(function (id) { $(id).addEventListener('input', st); });
+  $('pxScenTable').addEventListener('input', function (e) {
+    var t = e.target, iAttr = t.getAttribute('data-pxrow');
+    if (iAttr == null) return;
+    var i = +iAttr, f = t.getAttribute('data-f');
+    if (f === 'label') laboState.pxScenarios[i].label = t.value;
+    else if (f === 'perf') { laboState.pxScenarios[i].perf = +t.value || 0; pxScenUpdateRow(i); }
+  });
+  $('pxScenTable').addEventListener('click', function (e) {
+    var t = e.target.closest('[data-pxdel]');
+    if (!t) return;
+    laboState.pxScenarios.splice(+t.getAttribute('data-pxdel'), 1);
+    renderPxScenTable();
+  });
+  $('pxScenAdd').addEventListener('click', function () {
+    laboState.pxScenarios.push({ label: 'Mon scénario', perf: 0 });
+    renderPxScenTable();
+  });
   $('scAuto').addEventListener('click', function () { pxMode('auto'); });
   $('scEch').addEventListener('click', function () { pxMode('ech'); });
   $('scVol').addEventListener('click', function () { pxMode('vol'); });
@@ -1927,7 +2115,7 @@ function onAppClick(e) {
     case 'resetProgressCancel': state.confirmReset = false; render(); break;
     case 'resetProgressConfirm':
       try { localStorage.removeItem(KEY); } catch (e) {}
-      store = { srs: {}, xp: 0, streak: 0, seen: 0, poles: {}, best: {}, seeded: true, name: null, mentalBest: 0, daily: null, examInstant: store ? store.examInstant : false, fichesSeen: {}, programStart: null };
+      store = { srs: {}, xp: 0, streak: 0, seen: 0, poles: {}, best: {}, seeded: true, name: null, mentalBest: 0, daily: null, examInstant: store ? store.examInstant : false, fichesSeen: {}, programStart: null, parcoursMinutesDay: 30, parcoursObjectiveDays: 63, history: [] };
       state.confirmReset = false;
       save();
       go('home');
@@ -1987,7 +2175,16 @@ function onAppClick(e) {
     case 'ficheGo': store.fichesSeen[d.fiche] = true; save(); goChild('fiche', { fiche: d.fiche }); break;
     case 'goSearch': goChild('search'); break;
     case 'goParcours': goChild('parcours'); break;
-    case 'startParcours': store.programStart = today(); save(); render(); break;
+    case 'parcoursSetMinutes': state.parcoursSetupMinutes = +d.v; render(); break;
+    case 'parcoursSetObjective': state.parcoursSetupObjective = +d.v; render(); break;
+    case 'startParcours':
+      store.programStart = today();
+      store.parcoursMinutesDay = state.parcoursSetupMinutes || 30;
+      store.parcoursObjectiveDays = state.parcoursSetupObjective || 63;
+      save();
+      render();
+      break;
+    case 'parcoursStartQuiz': startCat(d.sub, +d.n || 12); break;
     case 'parcoursToggleWeek': {
       var n = +d.n;
       state.parcoursOpenWeek = state.parcoursOpenWeek === n ? -1 : n;
@@ -2058,7 +2255,7 @@ function onAppClick(e) {
 }
 
 function waitData() {
-  if (window.CGP_DATA) { seed(); state.ready = true; render(); return; }
+  if (window.CGP_DATA) { seed(); state.ready = true; logHistory(); render(); return; }
   setTimeout(waitData, 120);
 }
 
