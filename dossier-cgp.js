@@ -44,6 +44,17 @@ var PROGRAM = [
     validation: 'Niveau 3 · Technique ≥ 80 % sur 2 tentatives. Mise à niveau générale ≥ 85 %.' }
 ];
 var PROGRAM_ONGOING = ['fmt_spot', 'fmt_order', 'fmt_scenario', 'fmt_doc', 'fmt_open', 'fmt_texte', 'fmt_memviz', 'client_pointilleux', 'rentabilite_crm'];
+var PARCOURS_POLE_OPTIONS = ['Culture financière', 'Les enveloppes', 'Supports & actifs', 'Fiscalité & transmission', 'Retraite & protection', 'Financement & levier', 'Entreprise & ingénierie', 'Métier & méthode'];
+function parcoursOrderedProgram(priority) {
+  var content = PROGRAM.filter(function (w) { return !w.consolidation; });
+  var consolidation = PROGRAM.filter(function (w) { return w.consolidation; });
+  if (priority && priority.length) {
+    var pri = content.filter(function (w) { return w.poles.some(function (p) { return priority.indexOf(p) >= 0; }); });
+    var rest = content.filter(function (w) { return !w.poles.some(function (p) { return priority.indexOf(p) >= 0; }); });
+    content = pri.concat(rest);
+  }
+  return content.concat(consolidation);
+}
 
 var state = {
   ready: false, theme: 'dark', screen: 'home', openPole: null, cat: null,
@@ -52,7 +63,7 @@ var state = {
   orderKey: null, orderCur: null,
   buildDom: ['all'], buildTypes: ['qcm', 'vf'], buildLevel: 'all', buildN: 15,
   coursePoleSel: null, navStack: [], navDir: null, confirmReset: false, nameInput: null, search: '',
-  parcoursOpenWeek: null, parcoursSetupMinutes: 30, parcoursSetupObjective: 60
+  parcoursOpenWeek: null, parcoursSetupMinutes: 30, parcoursSetupObjective: 60, parcoursSetupPriority: []
 };
 var store = null;
 var confettiTimer = null;
@@ -68,6 +79,7 @@ function load() {
   if (store.programStart === undefined) store.programStart = null;
   if (!store.parcoursMinutesDay) store.parcoursMinutesDay = 30;
   if (!store.parcoursObjectiveDays) store.parcoursObjectiveDays = 63;
+  if (!store.parcoursPriorityPoles) store.parcoursPriorityPoles = [];
   if (!store.history) store.history = [];
 }
 function logHistory() {
@@ -502,18 +514,6 @@ function computeVals() {
   v.fichesByPole = pNames.map(function (p) {
     return { label: p, fiches: v.fiches.filter(function (f) { return f.pole === p; }) };
   }).filter(function (g) { return g.fiches.length; });
-  var poleStyle = {
-    'Les enveloppes': { accent: '#f2cd82', glyph: '🛡️' },
-    'Supports & actifs': { accent: '#4fcfa8', glyph: '📈' },
-    'Financement & levier': { accent: '#e2895f', glyph: '⚖️' },
-    'Retraite & protection': { accent: '#d98a9c', glyph: '🕰️' },
-    'Fiscalité & transmission': { accent: '#6fa8d0', glyph: '📜' },
-    'Entreprise & ingénierie': { accent: '#9db56a', glyph: '🏢' },
-    'Métier & méthode': { accent: '#dbb46f', glyph: '🎯' },
-    'Culture financière': { accent: '#a888c9', glyph: '🌐' }
-  };
-  function poleAccent(p) { return (poleStyle[p] && poleStyle[p].accent) || 'var(--acc)'; }
-  function poleGlyph(p) { return (poleStyle[p] && poleStyle[p].glyph) || '📘'; }
   v.coursePoles = v.fichesByPole.map(function (g) {
     var avgPct = g.fiches.length ? pctOf(g.label) : 0;
     return { label: g.label, count: g.fiches.length, accent: poleAccent(g.label), glyph: poleGlyph(g.label), pct: avgPct };
@@ -700,73 +700,96 @@ function computeVals() {
   var weekLenDays = Math.max(4, Math.round(objDays / 9));
   var minutesDay = S.parcoursMinutesDay || 30;
   var questionsPerDay = Math.max(3, Math.round(minutesDay / 1.5));
-  if (v.isParcours) {
-    var pStart = S.programStart;
-    v.parcoursStarted = pStart != null;
-    v.parcoursSetupMinutes = st.parcoursSetupMinutes || 30;
-    v.parcoursSetupObjective = st.parcoursSetupObjective || 60;
-    var daysSince = pStart != null ? today() - pStart : 0;
-    var curWeek = pStart != null ? Math.min(9, Math.max(1, Math.floor(daysSince / weekLenDays) + 1)) : 1;
-    v.parcoursCurrentWeek = curWeek;
-    var dayInWeek = Math.max(0, Math.min(weekLenDays - 1, daysSince - (curWeek - 1) * weekLenDays));
-    v.parcoursDayInWeek = dayInWeek + 1;
-    v.parcoursWeekLenDays = weekLenDays;
-    var fmtDay = function (d) { var dt = new Date(d * 86400000); return ('0' + dt.getDate()).slice(-2) + '/' + ('0' + (dt.getMonth() + 1)).slice(-2); };
-    v.parcoursWeeks = PROGRAM.map(function (w) {
-      var tasks = [];
-      w.theory.forEach(function (id) {
-        var t = Dd.THEORY[id];
-        tasks.push({ type: 'fiche', id: id, title: t ? t.title : id, done: !!(S.fichesSeen && S.fichesSeen[id]) });
-      });
-      w.quiz.forEach(function (id) {
-        var cat = allCats().find(function (c) { return c.id === id; });
-        var qs = bank(id), tot = qs.length, seen = 0;
-        qs.forEach(function (q, i) { if (S.srs[id + '#' + i]) seen++; });
-        var pct = tot ? Math.round(100 * seen / tot) : 0;
-        tasks.push({ type: 'quiz', id: id, label: cat ? cat.label : id, pct: pct, count: tot, target: Math.min(tot, questionsPerDay), done: pct >= 100 });
-      });
-      var doneCount = tasks.filter(function (t) { return t.done; }).length;
-      var quizTasks = tasks.filter(function (t) { return t.type === 'quiz'; });
-      var quizAvg = quizTasks.length ? Math.round(quizTasks.reduce(function (a, t) { return a + t.pct; }, 0) / quizTasks.length) : 0;
-      var fichesCount = tasks.length - quizTasks.length;
-      var fichesDone = doneCount - quizTasks.filter(function (t) { return t.done; }).length;
-      var pct = w.consolidation ? quizAvg : Math.round((fichesCount ? fichesDone / fichesCount : 1) * 50 + quizAvg * 0.5);
-      var range = pStart != null ? fmtDay(pStart + (w.n - 1) * weekLenDays) + ' → ' + fmtDay(pStart + w.n * weekLenDays - 1) : null;
-      var isCur = curWeek === w.n;
-      var dueCount = isCur && tasks.length ? Math.min(tasks.length, Math.ceil((dayInWeek + 1) / weekLenDays * tasks.length)) : 0;
-      var todayTask = null, aheadTask = null;
-      if (isCur && !w.consolidation) {
-        for (var ti = 0; ti < dueCount; ti++) { if (!tasks[ti].done) { todayTask = tasks[ti]; break; } }
-        if (!todayTask) { for (var tj = dueCount; tj < tasks.length; tj++) { if (!tasks[tj].done) { aheadTask = tasks[tj]; break; } } }
-      }
-      return {
-        n: w.n, title: w.title, accent: w.accent, poles: w.poles, consolidation: !!w.consolidation,
-        tasks: tasks, pct: Math.min(100, pct), range: range, validation: w.validation,
-        current: isCur, dueCount: dueCount, todayTask: todayTask, aheadTask: aheadTask,
-        open: state.parcoursOpenWeek != null ? state.parcoursOpenWeek === w.n : isCur
-      };
+  var priorityPoles = S.parcoursPriorityPoles || [];
+  var pStart = S.programStart;
+  v.parcoursStarted = pStart != null;
+  v.parcoursSetupMinutes = st.parcoursSetupMinutes || 30;
+  v.parcoursSetupObjective = st.parcoursSetupObjective || 60;
+  v.parcoursSetupPriority = st.parcoursSetupPriority || [];
+  v.poleOptions = PARCOURS_POLE_OPTIONS;
+  var daysSince = pStart != null ? today() - pStart : 0;
+  var expectedWeek = pStart != null ? Math.min(9, Math.max(1, Math.floor(daysSince / weekLenDays) + 1)) : 1;
+  v.parcoursExpectedWeek = expectedWeek;
+  var fmtDay = function (d) { var dt = new Date(d * 86400000); return ('0' + dt.getDate()).slice(-2) + '/' + ('0' + (dt.getMonth() + 1)).slice(-2); };
+  var order = parcoursOrderedProgram(priorityPoles);
+  var built = order.map(function (w) {
+    var tasks = [];
+    w.theory.forEach(function (id) {
+      var t = Dd.THEORY[id];
+      tasks.push({ type: 'fiche', id: id, title: t ? t.title : id, done: !!(S.fichesSeen && S.fichesSeen[id]) });
     });
-    v.parcoursOverallPct = Math.round(v.parcoursWeeks.reduce(function (a, w) { return a + w.pct; }, 0) / v.parcoursWeeks.length);
-    v.parcoursOngoing = PROGRAM_ONGOING.map(function (id) {
+    var isPriorityWeek = w.poles.some(function (p) { return priorityPoles.indexOf(p) >= 0; });
+    var qpd = isPriorityWeek ? Math.round(questionsPerDay * 1.5) : questionsPerDay;
+    w.quiz.forEach(function (id) {
       var cat = allCats().find(function (c) { return c.id === id; });
-      return { id: id, label: cat ? cat.label : id };
+      var qs = bank(id), tot = qs.length, seen = 0;
+      qs.forEach(function (q, i) { if (S.srs[id + '#' + i]) seen++; });
+      var pct = tot ? Math.round(100 * seen / tot) : 0;
+      tasks.push({ type: 'quiz', id: id, label: cat ? cat.label : id, pct: pct, count: tot, target: Math.min(tot, qpd), done: pct >= 100 });
     });
-    v.parcoursQuestionsPerDay = questionsPerDay;
-    v.parcoursMinutesDay = minutesDay;
-    v.parcoursObjectiveDays = objDays;
-    v.parcoursDeadlineLabel = pStart != null ? fmtDay(pStart + objDays) : null;
-    if (pStart != null) {
-      var expectedPct = Math.min(100, Math.round(daysSince / objDays * 100));
-      var delta = v.parcoursOverallPct - expectedPct;
-      v.parcoursPaceDelta = delta;
-      v.parcoursPaceStatus = delta >= 5 ? 'avance' : delta <= -10 ? 'retard' : 'ok';
-      v.parcoursPaceLabel = delta >= 5 ? 'En avance de ' + delta + ' pts sur ton objectif' : delta <= -10 ? 'En retard de ' + Math.abs(delta) + ' pts sur ton objectif' : 'Dans les temps par rapport à ton objectif';
+    var doneCount = tasks.filter(function (t) { return t.done; }).length;
+    var quizTasks = tasks.filter(function (t) { return t.type === 'quiz'; });
+    var quizAvg = quizTasks.length ? Math.round(quizTasks.reduce(function (a, t) { return a + t.pct; }, 0) / quizTasks.length) : 0;
+    var fichesCount = tasks.length - quizTasks.length;
+    var fichesDone = doneCount - quizTasks.filter(function (t) { return t.done; }).length;
+    var pct = Math.min(100, w.consolidation ? quizAvg : Math.round((fichesCount ? fichesDone / fichesCount : 1) * 50 + quizAvg * 0.5));
+    var validated;
+    if (w.n === 8) {
+      var allPolesOk = poleNames().every(function (p) { return polePct(p) >= 70; });
+      validated = !!(S.best && S.best.facile >= 85 && S.best.avance >= 75) && allPolesOk;
+    } else if (w.n === 9) {
+      validated = !!(S.best && S.best.technique >= 80 && S.best.niveau_general >= 85);
+    } else {
+      validated = pct >= 70;
     }
+    return {
+      originalN: w.n, title: w.title, accent: w.accent, poles: w.poles, consolidation: !!w.consolidation,
+      tasks: tasks, pct: pct, validation: w.validation, validated: validated, priority: isPriorityWeek
+    };
+  });
+  var unlockedIdx = 0;
+  for (var bi = 0; bi < built.length; bi++) { if (!built[bi].validated) { unlockedIdx = bi; break; } if (bi === built.length - 1) unlockedIdx = bi; }
+  v.parcoursCurrentWeek = unlockedIdx + 1;
+  var dayInWeek = Math.max(0, daysSince - unlockedIdx * weekLenDays);
+  v.parcoursDayInWeek = Math.min(weekLenDays, dayInWeek + 1);
+  v.parcoursWeekLenDays = weekLenDays;
+  v.parcoursWeeks = built.map(function (w, idx) {
+    var locked = idx > unlockedIdx;
+    var isActive = idx === unlockedIdx;
+    var range = pStart != null ? fmtDay(pStart + idx * weekLenDays) + ' → ' + fmtDay(pStart + (idx + 1) * weekLenDays - 1) : null;
+    var todayTask = null;
+    if (isActive && !w.consolidation) {
+      for (var ti = 0; ti < w.tasks.length; ti++) { if (!w.tasks[ti].done) { todayTask = w.tasks[ti]; break; } }
+    }
+    return {
+      n: idx + 1, originalN: w.originalN, title: w.title, accent: w.accent, poles: w.poles, consolidation: w.consolidation,
+      tasks: w.tasks, pct: w.pct, validation: w.validation, validated: w.validated, priority: w.priority,
+      range: range, locked: locked, current: isActive, todayTask: todayTask,
+      open: locked ? false : (state.parcoursOpenWeek != null ? state.parcoursOpenWeek === (idx + 1) : isActive)
+    };
+  });
+  v.parcoursOverallPct = Math.round(v.parcoursWeeks.reduce(function (a, w) { return a + w.pct; }, 0) / v.parcoursWeeks.length);
+  v.parcoursOngoing = PROGRAM_ONGOING.map(function (id) {
+    var cat = allCats().find(function (c) { return c.id === id; });
+    return { id: id, label: cat ? cat.label : id };
+  });
+  v.parcoursQuestionsPerDay = questionsPerDay;
+  v.parcoursMinutesDay = minutesDay;
+  v.parcoursObjectiveDays = objDays;
+  v.parcoursPriorityPoles = priorityPoles;
+  v.parcoursDeadlineLabel = pStart != null ? fmtDay(pStart + objDays) : null;
+  if (pStart != null) {
+    var delta = v.parcoursCurrentWeek - expectedWeek;
+    v.parcoursPaceDelta = delta;
+    v.parcoursPaceStatus = delta > 0 ? 'avance' : delta < 0 ? 'retard' : 'ok';
+    v.parcoursPaceLabel = delta > 0 ? 'En avance : semaine ' + v.parcoursCurrentWeek + ' pour un objectif semaine ' + expectedWeek
+      : delta < 0 ? 'En retard : tu es en semaine ' + v.parcoursCurrentWeek + ', l’objectif est semaine ' + expectedWeek
+      : 'Dans les temps par rapport à ton objectif';
   }
   var fmtDay2 = function (d) { var dt = new Date(d * 86400000); return ('0' + dt.getDate()).slice(-2) + '/' + ('0' + (dt.getMonth() + 1)).slice(-2); };
   v.masteryHistory = (S.history || []).map(function (h) { return { d: h.d, mastery: h.mastery, label: fmtDay2(h.d) }; });
   v.parcoursStartedFlag = !!(S.programStart != null);
-  v.parcoursWeekLabel = S.programStart != null ? 'Semaine ' + Math.min(9, Math.max(1, Math.floor((today() - S.programStart) / weekLenDays) + 1)) + ' / 9' : 'Pas encore commencé';
+  v.parcoursWeekLabel = S.programStart != null ? 'Semaine ' + v.parcoursCurrentWeek + ' / 9' : 'Pas encore commencé';
 
   return v;
 }
@@ -779,6 +802,18 @@ function hexA(hex, a) {
   var r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
   return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
 }
+var poleStyle = {
+  'Les enveloppes': { accent: '#f2cd82', glyph: '🛡️' },
+  'Supports & actifs': { accent: '#4fcfa8', glyph: '📈' },
+  'Financement & levier': { accent: '#e2895f', glyph: '⚖️' },
+  'Retraite & protection': { accent: '#d98a9c', glyph: '🕰️' },
+  'Fiscalité & transmission': { accent: '#6fa8d0', glyph: '📜' },
+  'Entreprise & ingénierie': { accent: '#9db56a', glyph: '🏢' },
+  'Métier & méthode': { accent: '#dbb46f', glyph: '🎯' },
+  'Culture financière': { accent: '#a888c9', glyph: '🌐' }
+};
+function poleAccent(p) { return (poleStyle[p] && poleStyle[p].accent) || 'var(--acc)'; }
+function poleGlyph(p) { return (poleStyle[p] && poleStyle[p].glyph) || '📘'; }
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -933,23 +968,35 @@ function tplParcours(v) {
     var oChip = function (n, l) { return parcoursChip('parcoursSetObjective', n, l, v.parcoursSetupObjective === n); };
     var previewQpd = Math.max(3, Math.round(v.parcoursSetupMinutes / 1.5));
     var previewWeekLen = Math.max(4, Math.round(v.parcoursSetupObjective / 9));
+    var poleChips = v.poleOptions.map(function (p) {
+      var sel = v.parcoursSetupPriority.indexOf(p) >= 0;
+      return '<button data-action="parcoursTogglePriority" data-pole="' + esc(p) + '" style="border:1px solid ' + (sel ? poleAccent(p) : 'var(--line)') + ';background:' + (sel ? hexA(poleAccent(p), 0.18) : 'none') + ';color:' + (sel ? 'var(--ink)' : 'var(--ink2)') + ';border-radius:999px;padding:8px 13px;font:500 11.5px \'Inter\',sans-serif;cursor:pointer;">' + poleGlyph(p) + ' ' + esc(p) + '</button>';
+    }).join('');
     return '<div style="flex:1;overflow:auto;min-height:0;">' +
       '<div style="padding:58px 24px 0;"><button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Inter\',sans-serif;color:var(--acc);cursor:pointer;">&#8249; Retour</button>' +
       '<div style="font:500 10px \'Inter\',monospace;letter-spacing:.2em;color:var(--ink3);margin-top:16px;">MON PARCOURS</div>' +
       '<div style="font:300 32px/1.15 Fraunces,serif;letter-spacing:-.02em;margin-top:14px;">9 semaines pour être <span style="font-style:italic;color:var(--acc);">prêt</span>.</div>' +
-      '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">Un programme construit sur les 63 fiches et 1604 questions de l\'app. Chaque jour, une seule chose à faire — l\'app choisit pour toi et suit ta vraie progression.</div></div>' +
+      '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">Un programme construit sur les 63 fiches et 1604 questions de l\'app. Chaque jour, une seule chose à faire. Chaque semaine se débloque quand la précédente est validée — pas d\'avance sans avoir vraiment travaillé le sujet.</div></div>' +
       '<div style="margin:26px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">COMBIEN DE TEMPS PAR JOUR ?</div>' +
       '<div style="display:flex;gap:8px;margin-top:10px;">' + mChip(15) + mChip(30) + mChip(45) + mChip(60) + '</div></div>' +
       '<div style="margin:22px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">TON OBJECTIF</div>' +
       '<div style="display:flex;gap:8px;margin-top:10px;">' + oChip(30, '1 mois') + oChip(60, '2 mois') + oChip(90, '3 mois') + oChip(63, 'À mon rythme') + '</div></div>' +
+      '<div style="margin:22px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">THÉMATIQUES PRIORITAIRES <span style="color:var(--ink3);text-transform:none;letter-spacing:0;">(jusqu\'à 3, optionnel)</span></div>' +
+      '<div style="font:400 11.5px/1.6 \'Inter\',sans-serif;color:var(--ink3);margin-top:6px;">Les semaines liées à ces thèmes passent en premier et reçoivent 50% de questions en plus par jour.</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">' + poleChips + '</div></div>' +
       '<div style="margin:20px 24px 0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;font:400 12px/1.7 \'Inter\',sans-serif;color:var(--ink2);">≈ <b style="color:var(--ink);">' + previewQpd + ' questions/jour</b> et des semaines d\'environ <b style="color:var(--ink);">' + previewWeekLen + ' jours</b> pour tenir ton objectif.</div>' +
       '<div style="margin:20px 24px 0;"><button data-action="startParcours" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Commencer mon parcours</button></div>' +
       '<div style="height:26px;"></div></div>';
   }
-  var curWeekGlobal = v.parcoursCurrentWeek;
   var weeks = v.parcoursWeeks.map(function (w) {
     var acc = w.accent;
-    var statusTag = w.n < curWeekGlobal ? (w.pct >= 90 ? ' · terminée ✓' : ' · à rattraper') : (w.n > curWeekGlobal ? ' · à venir' : ' · en cours');
+    if (w.locked) {
+      return '<div style="margin-top:12px;border:1px solid var(--line);border-radius:16px;padding:15px 16px;background:var(--panel);opacity:.55;display:flex;align-items:center;gap:12px;">' +
+        '<span style="flex-shrink:0;width:38px;height:38px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font:500 15px \'Inter\',sans-serif;color:var(--ink3);">🔒</span>' +
+        '<span style="flex:1;min-width:0;"><span style="display:block;font:500 9.5px \'Inter\',monospace;letter-spacing:.08em;color:var(--ink3);">SEMAINE ' + w.n + ' · VERROUILLÉE' + (w.priority ? ' · priorisée' : '') + '</span>' +
+        '<span style="display:block;font:500 13.5px \'Inter\',sans-serif;margin-top:3px;color:var(--ink2);">' + esc(w.title) + '</span></span></div>';
+    }
+    var statusTag = w.validated ? ' · validée ✓' : (w.current ? ' · en cours' : '');
     var body;
     if (w.consolidation) {
       body = '<div style="display:flex;flex-direction:column;gap:9px;">' +
@@ -970,16 +1017,8 @@ function tplParcours(v) {
             '<div style="font:500 9.5px \'Inter\',monospace;letter-spacing:.1em;color:' + acc + ';">AUJOURD\'HUI · JOUR ' + v.parcoursDayInWeek + '/' + v.parcoursWeekLenDays + '</div>' +
             '<div style="font:500 14px \'Inter\',sans-serif;margin-top:7px;">' + esc(tt.type === 'quiz' ? tt.label : tt.title) + '</div>' +
             '<button ' + ctaAction + ' style="margin-top:11px;width:100%;border:none;border-radius:999px;padding:12px;font:600 12.5px \'Inter\',sans-serif;color:var(--on);background:' + acc + ';cursor:pointer;">' + ctaLabel + '</button></div>';
-        } else if (w.aheadTask) {
-          var at = w.aheadTask;
-          var ctaLabel2 = at.type === 'fiche' ? 'Lire la fiche suivante' : ('Continuer · ' + at.target + ' questions');
-          var ctaAction2 = at.type === 'fiche' ? 'data-action="ficheGo" data-fiche="' + esc(at.id) + '"' : 'data-action="parcoursStartQuiz" data-sub="' + esc(at.id) + '" data-n="' + at.target + '"';
-          todayCard = '<div style="background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;">' +
-            '<div style="font:500 9.5px \'Inter\',monospace;letter-spacing:.1em;color:var(--acc2);">TU ES À JOUR ✓</div>' +
-            '<div style="font:400 12px/1.5 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">Envie de prendre de l\'avance ?</div>' +
-            '<button ' + ctaAction2 + ' style="margin-top:10px;width:100%;border:1px solid var(--line);border-radius:999px;padding:11px;font:600 12px \'Inter\',sans-serif;color:var(--ink);background:none;cursor:pointer;">' + ctaLabel2 + '</button></div>';
         } else {
-          todayCard = '<div style="background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px;font:400 12px/1.5 \'Inter\',sans-serif;color:var(--ink2);">🎉 Semaine terminée. La suivante démarre automatiquement.</div>';
+          todayCard = '<div style="background:' + hexA(acc, 0.12) + ';border:1px solid ' + hexA(acc, 0.35) + ';border-radius:14px;padding:14px;margin-bottom:12px;font:400 12px/1.5 \'Inter\',sans-serif;color:var(--ink2);">🎉 Semaine terminée — elle va se valider et débloquer la suivante.</div>';
         }
       }
       var rows = w.tasks.map(function (t) { return parcoursTaskRow(t, t === w.todayTask, acc); }).join('');
@@ -988,8 +1027,8 @@ function tplParcours(v) {
     return '<div style="margin-top:12px;border:1px solid var(--line);border-left:3px solid ' + acc + ';border-radius:16px;overflow:hidden;background:var(--panel);">' +
       '<button data-action="parcoursToggleWeek" data-n="' + w.n + '" style="width:100%;background:none;border:none;padding:15px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;">' +
       '<span style="flex-shrink:0;position:relative;width:38px;height:38px;border-radius:50%;background:conic-gradient(' + acc + ' ' + (w.pct * 3.6) + 'deg,var(--line) ' + (w.pct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
-      '<span style="width:32px;height:32px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font:500 10px \'Inter\',monospace;color:' + acc + ';">' + w.n + '</span></span>' +
-      '<span style="flex:1;min-width:0;"><span style="display:block;font:500 9.5px \'Inter\',monospace;letter-spacing:.08em;color:' + acc + ';">SEMAINE ' + w.n + (w.range ? ' · ' + esc(w.range) : '') + esc(statusTag) + '</span>' +
+      '<span style="width:32px;height:32px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font:500 10px \'Inter\',monospace;color:' + acc + ';">' + (w.validated ? '✓' : w.n) + '</span></span>' +
+      '<span style="flex:1;min-width:0;"><span style="display:block;font:500 9.5px \'Inter\',monospace;letter-spacing:.08em;color:' + acc + ';">SEMAINE ' + w.n + (w.range ? ' · ' + esc(w.range) : '') + (w.priority ? ' · priorisée' : '') + esc(statusTag) + '</span>' +
       '<span style="display:block;font:500 13.5px \'Inter\',sans-serif;margin-top:3px;">' + esc(w.title) + '</span></span>' +
       '<span style="flex-shrink:0;font:400 15px Fraunces,serif;color:' + acc + ';transition:transform .25s;transform:rotate(' + (w.open ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
       (w.open ? '<div style="padding:0 16px 16px;">' + body + '<div style="margin-top:14px;background:var(--panel2);border-left:3px solid var(--acc2);border-radius:10px;padding:11px 13px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);"><b style="color:var(--ink);">Validation —</b> ' + esc(w.validation) + '</div></div>' : '') +
@@ -2115,7 +2154,7 @@ function onAppClick(e) {
     case 'resetProgressCancel': state.confirmReset = false; render(); break;
     case 'resetProgressConfirm':
       try { localStorage.removeItem(KEY); } catch (e) {}
-      store = { srs: {}, xp: 0, streak: 0, seen: 0, poles: {}, best: {}, seeded: true, name: null, mentalBest: 0, daily: null, examInstant: store ? store.examInstant : false, fichesSeen: {}, programStart: null, parcoursMinutesDay: 30, parcoursObjectiveDays: 63, history: [] };
+      store = { srs: {}, xp: 0, streak: 0, seen: 0, poles: {}, best: {}, seeded: true, name: null, mentalBest: 0, daily: null, examInstant: store ? store.examInstant : false, fichesSeen: {}, programStart: null, parcoursMinutesDay: 30, parcoursObjectiveDays: 63, parcoursPriorityPoles: [], history: [] };
       state.confirmReset = false;
       save();
       go('home');
@@ -2177,10 +2216,19 @@ function onAppClick(e) {
     case 'goParcours': goChild('parcours'); break;
     case 'parcoursSetMinutes': state.parcoursSetupMinutes = +d.v; render(); break;
     case 'parcoursSetObjective': state.parcoursSetupObjective = +d.v; render(); break;
+    case 'parcoursTogglePriority': {
+      var arr = state.parcoursSetupPriority || (state.parcoursSetupPriority = []);
+      var pi = arr.indexOf(d.pole);
+      if (pi >= 0) arr.splice(pi, 1);
+      else if (arr.length < 3) arr.push(d.pole);
+      render();
+      break;
+    }
     case 'startParcours':
       store.programStart = today();
       store.parcoursMinutesDay = state.parcoursSetupMinutes || 30;
       store.parcoursObjectiveDays = state.parcoursSetupObjective || 63;
+      store.parcoursPriorityPoles = (state.parcoursSetupPriority || []).slice();
       save();
       render();
       break;
