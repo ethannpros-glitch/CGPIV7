@@ -1090,15 +1090,40 @@ function tplCoursePole(v) {
     '<div style="height:26px;"></div></div>';
 }
 
-function tplPara(p, i) {
+function emphasizeCaps(escapedText) {
+  return escapedText.replace(/(?:^|[^&#\w])[A-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜÇ][A-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜÇ0-9'\-]+(?:[\s-][A-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜÇ0-9'\-]{2,})*/g, function (m) {
+    var lead = /^[^A-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜÇ]/.test(m) ? m[0] : '';
+    var word = lead ? m.slice(1) : m;
+    if (word.length < 2) return m;
+    return lead + '<b style="color:var(--ink);font-weight:700;">' + word + '</b>';
+  });
+}
+function formatBody(raw, accent) {
+  var text = (raw || '').trim();
+  var dotColor = accent || 'var(--acc)';
+  var parts = text.split(/\s*•\s*/);
+  if (parts.length > 2) {
+    var intro = parts.shift().trim();
+    var items = parts.map(function (s) { return s.trim().replace(/\s+/g, ' '); }).filter(Boolean);
+    var html = '';
+    if (intro) html += '<div style="font:400 14px/1.75 \'Space Grotesk\',sans-serif;color:var(--ink);">' + emphasizeCaps(esc(intro)) + '</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:10px;' + (intro ? 'margin-top:11px;' : '') + '">' + items.map(function (it) {
+      return '<div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;width:5px;height:5px;border-radius:50%;background:' + dotColor + ';margin-top:9px;"></span>' +
+        '<span style="flex:1;font:400 13.5px/1.7 \'Space Grotesk\',sans-serif;color:var(--ink2);">' + emphasizeCaps(esc(it)) + '</span></div>';
+    }).join('') + '</div>';
+    return html;
+  }
+  return '<div style="font:400 14px/1.78 \'Space Grotesk\',sans-serif;color:var(--ink2);">' + emphasizeCaps(esc(text)) + '</div>';
+}
+function tplPara(p, i, accent) {
   var delay = ((i || 0) * 0.06).toFixed(2) + 's';
   if (p.callout) {
     return '<div class="stagger" style="animation-delay:' + delay + ';margin:10px 0;background:var(--panel2);border-left:3px solid var(--gold);border-radius:10px;padding:11px 13px;">' +
       '<div style="font:600 9.5px \'JetBrains Mono\',monospace;letter-spacing:.1em;color:var(--gold);display:flex;align-items:center;gap:6px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--gold);animation:kfBreathe 2s ease-in-out infinite;"></span>' + esc(p.label) + '</div>' +
-      '<div style="font:400 12.5px/1.65 \'Space Grotesk\',sans-serif;color:var(--ink);margin-top:5px;text-wrap:pretty;">' + esc(p.text.trim()) + '</div></div>';
+      '<div style="font:400 13px/1.65 \'Space Grotesk\',sans-serif;color:var(--ink);margin-top:5px;text-wrap:pretty;">' + emphasizeCaps(esc(p.text.trim())) + '</div></div>';
   }
   if (!p.text.trim()) return '';
-  return '<div class="stagger" style="animation-delay:' + delay + ';font:400 13px/1.8 \'Space Grotesk\',sans-serif;color:var(--ink2);margin-top:10px;text-wrap:pretty;">' + esc(p.text.trim()) + '</div>';
+  return '<div class="stagger" style="animation-delay:' + delay + ';margin-top:12px;text-wrap:pretty;">' + formatBody(p.text, accent) + '</div>';
 }
 
 function tplFiche(v) {
@@ -1109,7 +1134,7 @@ function tplFiche(v) {
   }).join('');
   var sections = v.ficheSections.map(function (s, i) {
     var col = s.warnish ? 'var(--warn)' : acc;
-    var body = s.paras.map(tplPara).join('') + (s.svg ? '<div class="stagger" style="animation-delay:' + (s.paras.length * 0.06).toFixed(2) + 's;margin-top:14px;border-radius:14px;overflow:hidden;background:#faf8f3;padding:8px;">' + s.svg + '</div>' : '');
+    var body = s.paras.map(function (p, pi) { return tplPara(p, pi, acc); }).join('') + (s.svg ? '<div class="stagger" style="animation-delay:' + (s.paras.length * 0.06).toFixed(2) + 's;margin-top:14px;border-radius:14px;overflow:hidden;background:#faf8f3;padding:8px;">' + s.svg + '</div>' : '');
     return '<div id="sec-' + i + '" class="thsec' + (i === 0 ? ' open' : '') + '" style="margin-top:12px;border:1px solid var(--line);border-left:3px solid ' + hexA(col, 0.6) + ';border-radius:16px;overflow:hidden;background:var(--panel);animation:kfIn .4s cubic-bezier(.16,1,.3,1) both;animation-delay:' + (i * 0.05).toFixed(2) + 's;">' +
       '<button data-fold-head style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:' + col + ';font:500 10px \'JetBrains Mono\',monospace;letter-spacing:.12em;text-align:left;">' +
       '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + hexA(col, 0.16) + ';border:1px solid ' + hexA(col, 0.4) + ';display:flex;align-items:center;justify-content:center;font:500 10px \'JetBrains Mono\',monospace;color:' + col + ';">' + (s.warnish ? '!' : (i + 1)) + '</span>' +
