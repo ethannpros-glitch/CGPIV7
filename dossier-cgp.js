@@ -260,11 +260,11 @@ function startList(keys, meta) {
   state.screen = 'quiz'; state.confetti = false;
   render();
 }
-function startCat(id, n) {
+function startCat(id, n, extra) {
   var qs = bank(id);
   var keys = qs.map(function (q, i) { return id + '#' + i; }).sort(function () { return Math.random() - 0.5; }).slice(0, n || 12);
   var cat = quizCats().find(function (c) { return c.id === id; });
-  startList(keys, { kind: 'cat', title: cat ? cat.label : 'Série' });
+  startList(keys, Object.assign({ kind: 'cat', title: cat ? cat.label : 'Série' }, extra || {}));
 }
 function startDailyQuiz() {
   var cats = quizCats(), keys = [];
@@ -317,24 +317,87 @@ function startNiveauGeneral(label) {
   keys.sort(function () { return Math.random() - 0.5; });
   startList(keys, { kind: 'exam', title: 'Mise à niveau générale', levelKey: 'niveau_general', label: label || 'Mise à niveau générale' });
 }
+var FICHE_QUIZ_MAP = {
+  th_per: ['per_fondamentaux'],
+  th_av: ['av_fondamentaux', 'lecture_contrat'],
+  th_dem: ['dem_fondamentaux', 'dem_expert'],
+  th_mat: ['mat_regimes'],
+  th_soc: ['soc_ei_micro', 'soc_sarl', 'soc_sas', 'soc_sel'],
+  th_ing: ['ing_150bter'],
+  th_bourse: ['bourse_pea', 'bourse_cto'],
+  th_prev: ['prev_madelin'],
+  th_reg: ['reg_mif', 'reg_lcb'],
+  th_struct: ['struct_dic'],
+  th_capi: ['capi_fond'],
+  th_lux: ['lux_fond'],
+  th_pee: ['per_percol', 'pee_perco'],
+  th_av_methodo: ['av_rachat'],
+  th_per_methodo: ['per_fiscalite', 'per_deblocage'],
+  th_vocab: ['client_pointilleux', 'rentabilite_crm'],
+  th_lombard: ['credit_lombard', 'ing_lombard'],
+  th_hypo: ['credit_hypo', 'prev_emprunteur'],
+  th_grille_per: ['per_reseau'],
+  th_grille_struct: ['struct_lecture'],
+  th_struct_gen: ['struct_action'],
+  th_retraite: ['retraite_compl'],
+  th_fonds: ['fonds_choix'],
+  th_scpi: ['scpi_pierre', 'soc_sci_struct'],
+  th_fisc: ['fisc_ir'],
+  th_succession: ['succession', 'ing_donation'],
+  th_immo: ['immo_patrimoine'],
+  th_prevoyance: ['protection_sociale'],
+  th_grille_methode: [],
+  th_holding_sci: ['soc_holding_sci', 'soc_holding_v8', 'soc_mbo'],
+  th_lire_etf: ['fonds_etf'],
+  th_lire_structure: ['struct_lecture'],
+  th_av_appro: ['av_appro', 'av_expert'],
+  th_per_appro: ['per_appro', 'per_prefon'],
+  th_gerance_appro: ['gerance_appro'],
+  th_entreprise_appro: ['entreprise_appro', 'ing_expert'],
+  th_fisc_part_appro: ['fisc_part_appro'],
+  th_fisc_patri_appro: ['fisc_patri_appro', 'fisc_expert'],
+  th_etf_actif: ['etf_actif'],
+  th_arbitrage: ['arbitrage'],
+  th_amf: ['amf'],
+  th_frais_struct: ['frais_struct'],
+  th_lire_dic: ['struct_dic'],
+  th_dutreil: ['ing_dutreuil'],
+  th_mc_interets: ['mc_interets'],
+  th_mc_risque: ['mc_risque'],
+  th_mc_oblig: ['mc_oblig'],
+  th_mc_options: ['mc_options'],
+  th_mc_macro: ['mc_macro'],
+  th_mc_capi: ['mc_interets'],
+  th_mc_diversif: ['mc_risque'],
+  th_ir_escalier: ['fisc_ir'],
+  th_av_horssucc: ['succession'],
+  th_retraite_etages: ['retraite_base'],
+  th_immo_levier: ['immo_patrimoine'],
+  th_prev_trou: ['prev_fondamentaux'],
+  th_holding_flux: ['soc_holding'],
+  th_pvimmo_duree: ['fisc_ir'],
+  th_quotient: ['fisc_ir'],
+  th_pe: ['pe_fondamentaux'],
+  th_pe2: ['pe_structuration', 'pe_fiscalite', 'pe_strategie'],
+  th_esg: ['reg_esg'],
+  th_crypto: ['crypto_q']
+};
 function fichePct(theoryId) {
-  var cat = allCats().find(function (c) { return c.theory === theoryId; });
-  if (!cat) return 0;
-  var sib = quizCats().filter(function (c) { return c.parentId === cat.parentId; });
+  var quizIds = FICHE_QUIZ_MAP[theoryId] || [];
+  if (!quizIds.length) return 100;
   var total = 0, seen = 0;
-  sib.forEach(function (c) {
-    bank(c.id).forEach(function (q, i) {
+  quizIds.forEach(function (id) {
+    bank(id).forEach(function (q, i) {
       total++;
-      if (store.srs[c.id + '#' + i]) seen++;
+      if (store.srs[id + '#' + i]) seen++;
     });
   });
-  return total ? Math.round(100 * seen / total) : 0;
+  return total ? Math.round(100 * seen / total) : 100;
 }
 function startFicheQ(theoryId) {
-  var cat = allCats().find(function (c) { return c.theory === theoryId; });
-  var sib = cat ? quizCats().filter(function (c) { return c.parentId === cat.parentId; }) : [];
+  var quizIds = FICHE_QUIZ_MAP[theoryId] || [];
   var keys = [];
-  sib.forEach(function (c) { bank(c.id).forEach(function (q, i) { keys.push(c.id + '#' + i); }); });
+  quizIds.forEach(function (id) { bank(id).forEach(function (q, i) { keys.push(id + '#' + i); }); });
   if (!keys.length) { startDailyQuiz(); return; }
   startList(keys.sort(function () { return Math.random() - 0.5; }).slice(0, 8), { kind: 'cat', title: 'Test de la fiche', theoryId: theoryId });
 }
@@ -345,7 +408,8 @@ function maybeCompleteFiche(id) {
   var seenMap = store.ficheSectionsSeen && store.ficheSectionsSeen[id];
   var seenCount = seenMap ? Object.keys(seenMap).length : 0;
   if (total && seenCount < total) return;
-  if (!(store.ficheTested && store.ficheTested[id])) return;
+  var quizIds = FICHE_QUIZ_MAP[id] || [];
+  if (quizIds.length && !(store.ficheTested && store.ficheTested[id])) return;
   if (!store.fichesSeen) store.fichesSeen = {};
   store.fichesSeen[id] = true;
 }
@@ -696,6 +760,7 @@ function computeVals() {
       : 'Aucune erreur : ces questions reviendront beaucoup plus tard.');
   v.doneCta = meta.kind === 'diag' ? 'Voir mon plan' : 'Enchaîner 5 questions';
   v.doneIsDiag = meta.kind === 'diag';
+  v.doneShowParcours = !!(S.programStart != null && (meta.theoryId || meta.fromParcours || meta.kind === 'exam'));
 
   v.examLabel = (meta.label || '').toUpperCase();
   v.examVerdict = pct >= 60 ? 'Admis.' : 'Sous le seuil de 60 %.';
@@ -1252,6 +1317,7 @@ function tplDone(v) {
     '<div style="font:400 13px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:22px;">' + esc(v.doneNote) + '</div>' +
     '<div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">' +
     '<button data-action="doneAgain" style="border:none;border-radius:999px;padding:17px;font:600 14px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + esc(v.doneCta) + '</button>' +
+    (v.doneShowParcours ? '<button data-action="goParcoursFromDone" style="background:none;border:1px solid var(--acc);border-radius:999px;padding:15px;font:600 12.5px \'Inter\',sans-serif;color:var(--acc);cursor:pointer;">Retour au parcours</button>' : '') +
     '<button data-action="goHome" style="background:none;border:1px solid var(--line);border-radius:999px;padding:15px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Retour à l\'accueil</button></div></div>';
 }
 
@@ -1323,6 +1389,7 @@ function tplExamResult(v) {
     '<div style="margin-top:14px;display:flex;flex-direction:column;gap:12px;">' + poles + '</div>' +
     '<div style="margin:26px 0 0;display:flex;flex-direction:column;gap:10px;">' +
     '<button data-action="reviewExam" style="border:none;border-radius:999px;padding:16px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Revoir mes ' + v.doneKo + ' erreurs</button>' +
+    (v.doneShowParcours ? '<button data-action="goParcoursFromDone" style="background:none;border:1px solid var(--acc);border-radius:999px;padding:15px;font:600 12.5px \'Inter\',sans-serif;color:var(--acc);cursor:pointer;">Retour au parcours</button>' : '') +
     '<button data-action="goHome" style="background:none;border:1px solid var(--line);border-radius:999px;padding:15px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Retour à l\'accueil</button></div>' +
     '<div style="height:26px;"></div></div>';
 }
@@ -2234,6 +2301,7 @@ function onAppClick(e) {
     case 'startDaily': startDailyQuiz(); break;
     case 'startSrs': startSrsQuiz(); break;
     case 'goHome': go('home'); break;
+    case 'goParcoursFromDone': go('parcours'); break;
     case 'goBack': goBack(); break;
     case 'goBrowse': goChild('browse'); break;
     case 'goSrs': go('srs'); break;
@@ -2302,7 +2370,7 @@ function onAppClick(e) {
       save();
       render();
       break;
-    case 'parcoursStartQuiz': startCat(d.sub, +d.n || 12); break;
+    case 'parcoursStartQuiz': startCat(d.sub, +d.n || 12, { fromParcours: true }); break;
     case 'parcoursToggleWeek': {
       var n = +d.n;
       state.parcoursOpenWeek = state.parcoursOpenWeek === n ? -1 : n;
