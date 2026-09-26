@@ -368,15 +368,15 @@ var FICHE_QUIZ_MAP = {
   th_mc_options: ['mc_options'],
   th_mc_macro: ['mc_macro'],
   th_mc_capi: ['mc_interets'],
-  th_mc_diversif: ['mc_risque'],
-  th_ir_escalier: ['fisc_ir'],
-  th_av_horssucc: ['succession'],
+  th_mc_diversif: [],
+  th_ir_escalier: [],
+  th_av_horssucc: [],
   th_retraite_etages: ['retraite_base'],
-  th_immo_levier: ['immo_patrimoine'],
+  th_immo_levier: [],
   th_prev_trou: ['prev_fondamentaux'],
-  th_holding_flux: ['soc_holding'],
-  th_pvimmo_duree: ['fisc_ir'],
-  th_quotient: ['fisc_ir'],
+  th_holding_flux: [],
+  th_pvimmo_duree: [],
+  th_quotient: [],
   th_pe: ['pe_fondamentaux'],
   th_pe2: ['pe_structuration', 'pe_fiscalite', 'pe_strategie'],
   th_esg: ['reg_esg'],
@@ -629,6 +629,7 @@ function computeVals() {
   v.ficheTocDots = v.ficheSections.map(function (s, i) { return { n: i + 1, warnish: s.warnish }; });
   v.ficheSectionsSeenCount = v.ficheSections.filter(function (s) { return s.seen; }).length;
   v.ficheAllSectionsSeen = v.ficheSections.length > 0 && v.ficheSectionsSeenCount === v.ficheSections.length;
+  v.ficheHasTest = !!(FICHE_QUIZ_MAP[st.fiche] && FICHE_QUIZ_MAP[st.fiche].length);
   v.ficheTested = !!(S.ficheTested && S.ficheTested[st.fiche]);
   v.ficheValidated = !!(S.fichesSeen && S.fichesSeen[st.fiche]);
 
@@ -1518,8 +1519,8 @@ function tplFiche(v) {
   }).join('');
   var completionBar = '<div style="margin:16px 26px 0;display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px;">' +
     '<span id="ficheSecStatus" style="font:500 11.5px \'Inter\',sans-serif;color:' + (v.ficheAllSectionsSeen ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (v.ficheAllSectionsSeen ? '✓' : v.ficheSectionsSeenCount + '/' + v.ficheSections.length) + ' sections lues</span>' +
-    '<span style="width:1px;height:12px;background:var(--line);"></span>' +
-    '<span id="ficheTestStatus" style="font:500 11.5px \'Inter\',sans-serif;color:' + (v.ficheTested ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (v.ficheTested ? '✓ test fait' : 'test à faire') + '</span>' +
+    (v.ficheHasTest ? '<span style="width:1px;height:12px;background:var(--line);"></span>' +
+      '<span id="ficheTestStatus" style="font:500 11.5px \'Inter\',sans-serif;color:' + (v.ficheTested ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (v.ficheTested ? '✓ test fait' : 'test à faire') + '</span>' : '') +
     '<span id="ficheValidatedBadge" style="margin-left:auto;font:600 10.5px \'Inter\',sans-serif;color:var(--acc2);display:' + (v.ficheValidated ? '' : 'none') + ';">FICHE VALIDÉE</span></div>';
   return '<div style="flex:1;overflow:auto;min-height:0;position:relative;">' +
     '<div style="position:sticky;top:0;left:0;right:0;height:3px;background:var(--line);z-index:5;"><div id="ficheProgressFill" style="height:3px;width:0%;background:linear-gradient(90deg,var(--acc2),var(--acc),var(--gold));"></div></div>' +
@@ -1533,7 +1534,9 @@ function tplFiche(v) {
     '<div style="margin-top:16px;display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;">' + toc + '</div></div>' +
     completionBar +
     '<div style="padding:6px 26px 0;">' + sections + '</div>' +
-    '<div style="padding:26px 26px 30px;"><button data-action="startFicheQuiz" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Tester la fiche</button></div></div>';
+    '<div style="padding:26px 26px 30px;">' + (v.ficheHasTest
+      ? '<button data-action="startFicheQuiz" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Tester la fiche</button>'
+      : '<div style="text-align:center;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);">Fiche de synthèse — aucun test dédié, elle est validée une fois toutes les sections lues.</div>') + '</div></div>';
 }
 
 function tplMasteryChart(hist) {
