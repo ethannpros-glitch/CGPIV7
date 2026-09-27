@@ -78,6 +78,7 @@ function load() {
   if (!store.fichesSeen) store.fichesSeen = {};
   if (!store.ficheSectionsSeen) store.ficheSectionsSeen = {};
   if (!store.ficheTested) store.ficheTested = {};
+  if (!store.ficheTestReview) store.ficheTestReview = {};
   if (store.programStart === undefined) store.programStart = null;
   if (!store.parcoursMinutesDay) store.parcoursMinutesDay = 30;
   if (!store.parcoursObjectiveDays) store.parcoursObjectiveDays = 63;
@@ -435,7 +436,7 @@ function grade(ok, after) {
     s.daily.n = Math.min(5, s.daily.n + 1);
   }
   save();
-  state.results = state.results.concat([{ ok: ok, key: it.key, pole: it.pole }]);
+  state.results = state.results.concat([{ ok: ok, key: it.key, pole: it.pole, pick: state.pick, calc: state.calc }]);
   state.ans = ok ? 'ok' : 'ko';
   render();
   if (after) after();
@@ -464,6 +465,15 @@ function nextQ() {
       if (q.meta.theoryId) {
         if (!store.ficheTested) store.ficheTested = {};
         store.ficheTested[q.meta.theoryId] = true;
+        if (!store.ficheTestReview) store.ficheTestReview = {};
+        store.ficheTestReview[q.meta.theoryId] = q.items.map(function (it, idx) {
+          var r = state.results[idx] || {};
+          return {
+            type: it.q.type, text: it.q.q || it.q.titre || '', options: it.q.options || null,
+            correct: it.q.correct, pick: r.pick, calc: r.calc, ok: r.ok,
+            explain: it.q.explain || it.q.modele || ''
+          };
+        });
         maybeCompleteFiche(q.meta.theoryId);
         save();
       }
@@ -540,10 +550,10 @@ function computeVals() {
     isOnb: scr === 'onb', isHome: scr === 'home', isBrowse: scr === 'browse', isCat: scr === 'cat',
     isQuiz: scr === 'quiz', isDone: scr === 'done', isExamPick: scr === 'examPick',
     isExamResult: scr === 'examResult', isSrs: scr === 'srs', isCourses: scr === 'courses',
-    isFiche: scr === 'fiche', isProgress: scr === 'progress', isProfile: scr === 'profile',
+    isFiche: scr === 'fiche', isFicheReview: scr === 'ficheReview', isProgress: scr === 'progress', isProfile: scr === 'profile',
     isLabo: scr === 'labo', isMental: scr === 'mental', isBuilder: scr === 'builder',
     isSearch: scr === 'search',
-    showTabs: ['home', 'browse', 'cat', 'srs', 'courses', 'fiche', 'coursePole', 'progress', 'profile', 'examPick', 'labo', 'mental', 'builder', 'search', 'parcours'].indexOf(scr) >= 0,
+    showTabs: ['home', 'browse', 'cat', 'srs', 'courses', 'fiche', 'ficheReview', 'coursePole', 'progress', 'profile', 'examPick', 'labo', 'mental', 'builder', 'search', 'parcours'].indexOf(scr) >= 0,
     mentalBest: S.mentalBest || 0,
     searchQuery: st.search || '',
     searchResults: (scr === 'search' && st.ready) ? doSearch(st.search || '') : [],
@@ -632,6 +642,21 @@ function computeVals() {
   v.ficheHasTest = !!(FICHE_QUIZ_MAP[st.fiche] && FICHE_QUIZ_MAP[st.fiche].length);
   v.ficheTested = !!(S.ficheTested && S.ficheTested[st.fiche]);
   v.ficheValidated = !!(S.fichesSeen && S.fichesSeen[st.fiche]);
+  v.ficheHasReview = !!(S.ficheTestReview && S.ficheTestReview[st.fiche] && S.ficheTestReview[st.fiche].length);
+  v.ficheReviewItems = (scr === 'ficheReview' && S.ficheTestReview && S.ficheTestReview[st.fiche]) ? S.ficheTestReview[st.fiche].map(function (it, i) {
+    var pickTxt = '—', correctTxt = '';
+    if (it.type === 'vf') {
+      pickTxt = it.pick === 0 ? 'Vrai' : (it.pick === 1 ? 'Faux' : '—');
+      correctTxt = it.correct === 0 ? 'Vrai' : 'Faux';
+    } else if (it.options) {
+      pickTxt = (it.pick != null && it.options[it.pick] != null) ? it.options[it.pick] : '—';
+      correctTxt = it.options[it.correct] != null ? it.options[it.correct] : '';
+    } else if (it.type === 'calc') {
+      pickTxt = it.calc || '—';
+      correctTxt = String(it.correct);
+    }
+    return { n: i + 1, text: it.text, ok: it.ok, pickTxt: pickTxt, correctTxt: correctTxt, explain: it.explain, showCorrect: it.type !== 'texte' && it.type !== 'open' };
+  }) : [];
 
   var exLabels = [
     { k: 'facile', label: 'Niveau 1 · Fondamentaux', sub: 'Les réflexes de base' },
@@ -762,6 +787,7 @@ function computeVals() {
   v.doneCta = meta.kind === 'diag' ? 'Voir mon plan' : 'Enchaîner 5 questions';
   v.doneIsDiag = meta.kind === 'diag';
   v.doneShowParcours = !!(S.programStart != null && (meta.theoryId || meta.fromParcours || meta.kind === 'exam'));
+  v.doneShowFicheReview = !!meta.theoryId;
 
   v.examLabel = (meta.label || '').toUpperCase();
   v.examVerdict = pct >= 60 ? 'Admis.' : 'Sous le seuil de 60 %.';
@@ -1278,7 +1304,7 @@ function tplQuiz(v) {
     mid += '<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line);animation:kfIn .3s ease both;">';
     if (v.wasOk) mid += '<div style="font:300 30px/1 Fraunces,serif;color:var(--acc);">Exact. <span style="font:500 12px \'Inter\',sans-serif;">+10 XP</span></div>';
     if (v.wasKo) mid += '<div style="font:300 30px/1 Fraunces,serif;color:var(--warn);">Raté. <span style="font:500 12px \'Inter\',sans-serif;">' + esc(v.koNote) + '</span></div>';
-    mid += '<div style="font:400 13px/1.75 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;text-wrap:pretty;">' + esc(v.qExplain) + '</div>' +
+    mid += '<div style="font:400 13px/1.75 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;text-wrap:pretty;white-space:pre-line;">' + esc(v.qExplain) + '</div>' +
       '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:14px;">REVOIR DANS ' + v.nextIn + ' J</div></div>';
   }
   mid += '<div style="height:20px;"></div>';
@@ -1318,6 +1344,7 @@ function tplDone(v) {
     '<div style="font:400 13px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:22px;">' + esc(v.doneNote) + '</div>' +
     '<div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">' +
     '<button data-action="doneAgain" style="border:none;border-radius:999px;padding:17px;font:600 14px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + esc(v.doneCta) + '</button>' +
+    (v.doneShowFicheReview ? '<button data-action="goFicheReviewFromDone" style="background:none;border:1px solid var(--line);border-radius:999px;padding:15px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Revoir mes réponses</button>' : '') +
     (v.doneShowParcours ? '<button data-action="goParcoursFromDone" style="background:none;border:1px solid var(--acc);border-radius:999px;padding:15px;font:600 12.5px \'Inter\',sans-serif;color:var(--acc);cursor:pointer;">Retour au parcours</button>' : '') +
     '<button data-action="goHome" style="background:none;border:1px solid var(--line);border-radius:999px;padding:15px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Retour à l\'accueil</button></div></div>';
 }
@@ -1534,9 +1561,32 @@ function tplFiche(v) {
     '<div style="margin-top:16px;display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;">' + toc + '</div></div>' +
     completionBar +
     '<div style="padding:6px 26px 0;">' + sections + '</div>' +
-    '<div style="padding:26px 26px 30px;">' + (v.ficheHasTest
+    '<div style="padding:26px 26px 30px;display:flex;flex-direction:column;gap:10px;">' + (v.ficheHasTest
       ? '<button data-action="startFicheQuiz" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Tester la fiche</button>'
-      : '<div style="text-align:center;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);">Fiche de synthèse — aucun test dédié, elle est validée une fois toutes les sections lues.</div>') + '</div></div>';
+      : '<div style="text-align:center;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);">Fiche de synthèse — aucun test dédié, elle est validée une fois toutes les sections lues.</div>') +
+    (v.ficheHasReview ? '<button data-action="goFicheReview" style="width:100%;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:15px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Revoir les questions du test</button>' : '') +
+    '</div></div>';
+}
+
+function tplFicheReview(v) {
+  var acc = v.ficheAccent;
+  var items = v.ficheReviewItems.map(function (it) {
+    var col = it.ok ? 'var(--acc2)' : 'var(--warn)';
+    return '<div style="margin-top:12px;border:1px solid var(--line);border-left:3px solid ' + hexA(col, 0.6) + ';border-radius:16px;background:var(--panel);padding:16px;">' +
+      '<div style="display:flex;align-items:flex-start;gap:10px;">' +
+      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + hexA(col, 0.18) + ';border:1px solid ' + hexA(col, 0.4) + ';display:flex;align-items:center;justify-content:center;font:600 11px \'Inter\',sans-serif;color:' + col + ';">' + (it.ok ? '✓' : '✕') + '</span>' +
+      '<div style="flex:1;font:400 13.5px/1.55 \'Inter\',sans-serif;">' + esc(it.text) + '</div></div>' +
+      '<div style="margin-top:10px;padding-left:32px;font:500 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);">Votre réponse : <span style="color:' + col + ';">' + esc(it.pickTxt) + '</span>' +
+      (!it.ok && it.showCorrect ? '<br>Bonne réponse : <span style="color:var(--acc2);">' + esc(it.correctTxt) + '</span>' : '') + '</div>' +
+      (it.explain ? '<div style="margin-top:8px;padding:10px 12px;background:var(--surface,rgba(255,255,255,.03));border-radius:10px;padding-left:32px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);white-space:pre-line;">' + esc(it.explain) + '</div>' : '') +
+      '</div>';
+  }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:32px 26px 8px;background:linear-gradient(160deg,' + hexA(acc, 0.2) + ',transparent 70%);">' +
+    '<button data-action="goBack" style="background:none;border:none;padding:0;font:500 12.5px \'Inter\',sans-serif;color:' + acc + ';cursor:pointer;">&#8249; Retour</button>' +
+    '<div style="font:300 24px/1.2 Fraunces,serif;letter-spacing:-.02em;margin-top:14px;">Revoir mes réponses</div>' +
+    '<div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);margin-top:6px;">' + esc(v.ficheTitle) + '</div></div>' +
+    '<div style="padding:6px 26px 30px;">' + items + '</div></div>';
 }
 
 function tplMasteryChart(hist) {
@@ -2184,6 +2234,7 @@ function render() {
   else if (v.isCourses) html = tplCourses(v);
   else if (v.isCoursePole) html = tplCoursePole(v);
   else if (v.isFiche) html = tplFiche(v);
+  else if (v.isFicheReview) html = tplFicheReview(v);
   else if (v.isProgress) html = tplProgress(v);
   else if (v.isProfile) html = tplProfile(v);
   else if (v.isLabo) html = tplLabo(v);
@@ -2393,6 +2444,8 @@ function onAppClick(e) {
       else startCat(d.id, 12);
       break;
     case 'startFicheQuiz': startFicheQ(state.fiche); break;
+    case 'goFicheReview': goChild('ficheReview'); break;
+    case 'goFicheReviewFromDone': go('ficheReview'); break;
     case 'answerQcm': answerQcm(+d.i); break;
     case 'answerVf': answerVf(+d.i); break;
     case 'calcKey':
