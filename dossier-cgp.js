@@ -700,8 +700,13 @@ function computeVals() {
       pickTxt = it.calc || '—';
       correctTxt = String(it.correct);
     }
+    var formula = '', narrative = it.explain;
+    if (it.type === 'calc' && it.explain) {
+      var calcSplit2 = splitCalcExplain(it.explain, it.correct);
+      formula = calcSplit2.formula; narrative = calcSplit2.formula ? calcSplit2.narrative : it.explain;
+    }
     return {
-      n: i + 1, text: it.text, ok: it.ok, pickTxt: pickTxt, correctTxt: correctTxt, explain: it.explain,
+      n: i + 1, text: it.text, ok: it.ok, pickTxt: pickTxt, correctTxt: correctTxt, explain: narrative, formula: formula,
       showCorrect: it.type !== 'texte' && it.type !== 'open', catId: it.catId,
       flagged: !!(S.flagged && it.catId && S.flagged[it.catId]), isReview: !!it.isReview
     };
@@ -757,6 +762,11 @@ function computeVals() {
     v.qUnit = q.unit || '';
     v.qExplain = q.explain || q.modele || '';
     v.qModele = q.modele || '';
+    v.qFormula = ''; v.qNarrative = '';
+    if (q.type === 'calc' && q.explain) {
+      var calcSplit = splitCalcExplain(q.explain, q.correct);
+      v.qFormula = calcSplit.formula; v.qNarrative = calcSplit.narrative;
+    }
     var examMode0 = st.quiz.meta.kind === 'exam' && !S.examInstant;
     var graded = done && !((q.type === 'texte' || q.type === 'open') && ans === 'reveal');
     v.answered = graded && !examMode0; v.wasOk = ans === 'ok'; v.wasKo = ans === 'ko';
@@ -987,6 +997,29 @@ var poleStyle = {
 };
 function poleAccent(p) { return (poleStyle[p] && poleStyle[p].accent) || 'var(--acc)'; }
 function poleGlyph(p) { return (poleStyle[p] && poleStyle[p].glyph) || '📘'; }
+function splitCalcExplain(explain, correct) {
+  if (!explain) return { formula: '', narrative: '' };
+  var sents = explain.match(/[^.!?]+[.!?]+(?=\s|\n|$)|[^.!?]+$/g) || [explain];
+  sents = sents.map(function (s) { return s.trim(); }).filter(Boolean);
+  var tol = Math.max(1, Math.abs(correct) * 0.03);
+  function numsIn(s) {
+    var out = [], re = /[−-]?\d[\d\s.,]*\d|\d/g, m;
+    while ((m = re.exec(s))) {
+      var raw = m[0].replace(/\s/g, '');
+      var neg = /^[−-]/.test(raw);
+      raw = raw.replace(/^[−-]/, '').replace(/\./g, '').replace(',', '.');
+      var n = parseFloat(raw);
+      if (!isNaN(n)) out.push(neg ? -n : n);
+    }
+    return out;
+  }
+  var idx = -1;
+  for (var k = 0; k < sents.length && k < 5; k++) {
+    if (numsIn(sents[k]).some(function (n) { return Math.abs(n - correct) <= tol; })) { idx = k; break; }
+  }
+  if (idx < 0) return { formula: '', narrative: explain };
+  return { formula: sents.slice(0, idx + 1).join(' '), narrative: sents.slice(idx + 1).join(' ') };
+}
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
     return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
@@ -1305,7 +1338,7 @@ function tplHome(v) {
           '<button data-action="flagTopic" data-cat="' + esc(t.catId) + '" style="flex-shrink:0;background:none;border:none;padding:2px 4px;font:400 13px \'Inter\',sans-serif;color:var(--ink3);cursor:pointer;">✕</button></div>' +
           '<div style="display:flex;gap:8px;margin-top:10px;">' +
           (t.theoryId ? '<button data-action="subGo" data-theory="' + esc(t.theoryId) + '" style="flex:1;background:none;border:1px solid var(--line);border-radius:999px;padding:9px;font:500 11.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Revoir le cours</button>' : '') +
-          '<button data-action="catGo" data-cat="' + esc(t.catId) + '" style="flex:1;background:var(--warn);border:none;border-radius:999px;padding:9px;font:600 11.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;">S\'entraîner</button>' +
+          '<button data-action="subGo" data-sub="' + esc(t.catId) + '" style="flex:1;background:var(--warn);border:none;border-radius:999px;padding:9px;font:600 11.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;">S\'entraîner</button>' +
           '</div></div>';
       }).join('') + '</div></div>' : '') +
     '<div style="margin:26px 24px 0;display:flex;gap:10px;">' +
@@ -1372,7 +1405,12 @@ function tplQuiz(v) {
     mid += '<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line);animation:kfIn .3s ease both;">';
     if (v.wasOk) mid += '<div style="font:300 30px/1 Fraunces,serif;color:var(--acc);">Exact. <span style="font:500 12px \'Inter\',sans-serif;">+10 XP</span></div>';
     if (v.wasKo) mid += '<div style="font:300 30px/1 Fraunces,serif;color:var(--warn);">Raté. <span style="font:500 12px \'Inter\',sans-serif;">' + esc(v.koNote) + '</span></div>';
-    mid += '<div style="font:400 13px/1.75 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;text-wrap:pretty;white-space:pre-line;">' + esc(v.qExplain) + '</div>' +
+    mid += (v.qFormula
+      ? '<div style="margin-top:12px;padding:12px 14px;background:' + hexA(v.wasOk ? '#4fcfa8' : '#e2895f', 0.12) + ';border:1px solid ' + hexA(v.wasOk ? '#4fcfa8' : '#e2895f', 0.35) + ';border-radius:12px;">' +
+        '<div style="font:600 9.5px \'Inter\',sans-serif;letter-spacing:.1em;color:' + (v.wasOk ? 'var(--acc2)' : 'var(--warn)') + ';margin-bottom:5px;">📐 LE CALCUL</div>' +
+        '<div style="font:500 13.5px/1.6 \'Inter\',sans-serif;color:var(--ink);white-space:pre-line;">' + esc(v.qFormula) + '</div></div>' +
+        (v.qNarrative ? '<div style="font:400 13px/1.75 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;text-wrap:pretty;white-space:pre-line;">' + esc(v.qNarrative) + '</div>' : '')
+      : '<div style="font:400 13px/1.75 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;text-wrap:pretty;white-space:pre-line;">' + esc(v.qExplain) + '</div>') +
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;">' +
       '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">REVOIR DANS ' + v.nextIn + ' J</div>' +
       (v.qCatId ? '<button data-action="flagTopic" data-cat="' + esc(v.qCatId) + '" style="background:none;border:1px solid ' + (v.qFlagged ? 'var(--warn)' : 'var(--line)') + ';border-radius:999px;padding:6px 11px;font:500 10.5px \'Inter\',sans-serif;color:' + (v.qFlagged ? 'var(--warn)' : 'var(--ink3)') + ';cursor:pointer;white-space:nowrap;">' + (v.qFlagged ? '🚩 Sujet marqué' : '🚩 Retravailler ce sujet') + '</button>' : '') +
@@ -1649,6 +1687,9 @@ function tplFicheReview(v) {
       '<div style="flex:1;font:400 13.5px/1.55 \'Inter\',sans-serif;">' + (it.isReview ? '<span style="display:block;font:600 9.5px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--gold);margin-bottom:4px;">RÉVISION · FICHE PRÉCÉDENTE</span>' : '') + esc(it.text) + '</div></div>' +
       '<div style="margin-top:10px;padding-left:32px;font:500 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);">Votre réponse : <span style="color:' + col + ';">' + esc(it.pickTxt) + '</span>' +
       (!it.ok && it.showCorrect ? '<br>Bonne réponse : <span style="color:var(--acc2);">' + esc(it.correctTxt) + '</span>' : '') + '</div>' +
+      (it.formula ? '<div style="margin-top:8px;margin-left:32px;padding:10px 12px;background:' + hexA(it.ok ? '#4fcfa8' : '#e2895f', 0.12) + ';border:1px solid ' + hexA(it.ok ? '#4fcfa8' : '#e2895f', 0.35) + ';border-radius:10px;">' +
+        '<div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.1em;color:' + (it.ok ? 'var(--acc2)' : 'var(--warn)') + ';margin-bottom:4px;">📐 LE CALCUL</div>' +
+        '<div style="font:500 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink);white-space:pre-line;">' + esc(it.formula) + '</div></div>' : '') +
       (it.explain ? '<div style="margin-top:8px;padding:10px 12px;background:var(--surface,rgba(255,255,255,.03));border-radius:10px;padding-left:32px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);white-space:pre-line;">' + esc(it.explain) + '</div>' : '') +
       (it.catId ? '<div style="margin-top:10px;padding-left:32px;">' +
         '<button data-action="flagTopic" data-cat="' + esc(it.catId) + '" style="background:none;border:1px solid ' + (it.flagged ? 'var(--warn)' : 'var(--line)') + ';border-radius:999px;padding:6px 11px;font:500 10.5px \'Inter\',sans-serif;color:' + (it.flagged ? 'var(--warn)' : 'var(--ink3)') + ';cursor:pointer;">' + (it.flagged ? '🚩 Sujet marqué' : '🚩 Retravailler ce sujet') + '</button></div>' : '') +
