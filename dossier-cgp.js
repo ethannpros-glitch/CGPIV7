@@ -999,6 +999,11 @@ function poleAccent(p) { return (poleStyle[p] && poleStyle[p].accent) || 'var(--
 function poleGlyph(p) { return (poleStyle[p] && poleStyle[p].glyph) || '📘'; }
 function splitCalcExplain(explain, correct) {
   if (!explain) return { formula: '', narrative: '' };
+  if (/^Formule\b/.test(explain)) {
+    var m = explain.match(/\n(?:À retenir|Attention)\s*:[\s\S]*$/);
+    if (m) return { formula: explain.slice(0, m.index).trim(), narrative: explain.slice(m.index).replace(/^\n/, '').trim() };
+    return { formula: explain.trim(), narrative: '' };
+  }
   var sents = explain.match(/[^.!?]+[.!?]+(?=\s|\n|$)|[^.!?]+$/g) || [explain];
   sents = sents.map(function (s) { return s.trim(); }).filter(Boolean);
   var tol = Math.max(1, Math.abs(correct) * 0.03);
