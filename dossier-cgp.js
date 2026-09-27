@@ -74,12 +74,28 @@ var state = {
   quiz: null, qi: 0, ans: null, pick: null, calc: '', texte: '', revealed: false, results: [],
   fiche: null, level: 1, onb: 0, confetti: false, notif: true,
   orderKey: null, orderCur: null,
+  memvizPhase: 'announce', memvizTimeLeft: 0, memvizTimeTotal: 0, memvizAnswers: [], memvizResult: null,
   buildDom: ['all'], buildTypes: ['qcm', 'vf'], buildLevel: 'all', buildN: 15,
   coursePoleSel: null, navStack: [], navDir: null, confirmReset: false, nameInput: null, search: '',
   parcoursOpenWeek: null, parcoursSetupMinutes: 30, parcoursSetupObjective: 60, parcoursSetupPriority: []
 };
 var store = null;
 var confettiTimer = null;
+var memvizTimer = null;
+function parseHoles(svg) {
+  var out = [], re = /<text[^>]*data-hole="([^"]+)"[^>]*>([^<]*)<\/text>/g, m, idx = 0;
+  while ((m = re.exec(svg || ''))) { idx++; out.push({ n: idx, key: m[1], text: m[2] }); }
+  return out;
+}
+function normalizeHoleAnswer(s) {
+  return String(s == null ? '' : s).toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[€%\s]/g, '');
+}
+function memvizReset() {
+  if (memvizTimer) { clearInterval(memvizTimer); memvizTimer = null; }
+  state.memvizPhase = 'announce'; state.memvizTimeLeft = 0; state.memvizTimeTotal = 0; state.memvizAnswers = []; state.memvizResult = null;
+}
 
 function load() {
   var s = null;
@@ -272,6 +288,7 @@ function startList(keys, meta) {
   state.qi = 0; state.ans = null; state.pick = null;
   state.calc = ''; state.texte = ''; state.revealed = false; state.results = [];
   state.orderKey = null; state.orderCur = null;
+  memvizReset();
   state.screen = 'quiz'; state.confetti = false;
   render();
 }
@@ -525,11 +542,52 @@ function nextQ() {
     }
     if (confettiTimer) clearTimeout(confettiTimer);
     confettiTimer = setTimeout(function () { state.confetti = false; render(); }, 3400);
+    memvizReset();
     render();
     return;
   }
   state.qi++; state.ans = null; state.pick = null; state.calc = ''; state.texte = ''; state.revealed = false;
+  memvizReset();
   render();
+}
+function memvizHoleCount(q) { return parseHoles(q.svg).length; }
+function memvizStart() {
+  var it = cur(); if (!it || it.q.type !== 'memviz') return;
+  var n = memvizHoleCount(it.q);
+  var total = Math.max(8, n * 4 + 4);
+  state.memvizPhase = 'memorize';
+  state.memvizTimeTotal = total;
+  state.memvizTimeLeft = total;
+  render();
+  if (memvizTimer) clearInterval(memvizTimer);
+  memvizTimer = setInterval(function () {
+    if (state.screen !== 'quiz' || state.memvizPhase !== 'memorize') { clearInterval(memvizTimer); memvizTimer = null; return; }
+    state.memvizTimeLeft--;
+    if (state.memvizTimeLeft <= 0) { memvizEnterRecall(); return; }
+    render();
+  }, 1000);
+}
+function memvizEnterRecall() {
+  if (memvizTimer) { clearInterval(memvizTimer); memvizTimer = null; }
+  var it = cur();
+  state.memvizAnswers = it ? new Array(memvizHoleCount(it.q)).fill('') : [];
+  state.memvizPhase = 'recall';
+  render();
+}
+function memvizValidate() {
+  var it = cur(); if (!it) return;
+  var holes = parseHoles(it.q.svg);
+  var correctCount = 0;
+  holes.forEach(function (h, i) {
+    var given = normalizeHoleAnswer(state.memvizAnswers[i]);
+    var expect = normalizeHoleAnswer(h.text);
+    if (given && expect && given === expect) correctCount++;
+  });
+  state.memvizResult = holes.map(function (h, i) {
+    return { n: h.n, text: h.text, given: state.memvizAnswers[i] || '', ok: normalizeHoleAnswer(state.memvizAnswers[i]) === normalizeHoleAnswer(h.text) };
+  });
+  var allOk = holes.length > 0 && correctCount === holes.length;
+  grade(allOk);
 }
 function setScreen(screen, patch) {
   if (state.screen === 'mental' && screen !== 'mental' && mentalState.timer) {
@@ -829,11 +887,22 @@ function computeVals() {
       v.orderCorrectList = done ? q.items : [];
     }
 
-    var holes = (q.svg || '').replace(/(<[^>]*data-hole="[^"]*"[^>]*)>/g, function (m, g) { return g + ' opacity="0">'; });
-    v.memvizSvg = q.type === 'memviz' ? (st.revealed ? q.svg : holes) : '';
+    if (q.type === 'memviz') {
+      var mvHoles = parseHoles(q.svg);
+      v.memvizNextTime = Math.max(8, mvHoles.length * 4 + 4);
+      v.memvizPhase = st.memvizPhase;
+      v.memvizTimeLeft = st.memvizTimeLeft;
+      v.memvizTimeTotal = st.memvizTimeTotal || 1;
+      v.memvizFullSvg = q.svg;
+      v.memvizBlankSvg = (q.svg || '').replace(/(<[^>]*data-hole="[^"]*"[^>]*)>/g, function (m, g) { return g + ' opacity="0">'; });
+      v.memvizInputs = mvHoles.map(function (h, i) { return { i: i, n: h.n, value: st.memvizAnswers[i] || '' }; });
+      v.memvizResult = st.memvizResult;
+    } else {
+      v.memvizPhase = ''; v.memvizFullSvg = ''; v.memvizBlankSvg = ''; v.memvizInputs = []; v.memvizResult = null;
+    }
 
-    v.showValidate = !done && (q.type === 'calc' || q.type === 'texte' || q.type === 'memviz' || q.type === 'open' || q.type === 'order');
-    v.validateLabel = q.type === 'memviz' ? (st.revealed ? "Je l'ai mémorisé" : 'Révéler') : (q.type === 'order' ? 'Valider l’ordre' : 'Valider');
+    v.showValidate = !done && (q.type === 'calc' || q.type === 'texte' || q.type === 'open' || q.type === 'order' || (q.type === 'memviz' && st.memvizPhase === 'recall'));
+    v.validateLabel = q.type === 'memviz' ? 'Valider mes réponses' : (q.type === 'order' ? 'Valider l’ordre' : 'Valider');
     v.showSelfGrade = isTexteLike && ans === 'reveal';
     v.showNext = done && !isTexteLike;
     v.nextLabel = st.qi + 1 >= st.quiz.items.length ? (examMode ? 'Voir le résultat' : 'Terminer') : 'Suivante';
@@ -1095,6 +1164,42 @@ function tplOrder(v) {
   if (!v.showValidate && v.orderCorrectList && v.orderCorrectList.length) {
     out += '<div style="margin-top:18px;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">ORDRE ATTENDU</div>' +
       '<ol style="margin:8px 0 0;padding-left:20px;font:400 12.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);">' + v.orderCorrectList.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ol></div>';
+  }
+  return out;
+}
+
+function tplMemviz(v) {
+  if (v.memvizPhase === 'announce') {
+    return '<div style="margin-top:22px;padding:24px;background:var(--panel);border:1px solid var(--line);border-radius:18px;text-align:center;">' +
+      '<div style="font-size:30px;">🧠</div>' +
+      '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--gold);margin-top:12px;">QUESTION DE MÉMORISATION</div>' +
+      '<div style="font:400 13px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;">Le visuel va s\'afficher ' + v.memvizNextTime + ' secondes. Mémorise bien les éléments en surbrillance : ils seront ensuite masqués et à retrouver.</div>' +
+      '<button data-action="memvizStart" style="margin-top:18px;border:none;border-radius:999px;padding:14px 24px;font:600 13px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Je suis prêt·e, afficher</button>' +
+      '</div>';
+  }
+  if (v.memvizPhase === 'memorize') {
+    var pct = Math.max(0, Math.min(100, v.memvizTimeLeft / v.memvizTimeTotal * 100));
+    return '<div style="margin-top:16px;display:flex;align-items:center;gap:12px;">' +
+      '<div style="flex:1;height:4px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="height:4px;width:' + pct + '%;background:linear-gradient(90deg,var(--acc2),var(--gold));transition:width 1s linear;"></div></div>' +
+      '<div style="font:600 13px \'Inter\',sans-serif;color:' + (v.memvizTimeLeft <= 3 ? 'var(--warn)' : 'var(--gold)') + ';flex-shrink:0;">' + v.memvizTimeLeft + ' s</div></div>' +
+      '<div style="margin-top:14px;border-radius:16px;overflow:hidden;background:#faf8f3;">' + v.memvizFullSvg + '</div>' +
+      '<div style="text-align:center;margin-top:14px;"><button data-action="memvizSkipToRecall" style="background:none;border:none;color:var(--ink3);font:400 11.5px \'Inter\',sans-serif;cursor:pointer;text-decoration:underline;">J\'ai fini de mémoriser →</button></div>';
+  }
+  var svg = v.memvizResult ? v.memvizFullSvg : v.memvizBlankSvg;
+  var out = '<div style="margin-top:14px;border-radius:16px;overflow:hidden;background:#faf8f3;">' + svg + '</div>';
+  if (v.memvizResult) {
+    out += '<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">' + v.memvizResult.map(function (r) {
+      var col = r.ok ? 'var(--acc2)' : 'var(--warn)';
+      return '<div style="display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;">' +
+        '<span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:' + hexA(col, 0.18) + ';border:1px solid ' + hexA(col, 0.4) + ';display:flex;align-items:center;justify-content:center;font:600 10px \'Inter\',sans-serif;color:' + col + ';">' + (r.ok ? '✓' : '✕') + '</span>' +
+        '<span style="flex:1;font:400 12px/1.5 \'Inter\',sans-serif;color:var(--ink2);">' + (r.given ? 'Votre réponse : <b style="color:var(--ink);">' + esc(r.given) + '</b>' : '<i style="color:var(--dim);">Pas de réponse</i>') + (!r.ok ? ' — Bonne réponse : <b style="color:' + col + ';">' + esc(r.text) + '</b>' : '') + '</span>' +
+        '</div>';
+    }).join('') + '</div>';
+  } else {
+    out += '<div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;">' + v.memvizInputs.map(function (inp) {
+      return '<div><label style="display:block;font:500 10px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--ink3);margin-bottom:5px;">ÉLÉMENT MASQUÉ ' + inp.n + '</label>' +
+        '<input data-memviz-input data-i="' + inp.i + '" value="' + esc(inp.value) + '" placeholder="Votre réponse" style="width:100%;box-sizing:border-box;font:500 14px \'Inter\',sans-serif;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--ink);outline:none;" /></div>';
+    }).join('') + '</div>';
   }
   return out;
 }
@@ -1403,7 +1508,7 @@ function tplQuiz(v) {
   if (v.isVf) mid += '<div style="display:flex;gap:12px;margin-top:26px;">' + v.vfBtns.map(tplVf).join('') + '</div>';
   if (v.isCalc) mid += tplCalc(v);
   if (v.isTexte || v.isOpen) mid += tplTexte(v);
-  if (v.isMemviz) mid += '<div style="margin-top:18px;border-radius:16px;overflow:hidden;background:#faf8f3;">' + v.memvizSvg + '</div>';
+  if (v.isMemviz) mid += tplMemviz(v);
   if (v.isOrder) mid += tplOrder(v);
   if (v.examAnswered) mid += '<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line);animation:kfIn .3s ease both;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">RÉPONSE ENREGISTRÉE · CORRECTION À LA FIN DE L\'ÉPREUVE</div></div>';
   if (v.answered) {
@@ -2572,6 +2677,8 @@ function onAppClick(e) {
       save(); render();
       break;
     }
+    case 'memvizStart': memvizStart(); break;
+    case 'memvizSkipToRecall': memvizEnterRecall(); break;
     case 'answerQcm': answerQcm(+d.i); break;
     case 'answerVf': answerVf(+d.i); break;
     case 'calcKey':
@@ -2584,7 +2691,7 @@ function onAppClick(e) {
       var it = cur(); if (!it) break;
       if (it.q.type === 'calc') validateCalc();
       else if (it.q.type === 'texte' || it.q.type === 'open') { state.ans = 'reveal'; render(); }
-      else if (it.q.type === 'memviz') { if (state.revealed) grade(true); else { state.revealed = true; render(); } }
+      else if (it.q.type === 'memviz') { memvizValidate(); }
       else if (it.q.type === 'order') {
         var ok = !!(state.orderCur && state.orderCur.every(function (v, i) { return v === i; }));
         grade(ok);
@@ -2605,7 +2712,7 @@ function onAppClick(e) {
     case 'selfMid': grade(true, nextQ); break;
     case 'selfKo': grade(false, nextQ); break;
     case 'next': nextQ(); break;
-    case 'quitQuiz': goBack(); break;
+    case 'quitQuiz': memvizReset(); goBack(); break;
     case 'doneAgain': {
       var meta = state.quiz ? state.quiz.meta : {};
       if (meta.kind === 'diag') go('progress'); else startDailyQuiz();
@@ -2632,6 +2739,7 @@ document.addEventListener('DOMContentLoaded', function () {
   appEl.addEventListener('click', onAppClick);
   appEl.addEventListener('input', function (e) {
     if (e.target.matches('[data-texte-input]')) state.texte = e.target.value;
+    if (e.target.matches('[data-memviz-input]')) state.memvizAnswers[+e.target.dataset.i] = e.target.value;
     if (e.target.matches('[data-name-input]')) state.nameInput = e.target.value;
     if (e.target.matches('[data-search-input]')) {
       state.search = e.target.value;
