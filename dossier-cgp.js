@@ -79,6 +79,7 @@ function load() {
   if (!store.ficheSectionsSeen) store.ficheSectionsSeen = {};
   if (!store.ficheTested) store.ficheTested = {};
   if (!store.ficheTestReview) store.ficheTestReview = {};
+  if (!store.flagged) store.flagged = {};
   if (store.programStart === undefined) store.programStart = null;
   if (!store.parcoursMinutesDay) store.parcoursMinutesDay = 30;
   if (!store.parcoursObjectiveDays) store.parcoursObjectiveDays = 63;
@@ -383,6 +384,20 @@ var FICHE_QUIZ_MAP = {
   th_esg: ['reg_esg'],
   th_crypto: ['crypto_q']
 };
+var CAT_TO_THEORY = {};
+Object.keys(FICHE_QUIZ_MAP).forEach(function (thId) {
+  FICHE_QUIZ_MAP[thId].forEach(function (catId) {
+    if (!CAT_TO_THEORY[catId]) CAT_TO_THEORY[catId] = thId;
+  });
+});
+function catPct(catId) {
+  var total = 0, seen = 0;
+  bank(catId).forEach(function (q, i) {
+    total++;
+    if (store.srs[catId + '#' + i]) seen++;
+  });
+  return total ? Math.round(100 * seen / total) : 0;
+}
 function fichePct(theoryId) {
   var quizIds = FICHE_QUIZ_MAP[theoryId] || [];
   if (!quizIds.length) return 100;
@@ -471,7 +486,7 @@ function nextQ() {
           return {
             type: it.q.type, text: it.q.q || it.q.titre || '', options: it.q.options || null,
             correct: it.q.correct, pick: r.pick, calc: r.calc, ok: r.ok,
-            explain: it.q.explain || it.q.modele || ''
+            explain: it.q.explain || it.q.modele || '', catId: it.catId
           };
         });
         maybeCompleteFiche(q.meta.theoryId);
@@ -655,8 +670,17 @@ function computeVals() {
       pickTxt = it.calc || '—';
       correctTxt = String(it.correct);
     }
-    return { n: i + 1, text: it.text, ok: it.ok, pickTxt: pickTxt, correctTxt: correctTxt, explain: it.explain, showCorrect: it.type !== 'texte' && it.type !== 'open' };
+    return {
+      n: i + 1, text: it.text, ok: it.ok, pickTxt: pickTxt, correctTxt: correctTxt, explain: it.explain,
+      showCorrect: it.type !== 'texte' && it.type !== 'open', catId: it.catId,
+      flagged: !!(S.flagged && it.catId && S.flagged[it.catId])
+    };
   }) : [];
+  v.flaggedTopics = Object.keys(S.flagged || {}).map(function (catId) {
+    var cat = quizCats().find(function (c) { return c.id === catId; });
+    var thId = CAT_TO_THEORY[catId];
+    return { catId: catId, label: cat ? cat.label : catId, pct: catPct(catId), theoryId: thId || null, ficheTitle: thId && Dd.THEORY[thId] ? Dd.THEORY[thId].title : null };
+  }).filter(function (t) { return !!quizCats().find(function (c) { return c.id === t.catId; }); });
 
   var exLabels = [
     { k: 'facile', label: 'Niveau 1 · Fondamentaux', sub: 'Les réflexes de base' },
@@ -696,6 +720,8 @@ function computeVals() {
     v.quizPos = (st.qi + 1) + ' / ' + st.quiz.items.length;
     v.quizPct = Math.round(100 * (st.qi + (done ? 1 : 0)) / st.quiz.items.length);
     v.qCat = (it.catLabel || '').toUpperCase();
+    v.qCatId = it.catId;
+    v.qFlagged = !!(S.flagged && S.flagged[it.catId]);
     v.qText = q.q || q.titre || '';
     v.qUnit = q.unit || '';
     v.qExplain = q.explain || q.modele || '';
@@ -1240,6 +1266,17 @@ function tplHome(v) {
     '<button data-action="goSrs" style="background:none;border:none;border-left:1px solid var(--line);padding:0 0 0 22px;text-align:left;cursor:pointer;"><div style="font:300 52px/0.9 Fraunces,serif;letter-spacing:-.03em;color:var(--warn);"><span data-countup="' + v.dueCount + '">0</span></div><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin-top:6px;">À REVOIR</div></button></div>' +
     '<div style="margin:26px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">POINTS FAIBLES</div>' +
     '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">' + weak + '</div></div>' +
+    (v.flaggedTopics.length ? '<div style="margin:26px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--warn);">🚩 À RETRAVAILLER</div>' +
+      '<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">' + v.flaggedTopics.map(function (t) {
+        return '<div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:13px 14px;">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
+          '<span style="font:500 12.5px \'Inter\',sans-serif;flex:1;min-width:0;">' + esc(t.label) + '</span>' +
+          '<button data-action="flagTopic" data-cat="' + esc(t.catId) + '" style="flex-shrink:0;background:none;border:none;padding:2px 4px;font:400 13px \'Inter\',sans-serif;color:var(--ink3);cursor:pointer;">✕</button></div>' +
+          '<div style="display:flex;gap:8px;margin-top:10px;">' +
+          (t.theoryId ? '<button data-action="subGo" data-theory="' + esc(t.theoryId) + '" style="flex:1;background:none;border:1px solid var(--line);border-radius:999px;padding:9px;font:500 11.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Revoir le cours</button>' : '') +
+          '<button data-action="catGo" data-cat="' + esc(t.catId) + '" style="flex:1;background:var(--warn);border:none;border-radius:999px;padding:9px;font:600 11.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;">S\'entraîner</button>' +
+          '</div></div>';
+      }).join('') + '</div></div>' : '') +
     '<div style="margin:26px 24px 0;display:flex;gap:10px;">' +
     '<button data-action="goBrowse" class="hv-a" style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;cursor:pointer;color:var(--ink);"><div style="font:300 26px/1 Fraunces,serif;">19</div><div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:7px;">Catégories</div></button>' +
     '<button data-action="goExamPick" class="hv-a" style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;cursor:pointer;color:var(--ink);"><div style="font:300 26px/1 Fraunces,serif;">40</div><div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:7px;">Examen blanc</div></button></div>' +
@@ -1305,7 +1342,10 @@ function tplQuiz(v) {
     if (v.wasOk) mid += '<div style="font:300 30px/1 Fraunces,serif;color:var(--acc);">Exact. <span style="font:500 12px \'Inter\',sans-serif;">+10 XP</span></div>';
     if (v.wasKo) mid += '<div style="font:300 30px/1 Fraunces,serif;color:var(--warn);">Raté. <span style="font:500 12px \'Inter\',sans-serif;">' + esc(v.koNote) + '</span></div>';
     mid += '<div style="font:400 13px/1.75 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;text-wrap:pretty;white-space:pre-line;">' + esc(v.qExplain) + '</div>' +
-      '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:14px;">REVOIR DANS ' + v.nextIn + ' J</div></div>';
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;">' +
+      '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">REVOIR DANS ' + v.nextIn + ' J</div>' +
+      (v.qCatId ? '<button data-action="flagTopic" data-cat="' + esc(v.qCatId) + '" style="background:none;border:1px solid ' + (v.qFlagged ? 'var(--warn)' : 'var(--line)') + ';border-radius:999px;padding:6px 11px;font:500 10.5px \'Inter\',sans-serif;color:' + (v.qFlagged ? 'var(--warn)' : 'var(--ink3)') + ';cursor:pointer;white-space:nowrap;">' + (v.qFlagged ? '🚩 Sujet marqué' : '🚩 Retravailler ce sujet') + '</button>' : '') +
+      '</div></div>';
   }
   mid += '<div style="height:20px;"></div>';
 
@@ -1579,6 +1619,8 @@ function tplFicheReview(v) {
       '<div style="margin-top:10px;padding-left:32px;font:500 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);">Votre réponse : <span style="color:' + col + ';">' + esc(it.pickTxt) + '</span>' +
       (!it.ok && it.showCorrect ? '<br>Bonne réponse : <span style="color:var(--acc2);">' + esc(it.correctTxt) + '</span>' : '') + '</div>' +
       (it.explain ? '<div style="margin-top:8px;padding:10px 12px;background:var(--surface,rgba(255,255,255,.03));border-radius:10px;padding-left:32px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);white-space:pre-line;">' + esc(it.explain) + '</div>' : '') +
+      (it.catId ? '<div style="margin-top:10px;padding-left:32px;">' +
+        '<button data-action="flagTopic" data-cat="' + esc(it.catId) + '" style="background:none;border:1px solid ' + (it.flagged ? 'var(--warn)' : 'var(--line)') + ';border-radius:999px;padding:6px 11px;font:500 10.5px \'Inter\',sans-serif;color:' + (it.flagged ? 'var(--warn)' : 'var(--ink3)') + ';cursor:pointer;">' + (it.flagged ? '🚩 Sujet marqué' : '🚩 Retravailler ce sujet') + '</button></div>' : '') +
       '</div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
@@ -2338,7 +2380,7 @@ function onAppClick(e) {
     case 'resetProgressCancel': state.confirmReset = false; render(); break;
     case 'resetProgressConfirm':
       try { localStorage.removeItem(KEY); } catch (e) {}
-      store = { srs: {}, xp: 0, streak: 0, seen: 0, poles: {}, best: {}, seeded: true, name: null, mentalBest: 0, daily: null, examInstant: store ? store.examInstant : false, fichesSeen: {}, ficheSectionsSeen: {}, ficheTested: {}, programStart: null, parcoursMinutesDay: 30, parcoursObjectiveDays: 63, parcoursPriorityPoles: [], history: [] };
+      store = { srs: {}, xp: 0, streak: 0, seen: 0, poles: {}, best: {}, seeded: true, name: null, mentalBest: 0, daily: null, examInstant: store ? store.examInstant : false, fichesSeen: {}, ficheSectionsSeen: {}, ficheTested: {}, ficheTestReview: {}, flagged: {}, programStart: null, parcoursMinutesDay: 30, parcoursObjectiveDays: 63, parcoursPriorityPoles: [], history: [] };
       state.confirmReset = false;
       save();
       go('home');
@@ -2446,6 +2488,13 @@ function onAppClick(e) {
     case 'startFicheQuiz': startFicheQ(state.fiche); break;
     case 'goFicheReview': goChild('ficheReview'); break;
     case 'goFicheReviewFromDone': go('ficheReview'); break;
+    case 'flagTopic': {
+      if (!store.flagged) store.flagged = {};
+      if (store.flagged[d.cat]) delete store.flagged[d.cat];
+      else store.flagged[d.cat] = { at: today() };
+      save(); render();
+      break;
+    }
     case 'answerQcm': answerQcm(+d.i); break;
     case 'answerVf': answerVf(+d.i); break;
     case 'calcKey':
