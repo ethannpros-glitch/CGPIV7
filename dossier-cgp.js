@@ -55,6 +55,19 @@ function parcoursOrderedProgram(priority) {
   }
   return content.concat(consolidation);
 }
+function parcoursPrecedingTheory(theoryId) {
+  var ordered = parcoursOrderedProgram(store.parcoursPriorityPoles || []);
+  var flat = [];
+  for (var i = 0; i < ordered.length; i++) {
+    var w = ordered[i];
+    for (var j = 0; j < (w.theory || []).length; j++) {
+      var id = w.theory[j];
+      if (id === theoryId) return flat;
+      flat.push(id);
+    }
+  }
+  return flat;
+}
 
 var state = {
   ready: false, theme: 'dark', screen: 'home', openPole: null, cat: null,
@@ -415,7 +428,23 @@ function startFicheQ(theoryId) {
   var keys = [];
   quizIds.forEach(function (id) { bank(id).forEach(function (q, i) { keys.push(id + '#' + i); }); });
   if (!keys.length) { startDailyQuiz(); return; }
-  startList(keys.sort(function () { return Math.random() - 0.5; }).slice(0, 8), { kind: 'cat', title: 'Test de la fiche', theoryId: theoryId });
+  keys = keys.sort(function () { return Math.random() - 0.5; }).slice(0, 8);
+  var reviewKeys = [];
+  var inProgram = PROGRAM.some(function (w) { return (w.theory || []).indexOf(theoryId) >= 0; });
+  if (store.programStart != null && inProgram) {
+    var preceding = parcoursPrecedingTheory(theoryId).filter(function (id) { return store.fichesSeen && store.fichesSeen[id]; });
+    var pool = [];
+    preceding.forEach(function (id) {
+      (FICHE_QUIZ_MAP[id] || []).forEach(function (catId) {
+        bank(catId).forEach(function (q, i) { pool.push(catId + '#' + i); });
+      });
+    });
+    pool = pool.filter(function (k) { return keys.indexOf(k) < 0; });
+    pool.sort(function () { return Math.random() - 0.5; });
+    reviewKeys = pool.slice(0, 3);
+  }
+  var allKeys = keys.concat(reviewKeys).sort(function () { return Math.random() - 0.5; });
+  startList(allKeys, { kind: 'cat', title: 'Test de la fiche', theoryId: theoryId, reviewKeys: reviewKeys });
 }
 function maybeCompleteFiche(id) {
   var t = D().THEORY[id];
@@ -486,7 +515,8 @@ function nextQ() {
           return {
             type: it.q.type, text: it.q.q || it.q.titre || '', options: it.q.options || null,
             correct: it.q.correct, pick: r.pick, calc: r.calc, ok: r.ok,
-            explain: it.q.explain || it.q.modele || '', catId: it.catId
+            explain: it.q.explain || it.q.modele || '', catId: it.catId,
+            isReview: !!(q.meta.reviewKeys && q.meta.reviewKeys.indexOf(it.key) >= 0)
           };
         });
         maybeCompleteFiche(q.meta.theoryId);
@@ -673,7 +703,7 @@ function computeVals() {
     return {
       n: i + 1, text: it.text, ok: it.ok, pickTxt: pickTxt, correctTxt: correctTxt, explain: it.explain,
       showCorrect: it.type !== 'texte' && it.type !== 'open', catId: it.catId,
-      flagged: !!(S.flagged && it.catId && S.flagged[it.catId])
+      flagged: !!(S.flagged && it.catId && S.flagged[it.catId]), isReview: !!it.isReview
     };
   }) : [];
   v.flaggedTopics = Object.keys(S.flagged || {}).map(function (catId) {
@@ -721,6 +751,7 @@ function computeVals() {
     v.quizPct = Math.round(100 * (st.qi + (done ? 1 : 0)) / st.quiz.items.length);
     v.qCat = (it.catLabel || '').toUpperCase();
     v.qCatId = it.catId;
+    v.qIsReview = !!(st.quiz.meta.reviewKeys && st.quiz.meta.reviewKeys.indexOf(it.key) >= 0);
     v.qFlagged = !!(S.flagged && S.flagged[it.catId]);
     v.qText = q.q || q.titre || '';
     v.qUnit = q.unit || '';
@@ -1324,7 +1355,7 @@ function tplCat(v) {
 }
 
 function tplQuiz(v) {
-  var mid = '<div style="display:flex;justify-content:space-between;margin-top:16px;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);"><div>' + esc(v.qCat) + '</div><div style="color:var(--acc);">' + esc(v.qTypeLabel) + '</div></div>' +
+  var mid = '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);"><div>' + esc(v.qCat) + (v.qIsReview ? ' <span style="color:var(--gold);">· RÉVISION</span>' : '') + '</div><div style="color:var(--acc);">' + esc(v.qTypeLabel) + '</div></div>' +
     '<div style="font:300 25px/1.3 Fraunces,serif;letter-spacing:-.01em;margin-top:16px;text-wrap:pretty;">' + esc(v.qText) + '</div>';
   if (v.qHasSvg) mid += '<div style="margin-top:16px;border-radius:16px;overflow:hidden;background:#faf8f3;">' + v.qSvg + '</div>';
   if (v.isScenario) mid += '<div style="margin-top:16px;background:var(--panel2);border-left:3px solid var(--acc);border-radius:10px;padding:13px 15px;font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);"><b style="color:var(--ink);">Scénario —</b> ' + esc(v.qContexte) + '</div>';
@@ -1615,7 +1646,7 @@ function tplFicheReview(v) {
     return '<div style="margin-top:12px;border:1px solid var(--line);border-left:3px solid ' + hexA(col, 0.6) + ';border-radius:16px;background:var(--panel);padding:16px;">' +
       '<div style="display:flex;align-items:flex-start;gap:10px;">' +
       '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + hexA(col, 0.18) + ';border:1px solid ' + hexA(col, 0.4) + ';display:flex;align-items:center;justify-content:center;font:600 11px \'Inter\',sans-serif;color:' + col + ';">' + (it.ok ? '✓' : '✕') + '</span>' +
-      '<div style="flex:1;font:400 13.5px/1.55 \'Inter\',sans-serif;">' + esc(it.text) + '</div></div>' +
+      '<div style="flex:1;font:400 13.5px/1.55 \'Inter\',sans-serif;">' + (it.isReview ? '<span style="display:block;font:600 9.5px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--gold);margin-bottom:4px;">RÉVISION · FICHE PRÉCÉDENTE</span>' : '') + esc(it.text) + '</div></div>' +
       '<div style="margin-top:10px;padding-left:32px;font:500 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);">Votre réponse : <span style="color:' + col + ';">' + esc(it.pickTxt) + '</span>' +
       (!it.ok && it.showCorrect ? '<br>Bonne réponse : <span style="color:var(--acc2);">' + esc(it.correctTxt) + '</span>' : '') + '</div>' +
       (it.explain ? '<div style="margin-top:8px;padding:10px 12px;background:var(--surface,rgba(255,255,255,.03));border-radius:10px;padding-left:32px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);white-space:pre-line;">' + esc(it.explain) + '</div>' : '') +
