@@ -758,13 +758,14 @@ function computeVals() {
       pickTxt = it.calc || '—';
       correctTxt = String(it.correct);
     }
-    var formula = '', narrative = it.explain;
+    var formula = '', narrative = it.explain, expNote = '';
     if (it.type === 'calc' && it.explain) {
       var calcSplit2 = splitCalcExplain(it.explain, it.correct);
       formula = calcSplit2.formula; narrative = calcSplit2.formula ? calcSplit2.narrative : it.explain;
+      expNote = exponentNote(formula);
     }
     return {
-      n: i + 1, text: it.text, ok: it.ok, pickTxt: pickTxt, correctTxt: correctTxt, explain: narrative, formula: formula,
+      n: i + 1, text: it.text, ok: it.ok, pickTxt: pickTxt, correctTxt: correctTxt, explain: narrative, formula: formula, exponentNote: expNote,
       showCorrect: it.type !== 'texte' && it.type !== 'open', catId: it.catId,
       flagged: !!(S.flagged && it.catId && S.flagged[it.catId]), isReview: !!it.isReview
     };
@@ -820,10 +821,11 @@ function computeVals() {
     v.qUnit = q.unit || '';
     v.qExplain = q.explain || q.modele || '';
     v.qModele = q.modele || '';
-    v.qFormula = ''; v.qNarrative = '';
+    v.qFormula = ''; v.qNarrative = ''; v.qExponentNote = '';
     if (q.type === 'calc' && q.explain) {
       var calcSplit = splitCalcExplain(q.explain, q.correct);
       v.qFormula = calcSplit.formula; v.qNarrative = calcSplit.narrative;
+      v.qExponentNote = exponentNote(v.qFormula);
     }
     var examMode0 = st.quiz.meta.kind === 'exam' && !S.examInstant;
     var graded = done && !((q.type === 'texte' || q.type === 'open') && ans === 'reveal');
@@ -1093,6 +1095,14 @@ function splitCalcExplain(explain, correct) {
   }
   if (idx < 0) return { formula: '', narrative: explain };
   return { formula: sents.slice(0, idx + 1).join(' '), narrative: sents.slice(idx + 1).join(' ') };
+}
+function exponentNote(text) {
+  if (!text || text.indexOf('^') < 0) return '';
+  var m = text.match(/\(?([\d][\d.,]*)\)?\^(\d+)/);
+  if (!m) return 'ℹ️ Le symbole ^ veut dire « élevé à la puissance » : le nombre est multiplié plusieurs fois par lui-même.';
+  var base = m[1], exp = +m[2];
+  var mult = exp <= 4 ? new Array(exp).fill(base).join(' × ') : (base + ' multiplié par lui-même ' + exp + ' fois');
+  return 'ℹ️ ' + base + '^' + exp + ' veut dire « ' + base + ' élevé à la puissance ' + exp + ' » : ' + mult + '.';
 }
 function esc(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -1518,7 +1528,9 @@ function tplQuiz(v) {
     mid += (v.qFormula
       ? '<div style="margin-top:12px;padding:12px 14px;background:' + hexA(v.wasOk ? '#4fcfa8' : '#e2895f', 0.12) + ';border:1px solid ' + hexA(v.wasOk ? '#4fcfa8' : '#e2895f', 0.35) + ';border-radius:12px;">' +
         '<div style="font:600 9.5px \'Inter\',sans-serif;letter-spacing:.1em;color:' + (v.wasOk ? 'var(--acc2)' : 'var(--warn)') + ';margin-bottom:5px;">📐 LE CALCUL</div>' +
-        '<div style="font:500 13.5px/1.6 \'Inter\',sans-serif;color:var(--ink);white-space:pre-line;">' + esc(v.qFormula) + '</div></div>' +
+        '<div style="font:500 13.5px/1.6 \'Inter\',sans-serif;color:var(--ink);white-space:pre-line;">' + esc(v.qFormula) + '</div>' +
+        (v.qExponentNote ? '<div style="font:400 11.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;padding-top:8px;border-top:1px solid ' + hexA(v.wasOk ? '#4fcfa8' : '#e2895f', 0.25) + ';">' + esc(v.qExponentNote) + '</div>' : '') +
+        '</div>' +
         (v.qNarrative ? '<div style="font:400 13px/1.75 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;text-wrap:pretty;white-space:pre-line;">' + esc(v.qNarrative) + '</div>' : '')
       : '<div style="font:400 13px/1.75 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;text-wrap:pretty;white-space:pre-line;">' + esc(v.qExplain) + '</div>') +
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;">' +
@@ -1799,7 +1811,9 @@ function tplFicheReview(v) {
       (!it.ok && it.showCorrect ? '<br>Bonne réponse : <span style="color:var(--acc2);">' + esc(it.correctTxt) + '</span>' : '') + '</div>' +
       (it.formula ? '<div style="margin-top:8px;margin-left:32px;padding:10px 12px;background:' + hexA(it.ok ? '#4fcfa8' : '#e2895f', 0.12) + ';border:1px solid ' + hexA(it.ok ? '#4fcfa8' : '#e2895f', 0.35) + ';border-radius:10px;">' +
         '<div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.1em;color:' + (it.ok ? 'var(--acc2)' : 'var(--warn)') + ';margin-bottom:4px;">📐 LE CALCUL</div>' +
-        '<div style="font:500 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink);white-space:pre-line;">' + esc(it.formula) + '</div></div>' : '') +
+        '<div style="font:500 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink);white-space:pre-line;">' + esc(it.formula) + '</div>' +
+        (it.exponentNote ? '<div style="font:400 11px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:6px;padding-top:6px;border-top:1px solid ' + hexA(it.ok ? '#4fcfa8' : '#e2895f', 0.25) + ';">' + esc(it.exponentNote) + '</div>' : '') +
+        '</div>' : '') +
       (it.explain ? '<div style="margin-top:8px;padding:10px 12px;background:var(--surface,rgba(255,255,255,.03));border-radius:10px;padding-left:32px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);white-space:pre-line;">' + esc(it.explain) + '</div>' : '') +
       (it.catId ? '<div style="margin-top:10px;padding-left:32px;">' +
         '<button data-action="flagTopic" data-cat="' + esc(it.catId) + '" style="background:none;border:1px solid ' + (it.flagged ? 'var(--warn)' : 'var(--line)') + ';border-radius:999px;padding:6px 11px;font:500 10.5px \'Inter\',sans-serif;color:' + (it.flagged ? 'var(--warn)' : 'var(--ink3)') + ';cursor:pointer;">' + (it.flagged ? '🚩 Sujet marqué' : '🚩 Retravailler ce sujet') + '</button></div>' : '') +
