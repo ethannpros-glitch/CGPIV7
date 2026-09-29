@@ -114,6 +114,9 @@ function load() {
   if (!store.parcoursObjectiveDays) store.parcoursObjectiveDays = 63;
   if (!store.parcoursPriorityPoles) store.parcoursPriorityPoles = [];
   if (!store.history) store.history = [];
+  if (!store.cultureBest) store.cultureBest = {};
+  if (!store.cultureSeen) store.cultureSeen = {};
+  if (!store.cultureSpecSeen) store.cultureSpecSeen = {};
 }
 function logHistory() {
   var h = store.history, last = h[h.length - 1];
@@ -211,6 +214,16 @@ function searchIndex() {
       }
     });
   });
+  CULTURE_METIERS.forEach(function (m) {
+    var specNames = m.specialites.map(function (s) { return s.name + ' ' + s.desc; }).join(' | ');
+    idx.push({
+      kind: 'culture', id: m.id, catId: 'culture', pole: 'Culture générale', catLabel: 'Métiers',
+      title: m.name,
+      titleN: normalize(m.name),
+      headN: normalize(specNames),
+      bodyN: normalize(m.intro + ' ' + m.parcours + ' ' + m.remuneration + ' ' + m.statut + ' ' + m.etablissements.join(' '))
+    });
+  });
   _searchIdx = idx;
   return idx;
 }
@@ -252,7 +265,7 @@ function doSearch(query) {
     return {
       kind: it.kind, id: it.id, catId: it.catId, title: it.title,
       path: it.pole + ' › ' + it.catLabel,
-      meta: it.kind === 'fiche' ? 'Cours' : (it.count + (it.count > 1 ? ' questions' : ' question')),
+      meta: it.kind === 'fiche' ? 'Cours' : it.kind === 'culture' ? 'Culture générale' : (it.count + (it.count > 1 ? ' questions' : ' question')),
       related: r.score <= 5
     };
   });
@@ -728,6 +741,8 @@ function computeVals() {
     cultureSel: st.cultureSel || null, cultureSecOpen: st.cultureSecOpen != null ? st.cultureSecOpen : null,
     cultureTestIdx: st.cultureTestIdx || 0, cultureTestScore: st.cultureTestScore || 0,
     cultureTestPick: st.cultureTestPick != null ? st.cultureTestPick : null, cultureTestAnswered: !!st.cultureTestAnswered,
+    cultureBestAll: (S && S.cultureBest) || {}, cultureSeenAll: (S && S.cultureSeen) || {},
+    cultureSpecSeenAll: (S && S.cultureSpecSeen) || {},
     isSearch: scr === 'search',
     showTabs: ['home', 'browse', 'cat', 'srs', 'courses', 'fiche', 'ficheReview', 'coursePole', 'progress', 'profile', 'examPick', 'labo', 'mental', 'builder', 'search', 'parcours'].indexOf(scr) >= 0,
     mentalBest: S.mentalBest || 0,
@@ -1508,7 +1523,7 @@ function tplSearch(v) {
   var list;
   if (results.length) {
     list = results.map(function (r, i) {
-      var icon = r.kind === 'fiche' ? '📘' : '✏️';
+      var icon = r.kind === 'fiche' ? '📘' : r.kind === 'culture' ? '🎓' : '✏️';
       return '<button data-action="searchGo" data-kind="' + esc(r.kind) + '" data-id="' + esc(r.id) + '" class="hv-a stagger" style="animation-delay:' + (i * 0.03).toFixed(2) + 's;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);box-sizing:border-box;">' +
         '<span style="font-size:18px;flex-shrink:0;">' + icon + '</span>' +
         '<span style="flex:1;min-width:0;"><span style="display:block;font:500 9.5px \'Inter\',sans-serif;letter-spacing:.05em;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(r.path) + '</span>' +
@@ -2351,28 +2366,40 @@ var CULTURE_METIERS = [
 ];
 function cultureMetier(id) { return CULTURE_METIERS.find(function (m) { return m.id === id; }) || null; }
 function tplCulture(v) {
+  var testedCount = 0;
   var cards = CULTURE_METIERS.map(function (m, i) {
+    var best = v.cultureBestAll[m.id];
+    var tested = best != null;
+    if (tested) testedCount++;
+    var pct = tested ? Math.round(100 * best / m.quiz.length) : 0;
+    var ring = tested
+      ? '<span style="flex-shrink:0;position:relative;width:40px;height:40px;border-radius:50%;background:conic-gradient(var(--acc) ' + (pct * 3.6) + 'deg,var(--line) ' + (pct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;"><span style="width:33px;height:33px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font:600 9.5px \'Inter\',sans-serif;color:var(--acc);">' + pct + '%</span></span>'
+      : '<span style="flex-shrink:0;font-size:24px;">' + m.icon + '</span>';
     return '<button data-action="cultureGo" data-id="' + esc(m.id) + '" class="hv-a stagger" style="animation-delay:' + (i * 0.04).toFixed(2) + 's;width:100%;text-align:left;border:1px solid var(--line);border-radius:18px;background:var(--panel);padding:16px;display:flex;align-items:center;gap:13px;cursor:pointer;color:var(--ink);box-sizing:border-box;">' +
-      '<span style="flex-shrink:0;font-size:24px;">' + m.icon + '</span>' +
+      ring +
       '<span style="flex:1;min-width:0;"><span style="display:block;font:500 14.5px \'Inter\',sans-serif;">' + esc(m.name) + '</span>' +
-      '<span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink3);margin-top:3px;">' + m.specialites.length + ' spécialités · ' + m.quiz.length + ' questions</span></span>' +
+      '<span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink3);margin-top:3px;">' + (tested ? 'Testé · meilleur score ' + best + '/' + m.quiz.length : m.specialites.length + ' spécialités · ' + m.quiz.length + ' questions') + '</span></span>' +
       '<span style="flex-shrink:0;font:400 20px Fraunces,serif;color:var(--acc);">&#8250;</span></button>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
     '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:16px;">Culture <span style="font-style:italic;">générale</span></div>' +
-    '<div style="font:400 13px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;">Les professions que tout CGP croise chez ses clients — utile pour comprendre leur situation patrimoniale. Chiffres indicatifs, très variables selon l\'expérience, la zone et la structure d\'exercice.</div></div>' +
-    '<div style="margin:6px 24px 0;display:flex;flex-direction:column;gap:10px;">' + cards + '</div>' +
+    '<div style="font:400 13px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;">Les professions que tout CGP croise chez ses clients — utile pour comprendre leur situation patrimoniale. Chiffres indicatifs, très variables selon l\'expérience, la zone et la structure d\'exercice.</div>' +
+    '<div style="margin-top:14px;display:flex;align-items:center;gap:10px;"><div style="flex:1;height:5px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="width:' + Math.round(100 * testedCount / CULTURE_METIERS.length) + '%;height:5px;background:linear-gradient(90deg,var(--acc2),var(--acc));"></div></div><span style="font:500 11px \'Inter\',sans-serif;color:var(--ink3);flex-shrink:0;">' + testedCount + '/' + CULTURE_METIERS.length + ' métiers testés</span></div></div>' +
+    '<div style="margin:16px 24px 0;display:flex;flex-direction:column;gap:10px;">' + cards + '</div>' +
     '<div style="height:26px;"></div></div>';
 }
 function tplCultureDetail(v) {
   var m = cultureMetier(v.cultureSel);
   if (!m) return tplCulture(v);
+  var specSeenCount = 0;
   var secs = m.specialites.map(function (s, i) {
     var open = v.cultureSecOpen === i;
+    var seen = !!v.cultureSpecSeenAll[m.id + '#' + i];
+    if (seen) specSeenCount++;
     return '<div style="border:1px solid var(--line);border-left:3px solid ' + hexA('#dbb46f', 0.6) + ';border-radius:14px;overflow:hidden;background:var(--panel);margin-top:9px;">' +
       '<button data-action="cultureSecToggle" data-i="' + i + '" style="width:100%;background:none;border:none;padding:13px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--ink);text-align:left;">' +
-      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + hexA('#dbb46f', 0.16) + ';display:flex;align-items:center;justify-content:center;font:600 10px \'Inter\',sans-serif;color:var(--gold);">' + (i + 1) + '</span>' +
+      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + (seen ? 'var(--gold)' : hexA('#dbb46f', 0.16)) + ';display:flex;align-items:center;justify-content:center;font:600 10px \'Inter\',sans-serif;color:' + (seen ? 'var(--on)' : 'var(--gold)') + ';">' + (seen ? '✓' : (i + 1)) + '</span>' +
       '<span style="flex:1;font:500 12.5px \'Inter\',sans-serif;">' + esc(s.name) + '</span>' +
       '<span style="font:400 14px Fraunces,serif;color:var(--acc);transition:transform .25s;transform:rotate(' + (open ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
       (open ? '<div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:9px;">' +
@@ -2382,17 +2409,21 @@ function tplCultureDetail(v) {
         '</div>' : '') + '</div>';
   }).join('');
   var etabs = m.etablissements.map(function (e) { return '<li style="margin-top:5px;">' + esc(e) + '</li>'; }).join('');
+  var best = v.cultureBestAll[m.id];
+  var tested = best != null;
+  var testBtnLabel = tested ? 'Retester ce métier · meilleur score ' + best + '/' + m.quiz.length : 'Tester ce métier · ' + m.quiz.length + ' questions';
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Métiers</button>' +
     '<div style="display:flex;align-items:center;gap:13px;margin-top:16px;"><span style="font-size:30px;">' + m.icon + '</span>' +
     '<div style="font:300 28px/1.1 Fraunces,serif;letter-spacing:-.02em;">' + esc(m.name) + '</div></div>' +
-    '<div style="font:400 13px/1.65 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">' + esc(m.intro) + '</div></div>' +
+    '<div style="font:400 13px/1.65 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">' + esc(m.intro) + '</div>' +
+    '<div style="margin-top:12px;font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);">' + specSeenCount + '/' + m.specialites.length + ' spécialités consultées' + (tested ? ' · meilleur score au test : ' + best + '/' + m.quiz.length : ' · pas encore testé') + '</div></div>' +
     '<div style="margin:22px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">SPÉCIALITÉS DÉTAILLÉES</div>' + secs + '</div>' +
     '<div style="margin:20px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">ÉTABLISSEMENTS (EXEMPLES CONNUS)</div>' +
     '<ul style="margin:8px 0 0;padding-left:20px;font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);">' + etabs + '</ul></div>' +
     '<div style="margin:20px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">RÉMUNÉRATION INDICATIVE</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + esc(m.remuneration) + '</div></div>' +
     '<div style="margin:20px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">STATUT JURIDIQUE USUEL</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + esc(m.statut) + '</div></div>' +
-    '<div style="padding:26px 24px 30px;"><button data-action="startCultureTest" data-id="' + esc(m.id) + '" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Tester ce métier · ' + m.quiz.length + ' questions</button></div>' +
+    '<div style="padding:26px 24px 30px;"><button data-action="startCultureTest" data-id="' + esc(m.id) + '" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + testBtnLabel + '</button></div>' +
     '<div style="height:10px;"></div></div>';
 }
 function tplCultureTest(v) {
@@ -3050,7 +3081,7 @@ function onAppClick(e) {
     case 'resetProgressCancel': state.confirmReset = false; render(); break;
     case 'resetProgressConfirm':
       try { localStorage.removeItem(KEY); } catch (e) {}
-      store = { srs: {}, xp: 0, streak: 0, seen: 0, poles: {}, best: {}, seeded: true, name: null, mentalBest: 0, daily: null, examInstant: store ? store.examInstant : false, fichesSeen: {}, ficheSectionsSeen: {}, ficheTested: {}, ficheTestReview: {}, flagged: {}, programStart: null, parcoursMinutesDay: 30, parcoursObjectiveDays: 63, parcoursPriorityPoles: [], history: [] };
+      store = { srs: {}, xp: 0, streak: 0, seen: 0, poles: {}, best: {}, seeded: true, name: null, mentalBest: 0, daily: null, examInstant: store ? store.examInstant : false, fichesSeen: {}, ficheSectionsSeen: {}, ficheTested: {}, ficheTestReview: {}, flagged: {}, programStart: null, parcoursMinutesDay: 30, parcoursObjectiveDays: 63, parcoursPriorityPoles: [], history: [], cultureBest: {}, cultureSeen: {}, cultureSpecSeen: {} };
       state.confirmReset = false;
       save();
       go('home');
@@ -3071,8 +3102,23 @@ function onAppClick(e) {
     case 'goBack': goBack(); break;
     case 'goBrowse': goChild('browse'); break;
     case 'goCulture': goChild('culture'); break;
-    case 'cultureGo': state.cultureSel = d.id; state.cultureSecOpen = null; goChild('cultureDetail'); break;
-    case 'cultureSecToggle': state.cultureSecOpen = state.cultureSecOpen === +d.i ? null : +d.i; render(); break;
+    case 'cultureGo':
+      state.cultureSel = d.id; state.cultureSecOpen = null;
+      if (!store.cultureSeen) store.cultureSeen = {};
+      store.cultureSeen[d.id] = true; save();
+      goChild('cultureDetail');
+      break;
+    case 'cultureSecToggle': {
+      var newI = state.cultureSecOpen === +d.i ? null : +d.i;
+      state.cultureSecOpen = newI;
+      if (newI != null && state.cultureSel) {
+        if (!store.cultureSpecSeen) store.cultureSpecSeen = {};
+        store.cultureSpecSeen[state.cultureSel + '#' + newI] = true;
+        save();
+      }
+      render();
+      break;
+    }
     case 'startCultureTest':
       state.cultureSel = d.id || state.cultureSel;
       state.cultureTestIdx = 0; state.cultureTestScore = 0; state.cultureTestPick = null; state.cultureTestAnswered = false;
@@ -3091,6 +3137,13 @@ function onAppClick(e) {
     }
     case 'cultureTestNext':
       state.cultureTestIdx++; state.cultureTestPick = null; state.cultureTestAnswered = false;
+      var cmm = cultureMetier(state.cultureSel);
+      if (cmm && state.cultureTestIdx >= cmm.quiz.length) {
+        if (!store.cultureBest) store.cultureBest = {};
+        var prevBest = store.cultureBest[state.cultureSel] || 0;
+        store.cultureBest[state.cultureSel] = Math.max(prevBest, state.cultureTestScore);
+        save();
+      }
       render();
       break;
     case 'goSrs': go('srs'); break;
@@ -3176,6 +3229,12 @@ function onAppClick(e) {
     }
     case 'searchGo':
       if (d.kind === 'fiche') goChild('fiche', { fiche: d.id });
+      else if (d.kind === 'culture') {
+        state.cultureSel = d.id; state.cultureSecOpen = null;
+        if (!store.cultureSeen) store.cultureSeen = {};
+        store.cultureSeen[d.id] = true; save();
+        goChild('cultureDetail');
+      }
       else startCat(d.id, 12);
       break;
     case 'startFicheQuiz': startFicheQ(state.fiche); break;
