@@ -724,7 +724,10 @@ function computeVals() {
     isExamResult: scr === 'examResult', isSrs: scr === 'srs', isCourses: scr === 'courses',
     isFiche: scr === 'fiche', isFicheReview: scr === 'ficheReview', isProgress: scr === 'progress', isProfile: scr === 'profile',
     isLabo: scr === 'labo', isMental: scr === 'mental', isBuilder: scr === 'builder',
-    isCulture: scr === 'culture', cultureOpen: st.cultureOpen || null,
+    isCulture: scr === 'culture', isCultureDetail: scr === 'cultureDetail', isCultureTest: scr === 'cultureTest',
+    cultureSel: st.cultureSel || null, cultureSecOpen: st.cultureSecOpen != null ? st.cultureSecOpen : null,
+    cultureTestIdx: st.cultureTestIdx || 0, cultureTestScore: st.cultureTestScore || 0,
+    cultureTestPick: st.cultureTestPick != null ? st.cultureTestPick : null, cultureTestAnswered: !!st.cultureTestAnswered,
     isSearch: scr === 'search',
     showTabs: ['home', 'browse', 'cat', 'srs', 'courses', 'fiche', 'ficheReview', 'coursePole', 'progress', 'profile', 'examPick', 'labo', 'mental', 'builder', 'search', 'parcours'].indexOf(scr) >= 0,
     mentalBest: S.mentalBest || 0,
@@ -1556,6 +1559,7 @@ function tplHome(v) {
     '<div style="margin:26px 24px 0;display:flex;align-items:flex-end;gap:22px;">' +
     '<div><div style="font:300 52px/0.9 Fraunces,serif;letter-spacing:-.03em;"><span data-countup="' + v.mastery + '" data-countup-suffix="%">0%</span></div><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin-top:6px;">MAÎTRISE</div></div>' +
     '<button data-action="goSrs" style="background:none;border:none;border-left:1px solid var(--line);padding:0 0 0 22px;text-align:left;cursor:pointer;"><div style="font:300 52px/0.9 Fraunces,serif;letter-spacing:-.03em;color:var(--warn);"><span data-countup="' + v.dueCount + '">0</span></div><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin-top:6px;">À REVOIR</div></button></div>' +
+    '<div style="margin:8px 24px 0;font:400 10.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);">Ce sont deux choses différentes : <b style="color:var(--ink2);">maîtrise</b> = % de bonnes réponses (moyenne tous pôles) · <b style="color:var(--ink2);">à revoir</b> = nombre de questions dont la répétition espacée arrive à échéance aujourd\'hui, quel que soit ton niveau dessus.</div>' +
     (v.weakChips.length ? '<div style="margin:26px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">POINTS FAIBLES</div>' +
     '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">' + weak + '</div></div>' : '') +
     (v.flaggedTopics.length ? '<div style="margin:26px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--warn);">🚩 À RETRAVAILLER</div>' +
@@ -1764,7 +1768,8 @@ function tplExamResult(v) {
 function tplSrs(v) {
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:58px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.2em;color:var(--ink3);">MÉMOIRE</div>' +
-    '<div style="font:300 38px/1.08 Fraunces,serif;letter-spacing:-.025em;margin-top:14px;"><span style="font-style:italic;">' + v.dueCount + '</span> questions<br>arrivent à échéance.</div></div>' +
+    '<div style="font:300 38px/1.08 Fraunces,serif;letter-spacing:-.025em;margin-top:14px;"><span style="font-style:italic;">' + v.dueCount + '</span> questions<br>arrivent à échéance.</div>' +
+    '<div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;">Ce chiffre suit la répétition espacée (1, 3, 7, 16, 35, 90 jours) : il compte toutes les questions déjà vues dont la date de révision tombe aujourd\'hui, indépendamment de ton % de maîtrise sur leur pôle.</div></div>' +
     '<div style="margin:28px auto 0;position:relative;width:200px;height:200px;">' +
     '<div style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--acc2),var(--acc),var(--gold),var(--warn),var(--acc2));animation:kfSpin 22s linear infinite;"></div>' +
     '<div style="position:absolute;inset:11px;border-radius:50%;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;">' +
@@ -2134,82 +2139,257 @@ function laboLine(label, value, tot) {
 var CULTURE_METIERS = [
   {
     id: 'medecin', icon: '🩺', name: 'Médecin',
-    specialites: 'Généraliste, cardiologue, pédiatre, chirurgien, anesthésiste, radiologue, dermatologue…',
-    parcours: 'PASS ou LAS (1 an) puis 5 ans d\'études médicales, puis internat de 3 à 6 ans selon la spécialité choisie à l\'issue des épreuves classantes nationales (ECN). Soit environ 9 à 12 ans après le bac.',
+    intro: 'Le médecin diagnostique, soigne et assure le suivi de ses patients. Après un tronc commun, chacun choisit une spécialité à l\'issue d\'épreuves classantes — le métier se décline ensuite en dizaines de pratiques très différentes.',
+    specialites: [
+      { name: 'Médecine générale', desc: 'Premier point de contact avec le système de soins : suivi global, prévention, orientation vers les spécialistes. Environ un médecin sur deux en France est généraliste.', parcoursSpe: 'Internat de médecine générale, 3 ans après le 2e cycle, validé par un diplôme d\'études spécialisées (DES).', parcoursProf: 'La filière universitaire de médecine générale est encore jeune : devenir enseignant suppose un exercice clinique prolongé, une activité de recherche ou d\'enseignement, puis une qualification par le Conseil National des Universités (CNU), section médecine générale.' },
+      { name: 'Cardiologie', desc: 'Diagnostic et traitement des maladies du cœur et des vaisseaux (hypertension, infarctus, troubles du rythme…).', parcoursSpe: 'Internat de cardiologie et maladies vasculaires, 5 ans, avec stages hospitaliers spécialisés.', parcoursProf: 'Après l\'internat : 2 à 4 ans de chef de clinique-assistant (CCA) avec activité de recherche, un doctorat d\'université en plus du doctorat de médecine, puis qualification CNU et nomination Professeur des Universités-Praticien Hospitalier (PU-PH) en CHU.' },
+      { name: 'Pédiatrie', desc: 'Suivi médical des enfants, de la naissance à l\'adolescence : croissance, vaccination, maladies infantiles.', parcoursSpe: 'Internat de pédiatrie, 4 ans, avec possibilité de sur-spécialisation (néonatologie, pédiatrie hospitalière…).', parcoursProf: 'Même filière hospitalo-universitaire que les autres spécialités : chefferie de clinique, recherche, qualification CNU section pédiatrie, puis PU-PH.' },
+      { name: 'Chirurgie (orthopédique, viscérale…)', desc: 'Intervention chirurgicale : traumatologie, chirurgie digestive ou orthopédique selon la sous-spécialité choisie.', parcoursSpe: 'Internat de chirurgie, 5 à 6 ans selon la sous-spécialité, avec un fort volume d\'actes pratiques au bloc.', parcoursProf: 'Filière PU-PH identique : chefferie de clinique-assistanat (CCA), publications scientifiques, qualification CNU dans la section chirurgicale correspondante.' },
+      { name: 'Anesthésie-réanimation', desc: 'Anesthésie avant et pendant les opérations, prise en charge des patients en état critique en réanimation.', parcoursSpe: 'Internat d\'anesthésie-réanimation, 5 ans, avec formation intensive aux gestes d\'urgence.', parcoursProf: 'Même voie hospitalo-universitaire : CCA, recherche, qualification CNU en anesthésie-réanimation, nomination PU-PH.' },
+      { name: 'Radiologie (imagerie médicale)', desc: 'Réalisation et interprétation des examens d\'imagerie (radio, scanner, IRM, échographie) pour aider au diagnostic.', parcoursSpe: 'Internat de radiologie et imagerie médicale, 5 ans, avec formation technique aux différents appareils.', parcoursProf: 'Filière PU-PH identique : poste d\'assistant-chef de clinique, recherche, qualification CNU en radiologie.' }
+    ],
+    etablissements: ['UFR de médecine Sorbonne Université (Paris)', 'UFR de médecine Université Paris Cité', 'Faculté de médecine Aix-Marseille Université', 'Faculté de médecine Université Claude Bernard Lyon 1', 'Faculté de médecine Université de Bordeaux', 'Faculté de médecine Université de Lille', 'Faculté de médecine Université de Strasbourg', 'Faculté de médecine Université Toulouse III – Paul Sabatier'],
+    parcours: 'PASS ou LAS (1 an) puis 5 ans d\'études médicales, puis internat de 3 à 6 ans selon la spécialité choisie à l\'issue des épreuves classantes nationales (ECN/EDN). Soit environ 9 à 12 ans après le bac.',
     remuneration: 'Très variable selon le secteur (1 ou 2) et la spécialité : généraliste libéral souvent 80 000 à 110 000 €/an net ; spécialités techniques (chirurgie, anesthésie, radiologie) fréquemment 150 000 à 300 000 €+/an net en libéral. Praticien hospitalier salarié : rémunération de la fonction publique, plus stable mais généralement inférieure au libéral.',
-    statut: 'Exercice libéral en BNC (déclaration contrôlée), seul ou regroupé en société civile de moyens (SCM), SEL (SELARL/SELAS) ; ou salarié d\'un hôpital (statut de praticien hospitalier, fonction publique).'
+    statut: 'Exercice libéral en BNC (déclaration contrôlée), seul ou regroupé en société civile de moyens (SCM), SEL (SELARL/SELAS) ; ou salarié d\'un hôpital (statut de praticien hospitalier, fonction publique).',
+    quiz: [
+      { q: 'Combien d\'années d\'études faut-il, au minimum, après le bac, pour devenir médecin généraliste en France ?', options: ['6 ans', '9 ans', '12 ans', '15 ans'], correct: 1, explain: '1 an de PASS/LAS + 5 ans d\'études médicales + 3 ans d\'internat de médecine générale = 9 ans.' },
+      { q: 'Quel examen permet aux étudiants en médecine de choisir leur spécialité à l\'issue du 2e cycle ?', options: ['Les Épreuves Classantes Nationales (ECN/EDN)', 'Le CAPES', 'Le DEC', 'Le CRFPA'], correct: 0, explain: 'Les ECN, devenues EDN (Épreuves Dématérialisées Nationales), classent les étudiants qui choisissent alors leur spécialité et leur ville selon leur rang.' },
+      { q: 'Quel statut désigne un médecin qui est à la fois professeur des universités et praticien hospitalier ?', options: ['ECN', 'PU-PH', 'DES', 'CCA'], correct: 1, explain: 'Le PU-PH (Professeur des Universités – Praticien Hospitalier) enseigne à la faculté et exerce à l\'hôpital universitaire.' },
+      { q: 'Avant de devenir PU-PH, quel poste occupe généralement un jeune médecin pour se former à la recherche et à l\'enseignement ?', options: ['Chef de clinique-assistant (CCA)', 'Interne de première année', 'Externe', 'Médecin remplaçant'], correct: 0, explain: 'Le poste de CCA, 2 à 4 ans après l\'internat, permet de mener une activité de recherche en vue d\'une carrière hospitalo-universitaire.' },
+      { q: 'Quelle instance valide et nomme les enseignants-chercheurs en médecine au niveau national ?', options: ['Le Conseil National des Universités (CNU)', 'L\'Ordre des médecins', 'La Haute Autorité de Santé', 'Le Conseil National de l\'Ordre des Pharmaciens'], correct: 0, explain: 'Le CNU qualifie les candidats aux fonctions de maître de conférences et de professeur des universités, section par section.' }
+    ]
   },
   {
     id: 'dentiste', icon: '🦷', name: 'Chirurgien-dentiste',
-    specialites: 'Omnipratique, orthodontie, chirurgie orale, parodontologie, implantologie…',
+    intro: 'Le chirurgien-dentiste prévient, diagnostique et traite les pathologies bucco-dentaires. Plusieurs spécialités existent, accessibles après un internat qualifiant très sélectif.',
+    specialites: [
+      { name: 'Omnipratique', desc: 'Dentisterie générale : soins conservateurs, détartrage, extractions, prothèses simples — la majorité des chirurgiens-dentistes exercent en omnipratique.', parcoursSpe: '6 ans d\'études d\'odontologie avec stages cliniques, sans internat qualifiant supplémentaire.', parcoursProf: 'Devenir enseignant-chercheur passe par un poste d\'assistant hospitalo-universitaire (AHU), un doctorat d\'université, puis une qualification CNU section odontologie et une nomination MCU-PH (Maître de Conférences-Praticien Hospitalier), avant, éventuellement, PU-PH.' },
+      { name: 'Orthodontie (ODF)', desc: 'Correction du positionnement des dents et des mâchoires, souvent chez l\'enfant et l\'adolescent (appareils dentaires).', parcoursSpe: 'Internat qualifiant en orthopédie dento-faciale, 3 ans supplémentaires après le diplôme de base, très sélectif.', parcoursProf: 'Même filière hospitalo-universitaire : AHU puis MCU-PH/PU-PH en orthopédie dento-faciale, avec recherche et enseignement clinique.' },
+      { name: 'Chirurgie orale', desc: 'Extractions complexes, implantologie, chirurgie des kystes et tumeurs de la sphère bucco-dentaire.', parcoursSpe: 'Internat qualifiant en chirurgie orale, 3 ans, en lien étroit avec les services de chirurgie maxillo-faciale.', parcoursProf: 'Filière hospitalo-universitaire identique : AHU, doctorat, qualification CNU en chirurgie orale.' },
+      { name: 'Parodontologie', desc: 'Traitement des maladies des gencives et des tissus de soutien de la dent (parodontite, déchaussement).', parcoursSpe: 'Diplômes universitaires (DU) ou diplôme d\'études spécialisées complémentaires selon les facultés.', parcoursProf: 'Poste d\'AHU en parodontologie, puis qualification MCU-PH sur profil recherche/clinique.' },
+      { name: 'Pédodontie (dentisterie pédiatrique)', desc: 'Soins dentaires adaptés aux enfants, prévention précoce, gestion du comportement au fauteuil.', parcoursSpe: 'Formation complémentaire (DU/DESU) en odontologie pédiatrique après le diplôme d\'État.', parcoursProf: 'Même logique hospitalo-universitaire : AHU puis MCU-PH en odontologie pédiatrique.' }
+    ],
+    etablissements: ['UFR d\'Odontologie Université Paris Cité (Garancière)', 'UFR d\'Odontologie Université Claude Bernard Lyon 1', 'UFR d\'Odontologie Aix-Marseille Université', 'UFR d\'Odontologie Université Toulouse III – Paul Sabatier', 'UFR d\'Odontologie Université de Nantes', 'UFR d\'Odontologie Université de Strasbourg'],
     parcours: 'PASS ou LAS puis 5 à 6 ans d\'études odontologiques avec une thèse d\'exercice. L\'orthodontie et certaines spécialités demandent un internat qualifiant supplémentaire de 3 ans.',
     remuneration: 'Revenu net libéral généralement compris entre 70 000 et 130 000 €/an ; les orthodontistes atteignent souvent 100 000 à 200 000 €/an du fait d\'actes hors nomenclature mieux valorisés.',
-    statut: 'Profession libérale, exercice en nom propre (BNC) ou en société (SELARL, SELAS), souvent regroupé en cabinet via une société civile de moyens (SCM) pour mutualiser les charges.'
+    statut: 'Profession libérale, exercice en nom propre (BNC) ou en société (SELARL, SELAS), souvent regroupé en cabinet via une société civile de moyens (SCM) pour mutualiser les charges.',
+    quiz: [
+      { q: 'Combien d\'années d\'études faut-il pour devenir chirurgien-dentiste omnipraticien ?', options: ['4 ans', '5 à 6 ans', '9 ans', '12 ans'], correct: 1, explain: 'Le cursus de base dure 5 à 6 ans après le PASS/LAS, sanctionné par une thèse d\'exercice.' },
+      { q: 'Quelle spécialité dentaire nécessite un internat qualifiant supplémentaire de 3 ans, très sélectif ?', options: ['L\'omnipratique', 'L\'orthodontie (ODF)', 'La pédodontie', 'Aucune'], correct: 1, explain: 'L\'orthodontie (orthopédie dento-faciale) est accessible via un internat qualifiant de 3 ans, très sélectif.' },
+      { q: 'Quel statut hospitalo-universitaire est l\'équivalent, en odontologie, du PU-PH en médecine ?', options: ['MCU-PH puis PU-PH', 'ECN', 'DES', 'CRFPA'], correct: 0, explain: 'La filière odontologie suit une logique similaire : Assistant Hospitalo-Universitaire (AHU), puis MCU-PH, puis PU-PH.' },
+      { q: 'Comment les chirurgiens-dentistes mutualisent-ils souvent leurs charges de cabinet ?', options: ['Via une société civile de moyens (SCM)', 'Via une SCI uniquement', 'Ce n\'est jamais possible', 'Via un CDI collectif'], correct: 0, explain: 'La SCM permet de partager les locaux et le matériel entre praticiens qui restent chacun indépendants fiscalement.' },
+      { q: 'Quel type de soins la parodontologie traite-t-elle principalement ?', options: ['Les maladies des gencives et du support de la dent', 'Les caries uniquement', 'Le blanchiment dentaire', 'Les prothèses complètes'], correct: 0, explain: 'La parodontologie s\'occupe des tissus de soutien de la dent : gencives, os alvéolaire, ligament parodontal.' }
+    ]
   },
   {
     id: 'opticien', icon: '👓', name: 'Opticien-lunetier',
-    specialites: 'Optique générale, contactologie (lentilles), basse vision…',
+    intro: 'L\'opticien-lunetier conseille, mesure et équipe les patients en lunettes et lentilles. Profession accessible dès bac+2, très présente en réseau de magasins, sans filière universitaire de recherche dédiée.',
+    specialites: [
+      { name: 'Optique générale', desc: 'Vente et conseil, mesure de la correction, montage et ajustement des verres — le cœur du métier en magasin.', parcoursSpe: 'BTS Opticien-Lunetier (2 ans), diplôme de référence de la profession.', parcoursProf: 'Enseigner en BTS suppose, dans le public, de réussir un concours de l\'Éducation nationale (CAPET biotechnologies-santé, option optique) après plusieurs années d\'exercice ; dans le privé, un recrutement direct par l\'école sur profil d\'expérience.' },
+      { name: 'Contactologie (lentilles)', desc: 'Adaptation et suivi des lentilles de contact, y compris les cas complexes (astigmatismes forts, kératocône).', parcoursSpe: 'Licence professionnelle ou certificat complémentaire en contactologie après le BTS.', parcoursProf: 'Même voie que l\'optique générale pour enseigner : concours de l\'Éducation nationale ou poste de formateur en école privée.' },
+      { name: 'Basse vision', desc: 'Accompagnement des patients malvoyants avec des aides optiques spécifiques (loupes, systèmes grossissants, filtres).', parcoursSpe: 'Diplôme universitaire (DU) basse vision, proposé par certaines facultés en complément du BTS.', parcoursProf: 'Peu de filière académique dédiée ; la transmission se fait surtout par la pratique et des formations continues spécialisées.' },
+      { name: 'Optique pédiatrique', desc: 'Dépistage des troubles visuels et équipement adapté des enfants, souvent en lien avec les ophtalmologistes.', parcoursSpe: 'Formation complémentaire courte après le BTS, souvent proposée par les fabricants ou les réseaux d\'opticiens.', parcoursProf: 'Pas de statut d\'enseignant-chercheur dédié ; l\'expertise se transmet par compagnonnage et formation continue.' }
+    ],
+    etablissements: ['Lycée Fresnel (Paris) – BTS Opticien-Lunetier', 'ISO Paris (Institut Supérieur d\'Optique)', 'Lycées publics proposant le BTS Opticien-Lunetier dans chaque académie', 'Écoles privées spécialisées en optique proposant le BTS et des licences professionnelles en contactologie'],
     parcours: 'BTS Opticien-Lunetier (2 ans post-bac), diplôme de référence de la profession ; des licences professionnelles ou certifications complémentaires en contactologie existent ensuite.',
     remuneration: 'Salarié en magasin : environ 24 000 à 35 000 €/an brut en début et milieu de carrière. Opticien indépendant gérant son propre point de vente : souvent 40 000 à 70 000 €/an ou plus selon le chiffre d\'affaires du magasin.',
-    statut: 'Le plus souvent salarié (enseignes comme Optic 2000, Krys, Afflelou…) ; ou commerçant indépendant/franchisé exploitant son magasin en nom propre, EURL ou SARL.'
+    statut: 'Le plus souvent salarié (enseignes comme Optic 2000, Krys, Afflelou…) ; ou commerçant indépendant/franchisé exploitant son magasin en nom propre, EURL ou SARL.',
+    quiz: [
+      { q: 'Quel diplôme est la référence pour exercer comme opticien-lunetier ?', options: ['Le BTS Opticien-Lunetier', 'Un doctorat', 'Le CAPET', 'Le DEC'], correct: 0, explain: 'Le BTS Opticien-Lunetier, en 2 ans post-bac, est le diplôme de référence de la profession.' },
+      { q: 'Quelle spécialisation concerne l\'adaptation des lentilles de contact dans les cas complexes ?', options: ['La contactologie', 'La basse vision', 'L\'optique pédiatrique', 'La parodontologie'], correct: 0, explain: 'La contactologie couvre l\'adaptation et le suivi des lentilles de contact, y compris les cas difficiles.' },
+      { q: 'Pour enseigner l\'optique en lycée public, quel type de concours faut-il généralement réussir ?', options: ['Un concours de l\'Éducation nationale (ex. CAPET)', 'Le CRFPA', 'Le DEC', 'Aucun concours n\'existe'], correct: 0, explain: 'L\'enseignement public en BTS suppose la réussite d\'un concours de l\'Éducation nationale dans la discipline.' },
+      { q: 'Sous quel statut exerce le plus souvent un opticien qui possède son propre magasin ?', options: ['Commerçant indépendant (EURL, SARL…)', 'Fonctionnaire', 'Praticien hospitalier', 'Officier ministériel'], correct: 0, explain: 'L\'opticien indépendant est un commerçant, exerçant en nom propre ou en société commerciale (EURL, SARL).' },
+      { q: 'La basse vision s\'adresse à quel type de patients ?', options: ['Les patients malvoyants nécessitant des aides optiques spécifiques', 'Uniquement les enfants', 'Uniquement les porteurs de lentilles', 'Les patients sans trouble visuel'], correct: 0, explain: 'La basse vision propose des aides optiques (loupes, systèmes grossissants) aux patients dont la vision reste limitée malgré une correction classique.' }
+    ]
   },
   {
     id: 'audio', icon: '👂', name: 'Audioprothésiste',
-    specialites: 'Appareillage auditif adulte et enfant, suivi et réglage des prothèses…',
+    intro: 'L\'audioprothésiste évalue la perte auditive et propose, règle puis suit l\'appareillage adapté à chaque patient. Une profession en forte croissance avec le vieillissement de la population.',
+    specialites: [
+      { name: 'Appareillage de l\'adulte', desc: 'Prise en charge de la perte auditive liée à l\'âge ou au bruit : bilan, choix et réglage de l\'appareil auditif.', parcoursSpe: 'Diplôme d\'État d\'audioprothésiste, formation universitaire sélective de 3 ans post-bac.', parcoursProf: 'Certaines facultés (rattachées à la médecine ou à la pharmacie) proposent des postes de Maître de Conférences en audioprothèse, accessibles avec un master, une activité de recherche et une qualification CNU.' },
+      { name: 'Appareillage pédiatrique', desc: 'Dépistage et suivi des enfants malentendants, appareillage précoce pour ne pas retarder le développement du langage.', parcoursSpe: 'Même diplôme d\'État, avec une pratique spécialisée acquise en centre pédiatrique.', parcoursProf: 'Même filière universitaire naissante que pour l\'adulte, encore peu de postes dédiés à la pédiatrie spécifiquement.' },
+      { name: 'Accompagnement des implants auditifs', desc: 'Suivi et réglage des implants cochléaires ou à ancrage osseux, en lien étroit avec les chirurgiens ORL.', parcoursSpe: 'Diplôme d\'État puis formations complémentaires spécifiques proposées par les fabricants d\'implants.', parcoursProf: 'Peu structuré académiquement ; l\'expertise se construit surtout par la pratique en centre hospitalier.' },
+      { name: 'Acouphènes et hyperacousie', desc: 'Évaluation et prise en charge des patients souffrant d\'acouphènes ou d\'une sensibilité excessive au bruit.', parcoursSpe: 'Formations complémentaires (DU) en thérapie des acouphènes après le diplôme d\'État.', parcoursProf: 'Peu de filière universitaire dédiée ; expertise obtenue par la formation continue et l\'expérience clinique.' }
+    ],
+    etablissements: ['Faculté de Pharmacie de Paris (Université Paris Cité)', 'Université Claude Bernard Lyon 1', 'Université de Montpellier', 'Université de Lille', 'Université de Lorraine (Nancy)', 'Université de Rennes 1 (centre de Fougères)', 'Université de Bordeaux', 'Université Clermont Auvergne'],
     parcours: 'Diplôme d\'État d\'audioprothésiste, formation universitaire sélective de 3 ans post-bac. Profession en forte croissance avec le vieillissement de la population.',
     remuneration: 'Salarié en réseau (Audika, Amplifon…) : environ 35 000 à 45 000 €/an brut en début de carrière. En libéral, propriétaire de son centre : souvent 60 000 à 100 000 €/an ou plus selon la patientèle.',
-    statut: 'Salarié d\'un réseau spécialisé, ou exercice libéral en nom propre (BNC) ou en société (SARL, SELARL) pour un centre indépendant.'
+    statut: 'Salarié d\'un réseau spécialisé, ou exercice libéral en nom propre (BNC) ou en société (SARL, SELARL) pour un centre indépendant.',
+    quiz: [
+      { q: 'Combien d\'années dure la formation pour devenir audioprothésiste ?', options: ['1 an', '3 ans', '6 ans', '9 ans'], correct: 1, explain: 'Le Diplôme d\'État d\'audioprothésiste se prépare en 3 ans post-bac dans une formation universitaire sélective.' },
+      { q: 'À quelle faculté est rattachée la formation d\'audioprothésiste à Paris ?', options: ['La Faculté de Pharmacie', 'La Faculté de Droit', 'Sciences Po', 'L\'INFN'], correct: 0, explain: 'À Paris, la formation d\'audioprothésiste est rattachée à la Faculté de Pharmacie de l\'Université Paris Cité.' },
+      { q: 'Quel type de dispositif un audioprothésiste suit-il en lien avec un chirurgien ORL ?', options: ['Les implants cochléaires', 'Les prothèses dentaires', 'Les lentilles de contact', 'Les orthèses plantaires'], correct: 0, explain: 'Le suivi et le réglage des implants cochléaires ou à ancrage osseux se fait en coordination avec le chirurgien ORL qui les a posés.' },
+      { q: 'Sous quel statut un audioprothésiste propriétaire de son centre exerce-t-il le plus souvent ?', options: ['Libéral en nom propre ou en société (SARL, SELARL)', 'Fonctionnaire', 'Officier ministériel', 'Collaborateur libéral uniquement'], correct: 0, explain: 'Le professionnel indépendant exerce en BNC ou via une société commerciale/libérale adaptée à son activité.' },
+      { q: 'Pourquoi la demande en audioprothésistes est-elle en forte croissance ?', options: ['Le vieillissement de la population', 'La baisse du nombre de malentendants', 'La suppression de la profession réglementée', 'Aucune de ces réponses'], correct: 0, explain: 'Le vieillissement de la population augmente mécaniquement le nombre de patients concernés par une perte auditive.' }
+    ]
   },
   {
     id: 'avocat', icon: '⚖️', name: 'Avocat',
-    specialites: 'Droit fiscal, droit de la famille, droit des affaires, droit pénal, droit social…',
+    intro: 'L\'avocat conseille, rédige des actes et représente ses clients devant les juridictions. La profession se spécialise fortement au fil de la carrière, par la pratique puis par une mention officielle.',
+    specialites: [
+      { name: 'Droit fiscal', desc: 'Optimisation et sécurisation fiscale des particuliers et entreprises, contentieux avec l\'administration fiscale.', parcoursSpe: 'Master 2 en droit fiscal, CRFPA, puis pratique en cabinet spécialisé. La mention de spécialisation « droit fiscal » s\'obtient après plusieurs années d\'exercice et un examen dédié devant le Conseil National des Barreaux.', parcoursProf: 'Devenir professeur des universités en droit fiscal suppose un doctorat, la réussite du concours national d\'agrégation de droit (privé ou public selon la section), puis un poste de Professeur des Universités — une carrière distincte de l\'exercice en cabinet.' },
+      { name: 'Droit des affaires / des sociétés', desc: 'Conseil aux entreprises : création, fusions-acquisitions, contrats commerciaux, restructurations.', parcoursSpe: 'Master 2 en droit des affaires, CRFPA, souvent complété par un LLM ou un passage en cabinet international.', parcoursProf: 'Même voie de l\'agrégation de droit privé pour l\'enseignement universitaire ; beaucoup de praticiens enseignent aussi comme chargés de cours sans être professeurs titulaires.' },
+      { name: 'Droit de la famille', desc: 'Divorce, autorité parentale, successions litigieuses, protection des majeurs.', parcoursSpe: 'Master 2 en droit privé/droit de la famille, CRFPA.', parcoursProf: 'Agrégation de droit privé pour la voie universitaire, ou enseignement vacataire en parallèle de l\'exercice libéral.' },
+      { name: 'Droit pénal', desc: 'Défense ou représentation des victimes dans les procédures pénales (délits, crimes).', parcoursSpe: 'Master 2 en droit pénal et sciences criminelles, CRFPA, stages en cabinets pénalistes ou auprès de juridictions.', parcoursProf: 'Agrégation de droit privé (section droit pénal), poste de professeur des universités possible en parallèle d\'une activité d\'avocat réduite.' },
+      { name: 'Droit social / du travail', desc: 'Conseil et contentieux en droit du travail pour les entreprises ou les salariés (licenciements, négociation collective).', parcoursSpe: 'Master 2 en droit social, CRFPA.', parcoursProf: 'Agrégation de droit privé, section droit social, pour la carrière universitaire.' }
+    ],
+    etablissements: ['EFB – École de Formation des Barreaux (Paris/Île-de-France)', 'ERAGE – École Régionale des Avocats du Grand Est', 'ERSCA – École Régionale d\'Avocats du Sud-Est (Aix-en-Provence)', 'Université Panthéon-Assas (Paris II)', 'Université Paris 1 Panthéon-Sorbonne', 'Université Toulouse I Capitole', 'Université Jean Moulin Lyon III'],
     parcours: 'Master 1 en droit puis examen d\'entrée au CRFPA (très sélectif), 18 mois de formation à l\'École des avocats, prestation de serment. Des mentions de spécialisation (dont fiscaliste) s\'obtiennent après plusieurs années de pratique et un examen dédié.',
     remuneration: 'Très hétérogène : collaborateur débutant environ 30 000 à 45 000 €/an de rétrocession d\'honoraires ; associé dans un cabinet d\'affaires ou fiscaliste expérimenté souvent 150 000 à 300 000 €/an ou davantage dans les grandes structures.',
-    statut: 'Profession libérale réglementée. Exercice en nom propre (EI), en société (SELARL, SELAS, SCP), ou comme collaborateur libéral lié par un contrat de collaboration (statut distinct du salariat).'
+    statut: 'Profession libérale réglementée. Exercice en nom propre (EI), en société (SELARL, SELAS, SCP), ou comme collaborateur libéral lié par un contrat de collaboration (statut distinct du salariat).',
+    quiz: [
+      { q: 'Quel examen très sélectif faut-il réussir pour intégrer une école d\'avocats ?', options: ['Le CRFPA', 'Le DEC', 'Le CAPET', 'Les ECN'], correct: 0, explain: 'Le CRFPA (Centre Régional de Formation Professionnelle des Avocats) organise l\'examen d\'entrée en école d\'avocats.' },
+      { q: 'Comment un avocat obtient-il une mention de spécialisation officielle (ex. droit fiscal) ?', options: ['Après plusieurs années d\'exercice et un examen dédié', 'Automatiquement après le CRFPA', 'En passant le doctorat uniquement', 'Ce n\'est pas possible'], correct: 0, explain: 'La mention de spécialisation s\'obtient après une pratique significative dans le domaine et la réussite d\'un examen devant le Conseil National des Barreaux.' },
+      { q: 'Quel concours national permet de devenir professeur des universités en droit ?', options: ['L\'agrégation de droit', 'Le CRFPA', 'Le DEC', 'Le concours PU-PH'], correct: 0, explain: 'L\'agrégation de droit (privé ou public) est le concours national qui ouvre la carrière de professeur des universités en droit.' },
+      { q: 'Sous quel statut un jeune avocat débute-t-il le plus souvent dans un cabinet ?', options: ['Collaborateur libéral', 'Salarié en CDI classique', 'Fonctionnaire stagiaire', 'Praticien hospitalier'], correct: 0, explain: 'Le collaborateur libéral est lié au cabinet par un contrat de collaboration, un statut distinct du salariat classique.' },
+      { q: 'Quel type de structure juridique un avocat peut-il utiliser pour exercer en société ?', options: ['Une SELARL ou une SELAS', 'Une SCPI uniquement', 'Une SCI obligatoirement', 'Aucune société n\'est autorisée'], correct: 0, explain: 'Les avocats peuvent exercer en société d\'exercice libéral (SELARL, SELAS) ou en société civile professionnelle (SCP).' }
+    ]
   },
   {
     id: 'compta', icon: '🧮', name: 'Expert-comptable et comptable',
-    specialites: 'Tenue et révision comptable, fiscalité des entreprises, conseil de gestion, commissariat aux comptes…',
+    intro: 'L\'expert-comptable et le comptable tiennent, contrôlent et analysent les comptes des entreprises et conseillent leurs dirigeants. Le parcours vers l\'expertise comptable est long et très structuré.',
+    specialites: [
+      { name: 'Comptabilité générale et tenue des comptes', desc: 'Saisie, contrôle et présentation des comptes annuels d\'une entreprise ou d\'une association.', parcoursSpe: 'BTS Comptabilité-Gestion ou DCG (Diplôme de Comptabilité et de Gestion), exercice en cabinet ou en entreprise.', parcoursProf: 'Enseigner en BTS/DCG en lycée ou en classe préparatoire suppose de réussir l\'agrégation d\'économie-gestion, un concours national de l\'Éducation nationale.' },
+      { name: 'Audit et commissariat aux comptes', desc: 'Certification de la sincérité et de la régularité des comptes des entreprises pour le compte des actionnaires et des tiers.', parcoursSpe: 'DSCG puis inscription sur la liste des commissaires aux comptes, souvent en parallèle du parcours d\'expert-comptable.', parcoursProf: 'Même voie que la comptabilité générale pour l\'enseignement secondaire ; pour l\'université, un doctorat en sciences de gestion et une qualification CNU (section 06) sont nécessaires.' },
+      { name: 'Fiscalité d\'entreprise', desc: 'Optimisation fiscale, déclarations, accompagnement lors des contrôles fiscaux des entreprises.', parcoursSpe: 'DCG puis DSCG avec une spécialisation fiscale, souvent complétés par un master en droit fiscal.', parcoursProf: 'Agrégation d\'économie-gestion pour l\'enseignement secondaire, doctorat et qualification CNU pour l\'université.' },
+      { name: 'Conseil en gestion et pilotage financier', desc: 'Accompagnement des dirigeants dans leurs décisions financières : budgets, prévisionnels, tableaux de bord.', parcoursSpe: 'DSCG ou master en finance/contrôle de gestion, expérience en cabinet ou en entreprise.', parcoursProf: 'Voie universitaire identique : doctorat en sciences de gestion, qualification CNU section 06, concours de recrutement.' },
+      { name: 'Paie et droit social', desc: 'Gestion de la paie des entreprises clientes et veille sur la conformité aux évolutions du droit social.', parcoursSpe: 'BTS Comptabilité-Gestion ou licence professionnelle spécialisée en paie, souvent complétée en cabinet.', parcoursProf: 'Peu de filière universitaire dédiée à la paie seule ; l\'enseignement se fait surtout en formation continue ou en BTS/licence professionnelle.' }
+    ],
+    etablissements: ['INTEC (CNAM) – Paris, formations DCG/DSCG à distance', 'IAE (instituts d\'administration des entreprises) proposant le DCG/DSCG dans de nombreuses académies', 'Écoles de commerce avec filière expertise comptable', 'Conseils régionaux de l\'Ordre des Experts-Comptables, organisateurs du stage d\'expertise comptable'],
     parcours: 'Expert-comptable : DCG (3 ans) puis DSCG (2 ans), puis 3 ans de stage professionnel validés par le Diplôme d\'Expertise Comptable (DEC) — environ 8 ans après le bac. Comptable non-expert : BTS Comptabilité-Gestion, DCG ou licence professionnelle, exercice sous la responsabilité d\'un expert-comptable ou en entreprise.',
     remuneration: 'Comptable salarié : environ 28 000 à 40 000 €/an brut. Expert-comptable libéral ou associé de cabinet : généralement 60 000 à 150 000 €/an ou plus selon la taille du cabinet et le portefeuille clients.',
-    statut: 'Expert-comptable inscrit à l\'Ordre, exerçant en nom propre ou en société d\'expertise comptable (SARL, SEL) ; comptable le plus souvent salarié d\'un cabinet ou d\'une entreprise.'
+    statut: 'Expert-comptable inscrit à l\'Ordre, exerçant en nom propre ou en société d\'expertise comptable (SARL, SEL) ; comptable le plus souvent salarié d\'un cabinet ou d\'une entreprise.',
+    quiz: [
+      { q: 'Quel diplôme final valide le parcours d\'expert-comptable, après le stage professionnel ?', options: ['Le DEC (Diplôme d\'Expertise Comptable)', 'Le DCG', 'Le BTS CG', 'Le DSCG'], correct: 0, explain: 'Le DEC vient après le DCG, le DSCG et 3 ans de stage professionnel : il conclut le parcours vers l\'expertise comptable.' },
+      { q: 'Combien d\'années sépare, environ, le bac de l\'obtention du titre d\'expert-comptable ?', options: ['3 ans', '5 ans', '8 ans', '12 ans'], correct: 2, explain: 'DCG (3 ans) + DSCG (2 ans) + 3 ans de stage professionnel = environ 8 ans après le bac.' },
+      { q: 'Quel concours permet d\'enseigner la comptabilité/gestion en lycée ou en classe préparatoire ?', options: ['L\'agrégation d\'économie-gestion', 'Le CRFPA', 'Le DEC', 'Les ECN'], correct: 0, explain: 'L\'agrégation d\'économie-gestion est le concours national de l\'Éducation nationale pour ces disciplines.' },
+      { q: 'Qui organise le stage professionnel obligatoire avant le DEC ?', options: ['Le Conseil régional de l\'Ordre des Experts-Comptables', 'Le CRFPA', 'L\'INFN', 'La Chambre des Notaires'], correct: 0, explain: 'Chaque Conseil régional de l\'Ordre des Experts-Comptables encadre et valide le stage professionnel de 3 ans.' },
+      { q: 'Quelle mission est spécifique au commissaire aux comptes, au-delà de la comptabilité générale ?', options: ['Certifier la sincérité des comptes pour les tiers', 'Gérer uniquement la paie', 'Rédiger des actes notariés', 'Plaider en justice'], correct: 0, explain: 'Le commissariat aux comptes consiste à certifier, de façon indépendante, la régularité et la sincérité des comptes d\'une entreprise.' }
+    ]
   },
   {
     id: 'notaire', icon: '📜', name: 'Notaire',
-    specialites: 'Droit de la famille et successions, droit immobilier, droit des affaires et des sociétés…',
+    intro: 'Le notaire authentifie les actes juridiques (ventes immobilières, successions, contrats de mariage) et sécurise les opérations les plus engageantes de la vie des particuliers et des entreprises.',
+    specialites: [
+      { name: 'Droit de la famille et des successions', desc: 'Contrats de mariage, donations, règlement des successions — le cœur historique du métier de notaire.', parcoursSpe: 'Master 2 en droit notarial, stage de 2 ans comme notaire assistant/salarié.', parcoursProf: 'Un notaire expérimenté peut devenir maître de conférences associé en droit notarial dans une université partenaire de l\'INFN, en parallèle de son exercice.' },
+      { name: 'Droit immobilier', desc: 'Ventes immobilières, copropriété, urbanisme, garanties liées aux transactions.', parcoursSpe: 'Master 2 en droit notarial ou droit immobilier, stage professionnel de 2 ans.', parcoursProf: 'Même voie d\'enseignant associé via l\'INFN, réservée aux praticiens expérimentés souhaitant transmettre leur expertise.' },
+      { name: 'Droit des affaires et des sociétés', desc: 'Transmission d\'entreprise, montages sociétaires, pactes d\'associés dans un cadre notarié.', parcoursSpe: 'Master 2 en droit notarial avec spécialisation en droit des affaires, stage professionnel.', parcoursProf: 'Enseignement associé possible en parallèle de l\'exercice, via les universités partenaires de l\'INFN.' },
+      { name: 'Droit rural', desc: 'Exploitations agricoles, baux ruraux, transmission du foncier agricole.', parcoursSpe: 'Master 2 en droit notarial avec une pratique développée en zone rurale.', parcoursProf: 'Transmission surtout par la pratique et la formation continue, peu de filière académique dédiée spécifiquement au droit rural notarial.' }
+    ],
+    etablissements: ['INFN – Institut National des Formations Notariales (centres régionaux)', 'Université Paris II Panthéon-Assas – Master 2 Droit notarial', 'Université Jean Moulin Lyon III – Master 2 Droit notarial', 'Université de Poitiers – Master 2 Droit notarial', 'Université de Rouen Normandie – Master 2 Droit notarial', 'Université de Strasbourg – Master 2 Droit notarial'],
     parcours: 'Master 2 en droit notarial puis Diplôme Supérieur du Notariat (voie universitaire) ou voie professionnelle via l\'Institut National des Formations Notariales, suivi d\'un stage de 2 ans comme notaire assistant/salarié, puis nomination par le Garde des Sceaux.',
     remuneration: 'Notaire salarié : environ 50 000 à 70 000 €/an. Notaire titulaire ou associé d\'un office : rémunéré par une quote-part des émoluments réglementés et d\'honoraires libres, souvent 100 000 à 300 000 €/an ou plus dans les études importantes — très variable selon la taille et la localisation de l\'office.',
-    statut: 'Officier public et ministériel. Exercice en société civile professionnelle (SCP), société d\'exercice libéral (SELARL/SELAS), ou en tant que salarié d\'une étude.'
+    statut: 'Officier public et ministériel. Exercice en société civile professionnelle (SCP), société d\'exercice libéral (SELARL/SELAS), ou en tant que salarié d\'une étude.',
+    quiz: [
+      { q: 'Qui nomme officiellement un notaire titulaire d\'office en France ?', options: ['Le Garde des Sceaux', 'Le Conseil National des Universités', 'Le maire de la commune', 'L\'Ordre des Experts-Comptables'], correct: 0, explain: 'La nomination d\'un notaire relève du ministère de la Justice, par le Garde des Sceaux.' },
+      { q: 'Quel institut encadre la formation professionnelle des futurs notaires ?', options: ['L\'INFN', 'Le CRFPA', 'L\'INTEC', 'Le CNU'], correct: 0, explain: 'L\'Institut National des Formations Notariales (INFN) organise la voie professionnelle vers le notariat.' },
+      { q: 'Comment est rémunéré un notaire titulaire d\'un office pour la plupart de ses actes réglementés ?', options: ['Par des émoluments tarifés réglementés', 'Uniquement par des honoraires libres', 'Par un salaire fixe de l\'État', 'Il n\'est pas rémunéré pour ces actes'], correct: 0, explain: 'Les émoluments notariés sont fixés par la réglementation pour la majorité des actes courants (vente, succession…).' },
+      { q: 'Quel type de droit concerne les baux ruraux et le foncier agricole chez le notaire ?', options: ['Le droit rural', 'Le droit pénal', 'Le droit fiscal international', 'Le droit du travail'], correct: 0, explain: 'Le droit rural couvre notamment les baux ruraux et la transmission des exploitations agricoles.' },
+      { q: 'Sous quelle forme juridique plusieurs notaires peuvent-ils s\'associer pour exercer ensemble ?', options: ['Une société civile professionnelle (SCP) ou une SEL', 'Une SCPI', 'Une association loi 1901', 'Un GIE uniquement'], correct: 0, explain: 'Les notaires associés exercent souvent en SCP ou en société d\'exercice libéral (SELARL/SELAS).' }
+    ]
   },
   {
     id: 'marchand', icon: '🏗️', name: 'Marchand de biens',
-    specialites: 'Achat-rénovation-revente de biens résidentiels, division parcellaire, transformation de locaux…',
+    intro: 'Le marchand de biens achète des biens immobiliers pour les revendre, souvent après rénovation ou division, en réalisant une marge sur l\'opération. C\'est une activité commerciale non réglementée, sans ordre professionnel.',
+    specialites: [
+      { name: 'Achat-rénovation-revente résidentiel', desc: 'Acquisition d\'un logement à rénover, travaux, puis revente avec une marge sur la plus-value créée.', parcoursSpe: 'Aucun diplôme obligatoire ; connaissances en immobilier, travaux et financement souvent acquises par l\'expérience ou une formation courte.', parcoursProf: 'Il n\'existe pas de statut de professeur ou de filière universitaire dédiée ; la transmission passe par le compagnonnage ou des formations en école de commerce/immobilier.' },
+      { name: 'Division parcellaire', desc: 'Découper un terrain ou un immeuble en plusieurs lots (parcelles, logements) pour les revendre séparément.', parcoursSpe: 'Connaissances pointues en urbanisme et en règles de copropriété, souvent acquises via une formation immobilière ou juridique.', parcoursProf: 'Même constat : pas de filière académique dédiée, enseignement possible en module spécialisé dans une école d\'immobilier.' },
+      { name: 'Transformation de locaux', desc: 'Convertir des bureaux ou des commerces vacants en logements, ou inversement, selon la demande du marché.', parcoursSpe: 'Expertise en réglementation du changement de destination et en montage d\'opérations, souvent développée en école d\'immobilier ou en reconversion professionnelle.', parcoursProf: 'Pas de statut académique dédié ; transmission par la pratique et les réseaux professionnels du secteur.' },
+      { name: 'Marchand de biens en location meublée', desc: 'Achat-revente combiné à une activité locative meublée transitoire pour optimiser la rentabilité avant la revente.', parcoursSpe: 'Connaissances en fiscalité de la location meublée (LMNP/LMP), souvent acquises via des formations spécialisées ou un accompagnement par un expert-comptable.', parcoursProf: 'Aucune filière universitaire propre ; expertise transmise par la pratique et des formations professionnelles courtes.' }
+    ],
+    etablissements: ['ESPI – École Supérieure des Professions Immobilières', 'ICH – Institut de Certification des Hommes (CNAM)', 'Écoles de commerce proposant des mastères spécialisés en immobilier', 'Formations continues proposées par les Chambres de Commerce et d\'Industrie (CCI)'],
     parcours: 'Aucun diplôme réglementé n\'est exigé : activité commerciale libre, souvent exercée après une formation en immobilier, commerce, droit ou gestion, ou en reconversion. À la différence de l\'agent immobilier, aucune carte professionnelle (carte T) n\'est requise puisqu\'il achète et revend pour son propre compte.',
     remuneration: 'Aucun salaire fixe : le revenu correspond à la marge dégagée sur chaque opération d\'achat-revente, très variable et irrégulier selon le nombre et la réussite des opérations menées.',
-    statut: 'Activité commerciale relevant des BIC. Exercice en nom propre ou, le plus souvent, en société (SAS, SASU, SARL) pour limiter la responsabilité et optimiser la fiscalité des opérations.'
+    statut: 'Activité commerciale relevant des BIC. Exercice en nom propre ou, le plus souvent, en société (SAS, SASU, SARL) pour limiter la responsabilité et optimiser la fiscalité des opérations.',
+    quiz: [
+      { q: 'Le marchand de biens a-t-il besoin d\'une carte professionnelle (carte T) pour exercer ?', options: ['Non, car il achète et revend pour son propre compte', 'Oui, comme l\'agent immobilier', 'Oui, mais seulement à Paris', 'Non, mais un diplôme d\'État est obligatoire'], correct: 0, explain: 'Contrairement à l\'agent immobilier qui agit pour le compte de tiers, le marchand de biens achète et revend pour lui-même : la carte T ne s\'applique pas.' },
+      { q: 'De quoi dépend principalement le revenu d\'un marchand de biens ?', options: ['La marge réalisée sur chaque opération d\'achat-revente', 'Un salaire fixe mensuel', 'Des honoraires réglementés', 'Une quote-part d\'émoluments'], correct: 0, explain: 'Il n\'y a pas de salaire fixe : le revenu correspond à la marge dégagée sur les opérations menées, donc très irrégulier.' },
+      { q: 'Sous quel régime fiscal l\'activité de marchand de biens est-elle imposée ?', options: ['Les BIC (Bénéfices Industriels et Commerciaux)', 'Les BNC uniquement', 'Les traitements et salaires', 'Elle n\'est pas imposable'], correct: 0, explain: 'L\'achat-revente immobilier à titre habituel est un acte de commerce, imposé dans la catégorie des BIC.' },
+      { q: 'Qu\'est-ce que la "division parcellaire" pratiquée par certains marchands de biens ?', options: ['Découper un bien en plusieurs lots à revendre séparément', 'Louer un bien meublé', 'Créer une SCPI', 'Devenir agent immobilier'], correct: 0, explain: 'La division parcellaire consiste à fractionner un terrain ou un immeuble en plusieurs lots distincts, revendus séparément.' },
+      { q: 'Pourquoi un marchand de biens exerce-t-il le plus souvent en société (SAS, SARL…) plutôt qu\'en nom propre ?', options: ['Pour limiter sa responsabilité et optimiser la fiscalité', 'Parce que la loi l\'impose', 'Pour obtenir la carte T', 'Pour bénéficier d\'un statut de fonctionnaire'], correct: 0, explain: 'La société permet de limiter la responsabilité personnelle et d\'optimiser le traitement fiscal des opérations successives.' }
+    ]
   }
 ];
+function cultureMetier(id) { return CULTURE_METIERS.find(function (m) { return m.id === id; }) || null; }
 function tplCulture(v) {
   var cards = CULTURE_METIERS.map(function (m, i) {
-    var open = v.cultureOpen === m.id;
-    return '<div class="stagger" style="animation-delay:' + (i * 0.04).toFixed(2) + 's;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--panel);margin-top:10px;">' +
-      '<button data-action="cultureToggle" data-id="' + esc(m.id) + '" style="width:100%;background:none;border:none;padding:16px;display:flex;align-items:center;gap:13px;cursor:pointer;color:var(--ink);text-align:left;">' +
-      '<span style="flex-shrink:0;font-size:22px;">' + m.icon + '</span>' +
-      '<span style="flex:1;font:500 14px \'Inter\',sans-serif;">' + esc(m.name) + '</span>' +
-      '<span style="font:400 15px Fraunces,serif;color:var(--acc);transition:transform .25s;transform:rotate(' + (open ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
-      (open ? '<div style="padding:0 16px 18px;display:flex;flex-direction:column;gap:12px;">' +
-        '<div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--acc);">SPÉCIALITÉS</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(m.specialites) + '</div></div>' +
-        '<div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--acc);">PARCOURS & ÉTUDES</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(m.parcours) + '</div></div>' +
-        '<div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--acc);">RÉMUNÉRATION INDICATIVE</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(m.remuneration) + '</div></div>' +
-        '<div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--acc);">STATUT JURIDIQUE USUEL</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(m.statut) + '</div></div>' +
-        '</div>' : '') + '</div>';
+    return '<button data-action="cultureGo" data-id="' + esc(m.id) + '" class="hv-a stagger" style="animation-delay:' + (i * 0.04).toFixed(2) + 's;width:100%;text-align:left;border:1px solid var(--line);border-radius:18px;background:var(--panel);padding:16px;display:flex;align-items:center;gap:13px;cursor:pointer;color:var(--ink);box-sizing:border-box;">' +
+      '<span style="flex-shrink:0;font-size:24px;">' + m.icon + '</span>' +
+      '<span style="flex:1;min-width:0;"><span style="display:block;font:500 14.5px \'Inter\',sans-serif;">' + esc(m.name) + '</span>' +
+      '<span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink3);margin-top:3px;">' + m.specialites.length + ' spécialités · ' + m.quiz.length + ' questions</span></span>' +
+      '<span style="flex-shrink:0;font:400 20px Fraunces,serif;color:var(--acc);">&#8250;</span></button>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
     '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:16px;">Culture <span style="font-style:italic;">générale</span></div>' +
-    '<div style="font:400 13px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;">Les professions que tout CGP croise chez ses clients : parcours, rémunération indicative et statut juridique — utile pour comprendre leur situation patrimoniale. Chiffres indicatifs, très variables selon l\'expérience, la zone et la structure d\'exercice.</div></div>' +
-    '<div style="margin:6px 24px 0;">' + cards + '</div>' +
+    '<div style="font:400 13px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;">Les professions que tout CGP croise chez ses clients — utile pour comprendre leur situation patrimoniale. Chiffres indicatifs, très variables selon l\'expérience, la zone et la structure d\'exercice.</div></div>' +
+    '<div style="margin:6px 24px 0;display:flex;flex-direction:column;gap:10px;">' + cards + '</div>' +
     '<div style="height:26px;"></div></div>';
+}
+function tplCultureDetail(v) {
+  var m = cultureMetier(v.cultureSel);
+  if (!m) return tplCulture(v);
+  var secs = m.specialites.map(function (s, i) {
+    var open = v.cultureSecOpen === i;
+    return '<div style="border:1px solid var(--line);border-left:3px solid ' + hexA('#dbb46f', 0.6) + ';border-radius:14px;overflow:hidden;background:var(--panel);margin-top:9px;">' +
+      '<button data-action="cultureSecToggle" data-i="' + i + '" style="width:100%;background:none;border:none;padding:13px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--ink);text-align:left;">' +
+      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + hexA('#dbb46f', 0.16) + ';display:flex;align-items:center;justify-content:center;font:600 10px \'Inter\',sans-serif;color:var(--gold);">' + (i + 1) + '</span>' +
+      '<span style="flex:1;font:500 12.5px \'Inter\',sans-serif;">' + esc(s.name) + '</span>' +
+      '<span style="font:400 14px Fraunces,serif;color:var(--acc);transition:transform .25s;transform:rotate(' + (open ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
+      (open ? '<div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:9px;">' +
+        '<div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--acc);">EN QUOI ÇA CONSISTE</div><div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(s.desc) + '</div></div>' +
+        '<div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--acc);">PARCOURS POUR SE SPÉCIALISER</div><div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(s.parcoursSpe) + '</div></div>' +
+        '<div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--acc);">DEVENIR ENSEIGNANT / PROFESSEUR</div><div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(s.parcoursProf) + '</div></div>' +
+        '</div>' : '') + '</div>';
+  }).join('');
+  var etabs = m.etablissements.map(function (e) { return '<li style="margin-top:5px;">' + esc(e) + '</li>'; }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Métiers</button>' +
+    '<div style="display:flex;align-items:center;gap:13px;margin-top:16px;"><span style="font-size:30px;">' + m.icon + '</span>' +
+    '<div style="font:300 28px/1.1 Fraunces,serif;letter-spacing:-.02em;">' + esc(m.name) + '</div></div>' +
+    '<div style="font:400 13px/1.65 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">' + esc(m.intro) + '</div></div>' +
+    '<div style="margin:22px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">SPÉCIALITÉS DÉTAILLÉES</div>' + secs + '</div>' +
+    '<div style="margin:20px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">ÉTABLISSEMENTS (EXEMPLES CONNUS)</div>' +
+    '<ul style="margin:8px 0 0;padding-left:20px;font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);">' + etabs + '</ul></div>' +
+    '<div style="margin:20px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">RÉMUNÉRATION INDICATIVE</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + esc(m.remuneration) + '</div></div>' +
+    '<div style="margin:20px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">STATUT JURIDIQUE USUEL</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + esc(m.statut) + '</div></div>' +
+    '<div style="padding:26px 24px 30px;"><button data-action="startCultureTest" data-id="' + esc(m.id) + '" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Tester ce métier · ' + m.quiz.length + ' questions</button></div>' +
+    '<div style="height:10px;"></div></div>';
+}
+function tplCultureTest(v) {
+  var m = cultureMetier(v.cultureSel);
+  if (!m) return tplCulture(v);
+  var idx = v.cultureTestIdx, total = m.quiz.length;
+  if (idx >= total) {
+    var pct = Math.round(v.cultureTestScore / total * 100);
+    return '<div style="flex:1;overflow:auto;min-height:0;display:flex;flex-direction:column;padding:58px 24px 0;">' +
+      '<button data-action="goBack" class="btn-back hv-a" style="align-self:flex-start;"><span class="bkarr">&#8249;</span> ' + esc(m.name) + '</button>' +
+      '<div style="background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:24px;text-align:center;margin-top:24px;">' +
+      '<div style="font:400 12px \'Inter\',sans-serif;color:var(--ink2);">Terminé !</div>' +
+      '<div style="font:300 46px Fraunces,serif;margin-top:8px;">' + v.cultureTestScore + ' / ' + total + '</div>' +
+      '<div style="font:400 12.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + (pct >= 80 ? 'Excellent — culture générale solide.' : pct >= 50 ? 'Bien, quelques révisions possibles.' : 'À revoir — relis la fiche du métier.') + '</div>' +
+      '<button data-action="goBack" style="margin-top:18px;border:none;border-radius:999px;padding:14px 22px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Retour au métier →</button></div></div>';
+  }
+  var q = m.quiz[idx];
+  var answered = v.cultureTestAnswered;
+  var opts = q.options.map(function (o, i) {
+    var isCorrect = i === q.correct, isPick = i === v.cultureTestPick;
+    var bg = 'var(--panel)', bd = 'var(--line)', col = 'var(--ink)';
+    if (answered) {
+      if (isCorrect) { bg = hexA('#4fcfa8', 0.16); bd = '#4fcfa8'; col = '#4fcfa8'; }
+      else if (isPick) { bg = hexA('#e2895f', 0.16); bd = '#e2895f'; col = '#e2895f'; }
+    }
+    return '<button ' + (answered ? '' : 'data-action="cultureTestPick" data-i="' + i + '"') + ' style="width:100%;text-align:left;background:' + bg + ';border:1px solid ' + bd + ';border-radius:14px;padding:13px 14px;font:400 13px/1.5 \'Inter\',sans-serif;color:' + col + ';cursor:' + (answered ? 'default' : 'pointer') + ';margin-top:8px;">' + esc(o) + '</button>';
+  }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> ' + esc(m.name) + '</button>' +
+    '<div style="font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:16px;">Question ' + (idx + 1) + ' / ' + total + ' · Score ' + v.cultureTestScore + '</div>' +
+    '<div style="font:300 21px/1.4 Fraunces,serif;margin-top:10px;">' + esc(q.q) + '</div></div>' +
+    '<div style="margin:18px 24px 0;">' + opts + '</div>' +
+    (answered ? '<div style="margin:16px 24px 0;padding:13px 14px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);">💡 ' + esc(q.explain) + '</div>' +
+      '<div style="padding:20px 24px 30px;"><button data-action="cultureTestNext" style="width:100%;border:none;border-radius:999px;padding:15px;font:600 13px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + (idx + 1 >= total ? 'Voir le résultat →' : 'Question suivante →') + '</button></div>' : '<div style="height:20px;"></div>') +
+    '</div>';
 }
 
 function tplLabo() {
@@ -2730,6 +2910,8 @@ function render() {
   else if (v.isProfile) html = tplProfile(v);
   else if (v.isLabo) html = tplLabo(v);
   else if (v.isCulture) html = tplCulture(v);
+  else if (v.isCultureDetail) html = tplCultureDetail(v);
+  else if (v.isCultureTest) html = tplCultureTest(v);
   else if (v.isMental) html = tplMental(v);
   else if (v.isBuilder) html = tplBuilder(v);
   else if (v.isSearch) html = tplSearch(v);
@@ -2851,7 +3033,28 @@ function onAppClick(e) {
     case 'goBack': goBack(); break;
     case 'goBrowse': goChild('browse'); break;
     case 'goCulture': goChild('culture'); break;
-    case 'cultureToggle': state.cultureOpen = state.cultureOpen === d.id ? null : d.id; render(); break;
+    case 'cultureGo': state.cultureSel = d.id; state.cultureSecOpen = null; goChild('cultureDetail'); break;
+    case 'cultureSecToggle': state.cultureSecOpen = state.cultureSecOpen === +d.i ? null : +d.i; render(); break;
+    case 'startCultureTest':
+      state.cultureSel = d.id || state.cultureSel;
+      state.cultureTestIdx = 0; state.cultureTestScore = 0; state.cultureTestPick = null; state.cultureTestAnswered = false;
+      goChild('cultureTest');
+      break;
+    case 'cultureTestPick': {
+      if (state.cultureTestAnswered) break;
+      var cm = cultureMetier(state.cultureSel);
+      if (!cm) break;
+      var cq = cm.quiz[state.cultureTestIdx];
+      var ci = +d.i;
+      state.cultureTestPick = ci; state.cultureTestAnswered = true;
+      if (ci === cq.correct) state.cultureTestScore++;
+      render();
+      break;
+    }
+    case 'cultureTestNext':
+      state.cultureTestIdx++; state.cultureTestPick = null; state.cultureTestAnswered = false;
+      render();
+      break;
     case 'goSrs': go('srs'); break;
     case 'goCourses': go('courses'); break;
     case 'goExamPick': goChild('examPick'); break;
