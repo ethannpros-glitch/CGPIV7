@@ -743,6 +743,14 @@ function computeVals() {
     cultureTestPick: st.cultureTestPick != null ? st.cultureTestPick : null, cultureTestAnswered: !!st.cultureTestAnswered,
     cultureBestAll: (S && S.cultureBest) || {}, cultureSeenAll: (S && S.cultureSeen) || {},
     cultureSpecSeenAll: (S && S.cultureSpecSeen) || {},
+    cultureTestedCount: st.ready ? CULTURE_METIERS.filter(function (m) { return S.cultureBest && S.cultureBest[m.id] != null; }).length : 0,
+    cultureOverallPct: st.ready ? (function () {
+      var tested = CULTURE_METIERS.filter(function (m) { return S.cultureBest && S.cultureBest[m.id] != null; });
+      if (!tested.length) return 0;
+      var sumBest = 0, sumTot = 0;
+      tested.forEach(function (m) { sumBest += S.cultureBest[m.id]; sumTot += m.quiz.length; });
+      return sumTot ? Math.round(100 * sumBest / sumTot) : 0;
+    })() : 0,
     isSearch: scr === 'search',
     showTabs: ['home', 'browse', 'cat', 'srs', 'courses', 'fiche', 'ficheReview', 'coursePole', 'progress', 'profile', 'examPick', 'labo', 'mental', 'builder', 'search', 'parcours'].indexOf(scr) >= 0,
     mentalBest: S.mentalBest || 0,
@@ -1812,7 +1820,7 @@ function tplSrs(v) {
     '<div style="height:26px;"></div></div>';
 }
 
-function tplFicheCard(f, idx, accent) {
+function tplFicheCard(f, idx, accent, action) {
   var pr = f.progress || 0;
   var acc = accent || 'var(--acc)';
   var ringColor = pr >= 80 ? 'var(--acc2)' : pr > 0 ? acc : 'var(--line)';
@@ -1822,7 +1830,7 @@ function tplFicheCard(f, idx, accent) {
       ? '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'Inter\',sans-serif;letter-spacing:.08em;color:' + acc + ';margin-top:5px;">' + pr + '% EN COURS</span>'
       : '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--dim);margin-top:5px;">' + esc(f.meta) + '</span>';
   var numTag = idx != null ? '<span style="flex-shrink:0;width:22px;font:500 11px \'Inter\',sans-serif;color:var(--dim);text-align:center;">' + (idx < 9 ? '0' : '') + (idx + 1) + '</span>' : '';
-  return '<button data-action="ficheGo" data-fiche="' + esc(f.key) + '" class="hv-a" style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;box-sizing:border-box;">' +
+  return '<button data-action="' + (action || 'ficheGo') + '" data-fiche="' + esc(f.key) + '" class="hv-a" style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;box-sizing:border-box;">' +
     numTag +
     '<span style="flex-shrink:0;position:relative;width:46px;height:46px;border-radius:50%;background:conic-gradient(' + ringColor + ' ' + (pr * 3.6) + 'deg,var(--line) ' + (pr * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
     '<span style="width:39px;height:39px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:17px;">' + esc(f.icon) + '</span></span>' +
@@ -1847,10 +1855,12 @@ function tplCourses(v) {
     '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink2);cursor:pointer;flex-shrink:0;margin-top:2px;">🔍</button></div>' +
     '<div style="margin:22px 24px 0;display:flex;flex-direction:column;gap:12px;">' + cards +
     '<button data-action="goCulture" class="hv-a" style="position:relative;overflow:hidden;width:100%;background:linear-gradient(120deg,' + hexA('#dbb46f', 0.16) + ',var(--panel) 60%);border:1px solid ' + hexA('#dbb46f', 0.35) + ';border-radius:20px;padding:19px 20px;text-align:left;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:16px;box-sizing:border-box;">' +
-    '<span style="flex-shrink:0;font-size:26px;">🎓</span>' +
-    '<span style="flex:1;min-width:0;"><span style="display:block;font:300 17px/1.25 Fraunces,serif;">Culture générale</span>' +
-    '<span style="display:block;font:500 9.5px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-top:6px;">LES MÉTIERS DU SECTEUR</span></span>' +
-    '<span style="flex-shrink:0;font:400 20px Fraunces,serif;color:var(--gold);">&#8250;</span></button>' +
+    '<span style="position:absolute;right:-8px;top:-16px;font-size:68px;opacity:.13;transform:rotate(8deg);pointer-events:none;">🎓</span>' +
+    '<span style="flex-shrink:0;position:relative;width:56px;height:56px;border-radius:50%;background:conic-gradient(var(--gold) ' + (v.cultureOverallPct * 3.6) + 'deg,var(--line) ' + (v.cultureOverallPct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
+    '<span style="width:47px;height:47px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:500 12px \'Inter\',sans-serif;color:var(--gold);">' + v.cultureOverallPct + '%</span></span>' +
+    '<span style="flex:1;min-width:0;position:relative;"><span style="display:block;font:300 17px/1.25 Fraunces,serif;">Culture générale</span>' +
+    '<span style="display:block;font:500 9.5px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-top:6px;">' + v.cultureTestedCount + '/' + CULTURE_METIERS.length + ' MÉTIERS · MAÎTRISE ' + v.cultureOverallPct + '%</span></span>' +
+    '<span style="flex-shrink:0;font:400 20px Fraunces,serif;color:var(--gold);position:relative;">&#8250;</span></button>' +
     '</div>' +
     '<div style="height:26px;"></div></div>';
 }
@@ -2366,59 +2376,71 @@ var CULTURE_METIERS = [
 ];
 function cultureMetier(id) { return CULTURE_METIERS.find(function (m) { return m.id === id; }) || null; }
 function tplCulture(v) {
-  var testedCount = 0;
+  var acc = 'var(--gold)';
   var cards = CULTURE_METIERS.map(function (m, i) {
     var best = v.cultureBestAll[m.id];
     var tested = best != null;
-    if (tested) testedCount++;
     var pct = tested ? Math.round(100 * best / m.quiz.length) : 0;
-    var ring = tested
-      ? '<span style="flex-shrink:0;position:relative;width:40px;height:40px;border-radius:50%;background:conic-gradient(var(--acc) ' + (pct * 3.6) + 'deg,var(--line) ' + (pct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;"><span style="width:33px;height:33px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font:600 9.5px \'Inter\',sans-serif;color:var(--acc);">' + pct + '%</span></span>'
-      : '<span style="flex-shrink:0;font-size:24px;">' + m.icon + '</span>';
-    return '<button data-action="cultureGo" data-id="' + esc(m.id) + '" class="hv-a stagger" style="animation-delay:' + (i * 0.04).toFixed(2) + 's;width:100%;text-align:left;border:1px solid var(--line);border-radius:18px;background:var(--panel);padding:16px;display:flex;align-items:center;gap:13px;cursor:pointer;color:var(--ink);box-sizing:border-box;">' +
-      ring +
-      '<span style="flex:1;min-width:0;"><span style="display:block;font:500 14.5px \'Inter\',sans-serif;">' + esc(m.name) + '</span>' +
-      '<span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink3);margin-top:3px;">' + (tested ? 'Testé · meilleur score ' + best + '/' + m.quiz.length : m.specialites.length + ' spécialités · ' + m.quiz.length + ' questions') + '</span></span>' +
-      '<span style="flex-shrink:0;font:400 20px Fraunces,serif;color:var(--acc);">&#8250;</span></button>';
+    var f = { key: m.id, title: m.name, icon: m.icon, meta: m.specialites.length + ' spécialités', progress: pct };
+    return '<div class="stagger" style="animation-delay:' + (i * 0.04).toFixed(2) + 's;">' + tplFicheCard(f, i, acc, 'cultureGo') + '</div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
-    '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:16px;">Culture <span style="font-style:italic;">générale</span></div>' +
-    '<div style="font:400 13px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;">Les professions que tout CGP croise chez ses clients — utile pour comprendre leur situation patrimoniale. Chiffres indicatifs, très variables selon l\'expérience, la zone et la structure d\'exercice.</div>' +
-    '<div style="margin-top:14px;display:flex;align-items:center;gap:10px;"><div style="flex:1;height:5px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="width:' + Math.round(100 * testedCount / CULTURE_METIERS.length) + '%;height:5px;background:linear-gradient(90deg,var(--acc2),var(--acc));"></div></div><span style="font:500 11px \'Inter\',sans-serif;color:var(--ink3);flex-shrink:0;">' + testedCount + '/' + CULTURE_METIERS.length + ' métiers testés</span></div></div>' +
-    '<div style="margin:16px 24px 0;display:flex;flex-direction:column;gap:10px;">' + cards + '</div>' +
+    '<div style="padding:0 0 0;position:relative;background:linear-gradient(160deg,' + hexA('#dbb46f', 0.22) + ',transparent 65%);">' +
+    '<div style="padding:58px 24px 22px;"><button data-action="goBack" class="btn-back hv-a" style="color:' + acc + ';"><span class="bkarr">&#8249;</span> Fiches</button>' +
+    '<div style="display:flex;align-items:center;gap:14px;margin-top:16px;">' +
+    '<span style="flex-shrink:0;width:50px;height:50px;border-radius:16px;background:' + hexA('#dbb46f', 0.18) + ';border:1px solid ' + hexA('#dbb46f', 0.4) + ';display:flex;align-items:center;justify-content:center;font-size:22px;">🎓</span>' +
+    '<div><div style="font:300 28px/1.1 Fraunces,serif;letter-spacing:-.02em;">Culture générale</div>' +
+    '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--ink3);margin-top:6px;">' + v.cultureTestedCount + '/' + CULTURE_METIERS.length + ' TESTÉS · MAÎTRISE ' + v.cultureOverallPct + '%</div></div></div>' +
+    '<div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">Les professions que tout CGP croise chez ses clients — utile pour comprendre leur situation patrimoniale. Chiffres indicatifs, très variables selon l\'expérience, la zone et la structure d\'exercice.</div></div></div>' +
+    '<div style="margin:6px 24px 0;display:flex;flex-direction:column;gap:9px;">' + cards + '</div>' +
     '<div style="height:26px;"></div></div>';
 }
 function tplCultureDetail(v) {
   var m = cultureMetier(v.cultureSel);
   if (!m) return tplCulture(v);
+  var acc = 'var(--gold)';
   var specSeenCount = 0;
+  var toc = m.specialites.map(function (s, i) {
+    var seen = !!v.cultureSpecSeenAll[m.id + '#' + i];
+    var col = seen ? acc : acc;
+    return '<button data-action="cultureJump" data-i="' + i + '" style="flex-shrink:0;width:30px;height:30px;border-radius:50%;background:' + hexA(col, seen ? 0.28 : 0.14) + ';border:1px solid ' + hexA(col, 0.4) + ';color:' + col + ';font:500 11px \'Inter\',sans-serif;cursor:pointer;">' + (seen ? '✓' : (i + 1)) + '</button>';
+  }).join('');
   var secs = m.specialites.map(function (s, i) {
     var open = v.cultureSecOpen === i;
     var seen = !!v.cultureSpecSeenAll[m.id + '#' + i];
     if (seen) specSeenCount++;
-    return '<div style="border:1px solid var(--line);border-left:3px solid ' + hexA('#dbb46f', 0.6) + ';border-radius:14px;overflow:hidden;background:var(--panel);margin-top:9px;">' +
-      '<button data-action="cultureSecToggle" data-i="' + i + '" style="width:100%;background:none;border:none;padding:13px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--ink);text-align:left;">' +
-      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + (seen ? 'var(--gold)' : hexA('#dbb46f', 0.16)) + ';display:flex;align-items:center;justify-content:center;font:600 10px \'Inter\',sans-serif;color:' + (seen ? 'var(--on)' : 'var(--gold)') + ';">' + (seen ? '✓' : (i + 1)) + '</span>' +
-      '<span style="flex:1;font:500 12.5px \'Inter\',sans-serif;">' + esc(s.name) + '</span>' +
-      '<span style="font:400 14px Fraunces,serif;color:var(--acc);transition:transform .25s;transform:rotate(' + (open ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
-      (open ? '<div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:9px;">' +
-        '<div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--acc);">EN QUOI ÇA CONSISTE</div><div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(s.desc) + '</div></div>' +
-        '<div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--acc);">PARCOURS POUR SE SPÉCIALISER</div><div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(s.parcoursSpe) + '</div></div>' +
-        '<div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--acc);">DEVENIR ENSEIGNANT / PROFESSEUR</div><div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(s.parcoursProf) + '</div></div>' +
+    return '<div id="csec-' + i + '" style="margin-top:12px;border:1px solid var(--line);border-left:3px solid ' + hexA(acc, 0.6) + ';border-radius:16px;overflow:hidden;background:var(--panel);">' +
+      '<button data-action="cultureSecToggle" data-i="' + i + '" style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:' + acc + ';font:500 10px \'Inter\',sans-serif;letter-spacing:.12em;text-align:left;">' +
+      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + (seen ? acc : hexA(acc, 0.16)) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;font:500 10px \'Inter\',sans-serif;color:' + (seen ? 'var(--on)' : acc) + ';">' + (seen ? '✓' : (i + 1)) + '</span>' +
+      '<span style="flex:1;text-transform:none;letter-spacing:0;font:500 13px \'Inter\',sans-serif;color:var(--ink);">' + esc(s.name) + '</span>' +
+      '<span style="flex-shrink:0;transition:transform .25s;transform:rotate(' + (open ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
+      (open ? '<div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:10px;">' +
+        '<div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:' + acc + ';">EN QUOI ÇA CONSISTE</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(s.desc) + '</div></div>' +
+        '<div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:' + acc + ';">PARCOURS POUR SE SPÉCIALISER</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(s.parcoursSpe) + '</div></div>' +
+        '<div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:' + acc + ';">DEVENIR ENSEIGNANT / PROFESSEUR</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(s.parcoursProf) + '</div></div>' +
         '</div>' : '') + '</div>';
   }).join('');
   var etabs = m.etablissements.map(function (e) { return '<li style="margin-top:5px;">' + esc(e) + '</li>'; }).join('');
   var best = v.cultureBestAll[m.id];
   var tested = best != null;
+  var allSpecSeen = specSeenCount >= m.specialites.length;
   var testBtnLabel = tested ? 'Retester ce métier · meilleur score ' + best + '/' + m.quiz.length : 'Tester ce métier · ' + m.quiz.length + ' questions';
+  var completionBar = '<div style="margin:16px 24px 0;display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px;flex-wrap:wrap;">' +
+    '<span style="font:500 11.5px \'Inter\',sans-serif;color:' + (allSpecSeen ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (allSpecSeen ? '✓' : specSeenCount + '/' + m.specialites.length) + ' spécialités consultées</span>' +
+    '<span style="width:1px;height:12px;background:var(--line);"></span>' +
+    '<span style="font:500 11.5px \'Inter\',sans-serif;color:' + (tested ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (tested ? '✓ testé · ' + best + '/' + m.quiz.length : 'test à faire') + '</span>' +
+    (allSpecSeen && tested ? '<span style="margin-left:auto;font:600 10.5px \'Inter\',sans-serif;color:var(--acc2);">MÉTIER EXPLORÉ</span>' : '') + '</div>';
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Métiers</button>' +
-    '<div style="display:flex;align-items:center;gap:13px;margin-top:16px;"><span style="font-size:30px;">' + m.icon + '</span>' +
-    '<div style="font:300 28px/1.1 Fraunces,serif;letter-spacing:-.02em;">' + esc(m.name) + '</div></div>' +
-    '<div style="font:400 13px/1.65 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">' + esc(m.intro) + '</div>' +
-    '<div style="margin-top:12px;font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);">' + specSeenCount + '/' + m.specialites.length + ' spécialités consultées' + (tested ? ' · meilleur score au test : ' + best + '/' + m.quiz.length : ' · pas encore testé') + '</div></div>' +
-    '<div style="margin:22px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">SPÉCIALITÉS DÉTAILLÉES</div>' + secs + '</div>' +
+    '<div style="padding:32px 26px 22px;background:linear-gradient(160deg,' + hexA(acc, 0.2) + ',transparent 70%);">' +
+    '<button data-action="goBack" class="btn-back hv-a" style="color:' + acc + ';"><span class="bkarr">&#8249;</span> Métiers</button>' +
+    '<div style="display:flex;align-items:center;gap:14px;margin-top:18px;">' +
+    '<span style="flex-shrink:0;width:52px;height:52px;border-radius:16px;background:' + hexA(acc, 0.18) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;font-size:23px;">' + m.icon + '</span>' +
+    '<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;align-items:center;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);"><div>CULTURE GÉNÉRALE</div><div style="color:' + acc + ';">' + m.specialites.length + ' SPÉ.</div></div>' +
+    '<div style="font:300 26px/1.15 Fraunces,serif;letter-spacing:-.02em;margin-top:6px;">' + esc(m.name) + '</div></div></div>' +
+    '<div style="font:400 12.5px/1.65 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">' + esc(m.intro) + '</div>' +
+    '<div style="margin-top:16px;display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;">' + toc + '</div></div>' +
+    completionBar +
+    '<div style="padding:6px 24px 0;"><div style="margin-top:16px;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">SPÉCIALITÉS DÉTAILLÉES</div>' + secs + '</div>' +
     '<div style="margin:20px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">ÉTABLISSEMENTS (EXEMPLES CONNUS)</div>' +
     '<ul style="margin:8px 0 0;padding-left:20px;font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);">' + etabs + '</ul></div>' +
     '<div style="margin:20px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">RÉMUNÉRATION INDICATIVE</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + esc(m.remuneration) + '</div></div>' +
@@ -3102,12 +3124,14 @@ function onAppClick(e) {
     case 'goBack': goBack(); break;
     case 'goBrowse': goChild('browse'); break;
     case 'goCulture': goChild('culture'); break;
-    case 'cultureGo':
-      state.cultureSel = d.id; state.cultureSecOpen = null;
+    case 'cultureGo': {
+      var cgId = d.id || d.fiche;
+      state.cultureSel = cgId; state.cultureSecOpen = null;
       if (!store.cultureSeen) store.cultureSeen = {};
-      store.cultureSeen[d.id] = true; save();
+      store.cultureSeen[cgId] = true; save();
       goChild('cultureDetail');
       break;
+    }
     case 'cultureSecToggle': {
       var newI = state.cultureSecOpen === +d.i ? null : +d.i;
       state.cultureSecOpen = newI;
@@ -3117,6 +3141,19 @@ function onAppClick(e) {
         save();
       }
       render();
+      break;
+    }
+    case 'cultureJump': {
+      var jI = +d.i;
+      state.cultureSecOpen = jI;
+      if (state.cultureSel) {
+        if (!store.cultureSpecSeen) store.cultureSpecSeen = {};
+        store.cultureSpecSeen[state.cultureSel + '#' + jI] = true;
+        save();
+      }
+      render();
+      var csec = document.getElementById('csec-' + jI);
+      if (csec) csec.scrollIntoView({ behavior: 'smooth', block: 'start' });
       break;
     }
     case 'startCultureTest':
