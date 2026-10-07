@@ -100,7 +100,7 @@ function memvizReset() {
 function load() {
   var s = null;
   try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) { s = null; }
-  store = s || { srs: {}, xp: 1240, streak: 12, seen: 0, poles: {}, best: {}, seeded: false };
+  store = s || { srs: {}, xp: 0, streak: 0, seen: 0, poles: {}, best: {}, seeded: false };
   if (!store.poles) store.poles = {};
   if (!store.best) store.best = {};
   if (store.examInstant == null) store.examInstant = false;
@@ -273,25 +273,6 @@ function doSearch(query) {
 
 function seed() {
   if (store.seeded) return;
-  var cats = quizCats(), t = today();
-  var due = 0, learn = 0, mast = 0, i = 0;
-  cats.forEach(function (c) {
-    var qs = bank(c.id);
-    qs.forEach(function (q, qi) {
-      i++;
-      if (i % 61 === 0 && due < 14) { store.srs[c.id + '#' + qi] = { b: 0, d: t, ok: 0, ko: 2 }; due++; }
-      else if (i % 23 === 0 && learn < 38) { store.srs[c.id + '#' + qi] = { b: 1, d: t + 2 + (qi % 4), ok: 1, ko: 1 }; learn++; }
-      else if (i % 4 === 0 && mast < 211) { store.srs[c.id + '#' + qi] = { b: 4, d: t + 12 + (qi % 20), ok: 3, ko: 0 }; mast++; }
-    });
-  });
-  var seedPct = { 'Les enveloppes': 82, 'Supports & actifs': 74, 'Fiscalité & transmission': 61, 'Retraite & protection': 47, 'Financement & levier': 39, 'Entreprise & ingénierie': 56, 'Métier & méthode': 68, 'Culture financière': 58 };
-  var poleTotals = {};
-  cats.forEach(function (c) { poleTotals[c.pole] = (poleTotals[c.pole] || 0) + bank(c.id).length; });
-  poleNames().forEach(function (p) {
-    var n = Math.max(5, Math.min(20, poleTotals[p] || 5));
-    store.poles[p] = { n: n, ok: Math.round(n * (seedPct[p] || 60) / 100) };
-  });
-  store.seen = 263;
   store.seeded = true;
   save();
 }
@@ -788,7 +769,7 @@ function computeVals() {
   v.catPole = catObj ? catObj.pole : '';
   v.subs = catObj ? (catObj.sub || []).map(function (s) {
     var n = bank(s.id).length;
-    return { label: s.label, badge: s.theory ? 'FICHE' : n + ' Q.', theory: s.theory || null, id: s.id };
+    return { label: s.label, badge: s.theory ? 'FICHE' : (s.simu ? 'SIMULATEUR' : n + ' Q.'), theory: s.theory || null, simu: s.simu || null, id: s.id };
   }) : [];
 
   var tKeys = Object.keys(Dd.THEORY || {});
@@ -1051,7 +1032,11 @@ function computeVals() {
   }
   function shortPole(p) {
     var base = p.split(' & ')[0].replace(/^(Les|La|Le|L’|L')\s+/, '');
-    return base.length > 12 ? base.slice(0, 11) + '…' : base;
+    if (base.length > 12) {
+      base = base.split(' ')[0];
+      if (base.length > 12) base = base.slice(0, 11) + '…';
+    }
+    return base;
   }
   v.radarGridOuter = ngon(R);
   v.radarGridMid = ngon(R * 0.667);
@@ -1633,7 +1618,7 @@ function tplBrowse(v) {
 
 function tplCat(v) {
   var subs = v.subs.map(function (s) {
-    return '<button data-action="subGo" data-sub="' + esc(s.id) + '"' + (s.theory ? ' data-theory="' + esc(s.theory) + '"' : '') + ' class="hv-a" style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;font:500 13px/1.4 \'Inter\',sans-serif;">' + esc(s.label) + '</span><span style="font:500 10px \'Inter\',sans-serif;color:var(--dim);letter-spacing:.08em;">' + esc(s.badge) + '</span></button>';
+    return '<button data-action="subGo" data-sub="' + esc(s.id) + '"' + (s.theory ? ' data-theory="' + esc(s.theory) + '"' : '') + (s.simu ? ' data-simu="' + esc(s.simu) + '"' : '') + ' class="hv-a" style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;font:500 13px/1.4 \'Inter\',sans-serif;">' + esc(s.label) + '</span><span style="font:500 10px \'Inter\',sans-serif;color:var(--dim);letter-spacing:.08em;">' + esc(s.badge) + '</span></button>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> ' + esc(v.catPole) + '</button>' +
@@ -2099,7 +2084,7 @@ function euro(n) { return fmtNum(Math.round(n)) + ' €'; }
 function pctv(x) { return (Math.round(x * 100) / 100).toString().replace('.', ',') + ' %'; }
 function irTax(rev, parts) {
   if (rev <= 0 || parts <= 0) return 0;
-  var br = [[11294, 0], [28797, 0.11], [82341, 0.30], [177106, 0.41], [Infinity, 0.45]];
+  var br = [[11497, 0], [29315, 0.11], [83823, 0.30], [180294, 0.41], [Infinity, 0.45]];
   var q = rev / parts, tax = 0, prev = 0;
   for (var i = 0; i < br.length; i++) {
     var cap = br[i][0], rate = br[i][1];
@@ -3219,6 +3204,7 @@ function onAppClick(e) {
     case 'catGo': goChild('cat', { cat: d.cat }); break;
     case 'subGo':
       if (d.theory) { goChild('fiche', { fiche: d.theory }); }
+      else if (d.simu) { goChild('labo'); }
       else startCat(d.sub, 12);
       break;
     case 'ficheGo':
