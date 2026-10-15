@@ -227,46 +227,45 @@ function searchIndex() {
   _searchIdx = idx;
   return idx;
 }
+function countOcc(hay, needle) {
+  var c = 0, i = 0;
+  while ((i = hay.indexOf(needle, i)) !== -1) { c++; i += needle.length; }
+  return c;
+}
+function bodyIsDense(item, needle) {
+  var n = countOcc(item.bodyN, needle);
+  if (item.kind === 'quiz' && item.count) return n >= 4 && (n / item.count) >= 0.15;
+  return n >= 3;
+}
 function doSearch(query) {
   var qn = normalize(query).trim();
   if (qn.length < 2) return [];
   var tokens = qn.split(/\s+/).filter(function (t) { return t.length >= 2; });
   if (!tokens.length) tokens = [qn];
-  var idx = searchIndex(), scored = [], matchedCatIds = {};
+  var idx = searchIndex(), scored = [];
   idx.forEach(function (item) {
     var score = 0;
     if (item.titleN.indexOf(qn) >= 0) score += 100;
     else if (item.headN.indexOf(qn) >= 0) score += 70;
-    else if (item.bodyN.indexOf(qn) >= 0) score += 40;
+    else if (bodyIsDense(item, qn)) score += 35;
     if (score === 0 && tokens.length > 1) {
       var hit = 0;
       tokens.forEach(function (tk) {
         if (item.titleN.indexOf(tk) >= 0) hit += 30;
         else if (item.headN.indexOf(tk) >= 0) hit += 18;
-        else if (item.bodyN.indexOf(tk) >= 0) hit += 8;
+        else if (bodyIsDense(item, tk)) hit += 10;
       });
-      score = hit >= 20 ? hit : 0;
+      score = hit >= 30 ? hit : 0;
     }
-    if (score > 0) { scored.push({ item: item, score: score }); matchedCatIds[item.catId] = true; }
+    if (score > 0) scored.push({ item: item, score: score });
   });
-  var directIds = {};
-  scored.forEach(function (r) { directIds[r.item.kind + ':' + r.item.id] = true; });
-  if (scored.length && scored.length < 12) {
-    idx.forEach(function (item) {
-      var key = item.kind + ':' + item.id;
-      if (directIds[key] || !matchedCatIds[item.catId]) return;
-      scored.push({ item: item, score: 5 });
-      directIds[key] = true;
-    });
-  }
   scored.sort(function (a, b) { return b.score - a.score || a.item.title.localeCompare(b.item.title); });
   return scored.slice(0, 30).map(function (r) {
     var it = r.item;
     return {
       kind: it.kind, id: it.id, catId: it.catId, title: it.title,
       path: it.pole + ' › ' + it.catLabel,
-      meta: it.kind === 'fiche' ? 'Cours' : it.kind === 'culture' ? 'Culture générale' : (it.count + (it.count > 1 ? ' questions' : ' question')),
-      related: r.score <= 5
+      meta: it.kind === 'fiche' ? 'Cours' : it.kind === 'culture' ? 'Culture générale' : (it.count + (it.count > 1 ? ' questions' : ' question'))
     };
   });
 }
@@ -1522,7 +1521,7 @@ function tplSearch(v) {
         '<span style="font-size:18px;flex-shrink:0;">' + icon + '</span>' +
         '<span style="flex:1;min-width:0;"><span style="display:block;font:500 9.5px \'Inter\',sans-serif;letter-spacing:.05em;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(r.path) + '</span>' +
         '<span style="display:block;font:500 13.5px \'Inter\',sans-serif;margin-top:3px;">' + esc(r.title) + '</span></span>' +
-        '<span style="font:500 9.5px \'Inter\',sans-serif;color:' + (r.related ? 'var(--acc)' : 'var(--dim)') + ';flex-shrink:0;text-align:right;">' + esc(r.meta + (r.related ? ' · thème proche' : '')) + '</span></button>';
+        '<span style="font:500 9.5px \'Inter\',sans-serif;color:var(--dim);flex-shrink:0;text-align:right;">' + esc(r.meta) + '</span></button>';
     }).join('');
   } else if (qTrim.length >= 2) {
     list = '<div class="stagger" style="text-align:center;padding:44px 20px;color:var(--ink3);font:400 13px \'Inter\',sans-serif;">Aucun résultat pour « ' + esc(qTrim) + ' ».</div>';
