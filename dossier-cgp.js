@@ -944,7 +944,7 @@ function computeVals() {
 
     v.calcDisplay = st.calc || '—';
     v.calcOpen = !done;
-    v.keys = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '−', '0', '⌫'];
+    v.keys = ['7', '8', '9', '4', '5', '6', '1', '2', '3', ',', '0', '⌫', '−'];
 
     var isTexteLike = q.type === 'texte' || q.type === 'open';
     v.texteOpen = isTexteLike && !done; v.texteDone = isTexteLike && done; v.texteVal = st.texte;
@@ -3467,6 +3467,7 @@ function onAppClick(e) {
     case 'calcKey':
       if (d.k === '⌫') state.calc = state.calc.slice(0, -1);
       else if (d.k === '−') state.calc = state.calc.charAt(0) === '-' ? state.calc.slice(1) : '-' + state.calc;
+      else if (d.k === ',' && state.calc.indexOf(',') !== -1) { /* un seul séparateur décimal */ }
       else state.calc = (state.calc + d.k).slice(0, 12);
       render();
       break;
