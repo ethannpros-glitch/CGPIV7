@@ -1138,7 +1138,7 @@ function computeVals() {
   v.parcoursMinutesDay = minutesDay;
   v.parcoursObjectiveDays = objDays;
   v.parcoursPriorityPoles = priorityPoles;
-  v.parcoursDeadlineLabel = pStart != null ? fmtDay(pStart + objDays) : null;
+  v.parcoursDeadlineLabel = pStart != null ? fmtDay(pStart + weekLenDays * 9) : null;
   if (pStart != null) {
     var delta = v.parcoursCurrentWeek - expectedWeek;
     v.parcoursPaceDelta = delta;
@@ -1435,7 +1435,7 @@ function tplParcours(v) {
       '<div style="margin:22px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">THÉMATIQUES PRIORITAIRES <span style="color:var(--ink3);text-transform:none;letter-spacing:0;">(jusqu\'à 3, optionnel)</span></div>' +
       '<div style="font:400 11.5px/1.6 \'Inter\',sans-serif;color:var(--ink3);margin-top:6px;">Les semaines liées à ces thèmes passent en premier et reçoivent 50% de questions en plus par jour.</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">' + poleChips + '</div></div>' +
-      '<div style="margin:20px 24px 0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;font:400 12px/1.7 \'Inter\',sans-serif;color:var(--ink2);">≈ <b style="color:var(--ink);">' + previewQpd + ' questions/jour</b> et des semaines d\'environ <b style="color:var(--ink);">' + previewWeekLen + ' jours</b> pour tenir ton objectif.</div>' +
+      '<div style="margin:20px 24px 0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;font:400 12px/1.7 \'Inter\',sans-serif;color:var(--ink2);">≈ <b style="color:var(--ink);">' + previewQpd + ' questions/jour</b> et des semaines d\'environ <b style="color:var(--ink);">' + previewWeekLen + ' jours</b>, soit <b style="color:var(--ink);">' + (previewWeekLen * 9) + ' jours au total</b> pour les 9 étapes.</div>' +
       '<div style="margin:20px 24px 0;"><button data-action="startParcours" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Commencer mon parcours</button></div>' +
       '<div style="height:26px;"></div></div>';
   }
