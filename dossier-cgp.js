@@ -77,7 +77,8 @@ var state = {
   memvizPhase: 'announce', memvizTimeLeft: 0, memvizTimeTotal: 0, memvizAnswers: [], memvizResult: null,
   buildDom: ['all'], buildTypes: ['qcm', 'vf'], buildLevel: 'all', buildN: 15,
   coursePoleSel: null, navStack: [], navDir: null, confirmReset: false, nameInput: null, search: '',
-  parcoursOpenWeek: null, parcoursSetupMinutes: 30, parcoursSetupObjective: 60, parcoursSetupPriority: []
+  parcoursOpenWeek: null, parcoursSetupMinutes: 30, parcoursSetupObjective: 60, parcoursSetupPriority: [],
+  formulaOpen: null
 };
 var store = null;
 var confettiTimer = null;
@@ -117,6 +118,7 @@ function load() {
   if (!store.cultureBest) store.cultureBest = {};
   if (!store.cultureSeen) store.cultureSeen = {};
   if (!store.cultureSpecSeen) store.cultureSpecSeen = {};
+  if (!store.formulesSeen) store.formulesSeen = {};
 }
 function logHistory() {
   var h = store.history, last = h[h.length - 1];
@@ -224,6 +226,15 @@ function searchIndex() {
       bodyN: normalize(m.intro + ' ' + m.parcours + ' ' + m.remuneration + ' ' + m.statut + ' ' + (m.investLimites || '') + ' ' + m.etablissements.join(' '))
     });
   });
+  FORMULES.forEach(function (f) {
+    idx.push({
+      kind: 'formula', id: f.id, catId: 'formulas', pole: f.pole, catLabel: 'Boîte à formules',
+      title: f.title,
+      titleN: normalize(f.title),
+      headN: normalize(f.formula),
+      bodyN: normalize(f.steps.join(' ') + ' ' + f.example.q + ' ' + f.example.result + ' ' + f.piege)
+    });
+  });
   _searchIdx = idx;
   return idx;
 }
@@ -265,7 +276,7 @@ function doSearch(query) {
     return {
       kind: it.kind, id: it.id, catId: it.catId, title: it.title,
       path: it.pole + ' › ' + it.catLabel,
-      meta: it.kind === 'fiche' ? 'Cours' : it.kind === 'culture' ? 'Culture générale' : (it.count + (it.count > 1 ? ' questions' : ' question'))
+      meta: it.kind === 'fiche' ? 'Cours' : it.kind === 'culture' ? 'Culture générale' : it.kind === 'formula' ? 'Formule' : (it.count + (it.count > 1 ? ' questions' : ' question'))
     };
   });
 }
@@ -733,7 +744,13 @@ function computeVals() {
       return sumTot ? Math.round(100 * sumBest / sumTot) : 0;
     })() : 0,
     isSearch: scr === 'search',
-    showTabs: ['home', 'browse', 'cat', 'srs', 'courses', 'fiche', 'ficheReview', 'coursePole', 'progress', 'profile', 'examPick', 'labo', 'mental', 'builder', 'search', 'parcours'].indexOf(scr) >= 0,
+    isFormulas: scr === 'formulas',
+    formulaOpen: st.formulaOpen != null ? st.formulaOpen : null,
+    formulas: FORMULES.map(function (f) {
+      return { id: f.id, icon: f.icon, pole: f.pole, title: f.title, formula: f.formula, steps: f.steps, example: f.example, piege: f.piege, theory: f.theory, seen: !!(S.formulesSeen && S.formulesSeen[f.id]) };
+    }),
+    formulesSeenCount: st.ready ? FORMULES.filter(function (f) { return S.formulesSeen && S.formulesSeen[f.id]; }).length : 0,
+    showTabs: ['home', 'browse', 'cat', 'srs', 'courses', 'fiche', 'ficheReview', 'coursePole', 'progress', 'profile', 'examPick', 'labo', 'mental', 'builder', 'search', 'parcours', 'formulas'].indexOf(scr) >= 0,
     mentalBest: S.mentalBest || 0,
     searchQuery: st.search || '',
     searchResults: (scr === 'search' && st.ready) ? doSearch(st.search || '') : [],
@@ -1846,6 +1863,13 @@ function tplCourses(v) {
     '<span style="flex:1;min-width:0;position:relative;"><span style="display:block;font:300 17px/1.25 Fraunces,serif;">Culture générale</span>' +
     '<span style="display:block;font:500 9.5px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-top:6px;">' + v.cultureTestedCount + '/' + CULTURE_METIERS.length + ' MÉTIERS · MAÎTRISE ' + v.cultureOverallPct + '%</span></span>' +
     '<span style="flex-shrink:0;font:400 20px Fraunces,serif;color:var(--gold);position:relative;">&#8250;</span></button>' +
+    '<button data-action="goFormulas" class="hv-a" style="position:relative;overflow:hidden;width:100%;background:linear-gradient(120deg,' + hexA('#4fcfa8', 0.16) + ',var(--panel) 60%);border:1px solid ' + hexA('#4fcfa8', 0.35) + ';border-radius:20px;padding:19px 20px;text-align:left;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:16px;box-sizing:border-box;">' +
+    '<span style="position:absolute;right:-8px;top:-16px;font-size:68px;opacity:.13;transform:rotate(8deg);pointer-events:none;">🧮</span>' +
+    '<span style="flex-shrink:0;position:relative;width:56px;height:56px;border-radius:50%;background:conic-gradient(#4fcfa8 ' + (Math.round(100 * v.formulesSeenCount / FORMULES.length) * 3.6) + 'deg,var(--line) ' + (Math.round(100 * v.formulesSeenCount / FORMULES.length) * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
+    '<span style="width:47px;height:47px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:500 12px \'Inter\',sans-serif;color:#4fcfa8;">' + v.formulesSeenCount + '/' + FORMULES.length + '</span></span>' +
+    '<span style="flex:1;min-width:0;position:relative;"><span style="display:block;font:300 17px/1.25 Fraunces,serif;">Boîte à formules</span>' +
+    '<span style="display:block;font:500 9.5px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-top:6px;">TOUTES LES MÉTHODOS DE CALCUL, PAS À PAS</span></span>' +
+    '<span style="flex-shrink:0;font:400 20px Fraunces,serif;color:#4fcfa8;position:relative;">&#8250;</span></button>' +
     '</div>' +
     '<div style="height:26px;"></div></div>';
 }
@@ -2601,6 +2625,130 @@ var CULTURE_METIERS = [
     ]
   }
 ];
+var FORMULES = [
+  { id: 'per_entree', icon: '🧮', pole: 'Les enveloppes', title: 'PER — gain fiscal à l\'entrée',
+    formula: 'Économie d\'impôt = Versement déductible × TMI',
+    steps: [
+      'Vérifier le plafond de déduction disponible (10 % des revenus professionnels, plafonné à 8 PASS, ou 10 % du PASS pour un salarié si plus favorable).',
+      'Retenir le versement dans la limite de ce plafond.',
+      'Multiplier le versement déductible par le Taux Marginal d\'Imposition (TMI) du client.'
+    ],
+    example: { q: 'Un client au TMI de 30 % verse 8 000 € sur son PER, dans la limite de son plafond.', calc: '8 000 € × 30 %', result: '2 400 € d\'économie d\'impôt immédiate' },
+    piege: 'Ce n\'est pas un gain définitif : à la sortie, le capital correspondant aux versements déduits est réintégré au barème de l\'IR. Le PER déplace l\'imposition dans le temps, il ne l\'efface pas.',
+    theory: 'th_per' },
+  { id: 'per_sortie', icon: '📤', pole: 'Les enveloppes', title: 'PER — fiscalité de sortie en capital',
+    formula: 'Versements déduits → barème de l\'IR  ·  Plus-value → PFU 30 % (ou barème sur option)',
+    steps: [
+      'Distinguer, dans le capital sorti, la part issue de versements déduits à l\'entrée et la part de plus-value générée.',
+      'La part des versements déduits est imposée au barème progressif de l\'IR, sans abattement.',
+      'La part de plus-value est soumise au Prélèvement Forfaitaire Unique de 30 % (12,8 % IR + 17,2 % PS), ou au barème + PS sur option globale.'
+    ],
+    example: { q: 'Un client sort en capital 50 000 € de PER (40 000 € de versements déduits, 10 000 € de plus-value), TMI 30 %.', calc: '(40 000 × 30 %) + (10 000 × 30 %)', result: '12 000 € + 3 000 € = 15 000 € d\'impôt total' },
+    piege: 'Si les versements n\'ont PAS été déduits à l\'entrée (option du client), le capital correspondant sort sans impôt — seule la plus-value reste taxée. Vérifier toujours quelle option a été choisie à l\'entrée.',
+    theory: 'th_per' },
+  { id: 'av_avant8', icon: '📅', pole: 'Les enveloppes', title: 'Assurance-vie — rachat avant 8 ans',
+    formula: 'Impôt sur les gains rachetés = Gains × 30 % (PFU) — ou option barème + PS 17,2 %',
+    steps: [
+      'Isoler la quote-part de gains dans le rachat : Gains rachetés = Montant racheté × (gains totaux du contrat ÷ valeur totale du contrat).',
+      'Aucun abattement n\'est applicable avant 8 ans.',
+      'Appliquer le PFU de 30 % (12,8 % IR + 17,2 % PS), sauf option pour le barème progressif si plus avantageux (TMI faible).'
+    ],
+    example: { q: 'Un contrat de 6 ans a une valeur de rachat de 45 000 € pour 35 000 € de versements. Rachat total.', calc: '(45 000 − 35 000) × 30 %', result: '10 000 € de gains × 30 % = 3 000 € d\'impôt' },
+    piege: 'Erreur fréquente : appliquer l\'abattement de 4 600 €/9 200 € réservé aux contrats de plus de 8 ans. Avant 8 ans, cet abattement ne joue jamais.',
+    theory: 'th_av' },
+  { id: 'av_apres8', icon: '🎉', pole: 'Les enveloppes', title: 'Assurance-vie — rachat après 8 ans',
+    formula: 'IR = (Gains − Abattement) × 7,5 % (ou 12,8 % au-delà de 150 000 € de versements nets)  ·  PS = Gains × 17,2 % (sans abattement)',
+    steps: [
+      'Appliquer l\'abattement annuel : 4 600 € pour une personne seule, 9 200 € pour un couple marié/pacsé.',
+      'Sur la base après abattement, le taux réduit de 7,5 % s\'applique jusqu\'à 150 000 € de versements nets tous contrats cumulés ; au-delà, 12,8 %.',
+      'Les prélèvements sociaux de 17,2 % s\'appliquent sur la TOTALITÉ des gains, sans aucun abattement.'
+    ],
+    example: { q: 'Contrat de plus de 8 ans racheté : 22 000 € de gains, personne seule.', calc: 'IR : (22 000 − 4 600) × 7,5 %  ·  PS : 22 000 × 17,2 %', result: '1 305 € d\'IR + 3 784 € de PS = 5 089 € au total' },
+    piege: 'L\'abattement de 4 600 €/9 200 € ne joue QUE sur l\'assiette de l\'impôt sur le revenu, jamais sur celle des prélèvements sociaux — une confusion très fréquente.',
+    theory: 'th_av' },
+  { id: 'doubler_capital', icon: '📈', pole: 'Culture financière', title: 'Doubler son capital (intérêts composés)',
+    formula: 'Capital final = Capital initial × (1 + taux)^durée  —  Raccourci : Durée pour doubler ≈ 72 ÷ taux (en %)',
+    steps: [
+      'Pour un calcul exact : élever (1 + taux) à la puissance du nombre d\'années, puis multiplier par le capital initial.',
+      'Pour estimer rapidement le nombre d\'années nécessaires pour DOUBLER un capital, diviser 72 par le taux de rendement annuel exprimé en %.',
+      'Plus le taux est élevé, plus la durée nécessaire pour doubler le capital est courte.'
+    ],
+    example: { q: 'Un capital placé à 6 % par an : en combien de temps double-t-il environ ?', calc: '72 ÷ 6', result: '≈ 12 ans (le calcul exact donne 11,9 ans — la règle de 72 est une excellente approximation)' },
+    piege: 'La règle de 72 est une approximation, d\'autant plus fiable que le taux est compris entre 4 % et 10 % environ. Pour un taux très élevé ou très faible, préférer le calcul exact avec l\'exposant.',
+    theory: 'th_mc_interets' },
+  { id: 'pvimmo_duree', icon: '🏠', pole: 'Supports & actifs', title: 'Plus-value immobilière — abattement pour durée',
+    formula: 'Abattement IR : 6 %/an de la 6e à la 21e année puis 4 % la 22e (exonération à 22 ans)  ·  Abattement PS : 1,65 %/an de la 6e à la 21e, 1,60 % la 22e, puis 9 %/an jusqu\'à la 30e (exonération à 30 ans)',
+    steps: [
+      'Calculer la plus-value brute : prix de vente − prix d\'acquisition (corrigé des frais et travaux justifiés).',
+      'Appliquer l\'abattement pour durée de détention — deux barèmes distincts, un pour l\'IR, un pour les prélèvements sociaux.',
+      'Exonération totale d\'IR après 22 ans de détention, et des prélèvements sociaux après 30 ans.'
+    ],
+    example: { q: 'Un bien détenu 20 ans dégage une plus-value brute de 100 000 €. Quel abattement d\'IR ?', calc: '(20 − 5) × 6 %', result: '90 % d\'abattement d\'IR, soit 10 000 € de plus-value imposable à l\'IR (19 %)' },
+    piege: 'Les deux abattements (IR et PS) ne suivent pas le même rythme ni la même durée totale : un bien exonéré d\'IR à 22 ans reste partiellement soumis aux prélèvements sociaux jusqu\'à 30 ans.',
+    theory: 'th_pvimmo_duree' },
+  { id: 'succession_usufruit', icon: '👪', pole: 'Fiscalité & transmission', title: 'Succession/donation — abattements et usufruit',
+    formula: 'Droits = (Part nette taxable − Abattement) × Barème progressif (art. 777/779 CGI)  ·  Valeur usufruit/nue-propriété = Valeur pleine propriété × barème de l\'âge (art. 669 CGI)',
+    steps: [
+      'Déterminer la part nette taxable de chaque héritier ou donataire.',
+      'Déduire l\'abattement applicable selon le lien de parenté (100 000 € parent-enfant, 15 932 € entre frères et sœurs…).',
+      'Appliquer le barème progressif PAR TRANCHES sur le solde — jamais un taux unique sur la totalité.',
+      'En cas de démembrement, répartir d\'abord la valeur du bien selon le barème de l\'âge de l\'usufruitier (art. 669 CGI) avant d\'appliquer les droits.'
+    ],
+    example: { q: 'Un enfant reçoit une donation de 150 000 € de son parent, sans abattement utilisé auparavant.', calc: '150 000 − 100 000 = 50 000 € taxable, puis barème par tranches', result: 'Abattement de 100 000 € ; seuls les 50 000 € restants sont soumis au barème progressif des droits de donation' },
+    piege: 'Le barème des droits de succession/donation est progressif PAR TRANCHES, comme l\'IR : une erreur fréquente est d\'appliquer le taux de la tranche la plus haute à la totalité de la part taxable.',
+    theory: 'th_succession' },
+  { id: 'duration_oblig', icon: '📉', pole: 'Culture financière', title: 'Duration obligataire — sensibilité prix/taux',
+    formula: 'Variation de prix (%) ≈ − Duration × Variation de taux (en points)',
+    steps: [
+      'Identifier la duration de l\'obligation ou du fonds obligataire.',
+      'Identifier la variation de taux anticipée, en points de pourcentage.',
+      'Multiplier la duration par la variation de taux, puis inverser le signe (relation inverse prix/taux).'
+    ],
+    example: { q: 'Une obligation de duration 7 subit une hausse de taux de 1 point.', calc: '−7 × 1', result: '≈ −7 % de variation de prix' },
+    piege: 'La duration mesure une sensibilité approximative, surtout fiable pour de petites variations de taux ; pour un choc de taux important, l\'effet de convexité rend l\'approximation moins précise.',
+    theory: 'th_mc_oblig' },
+  { id: 'ltv_lombard', icon: '⚖️', pole: 'Financement & levier', title: 'Crédit Lombard/hypothécaire — LTV et appel de marge',
+    formula: 'Montant empruntable = Valeur de l\'actif nanti × Quotité (LTV)  ·  Nouveau LTV = Encours du crédit ÷ Nouvelle valeur de l\'actif',
+    steps: [
+      'Déterminer la quotité de financement (LTV) accordée selon la nature de l\'actif nanti (plus il est volatil, plus la quotité est prudente).',
+      'Multiplier la valeur de l\'actif par cette quotité pour obtenir le montant maximum empruntable.',
+      'En cas de baisse de l\'actif nanti, recalculer le nouveau LTV (encours ÷ nouvelle valeur) pour vérifier s\'il dépasse le seuil d\'appel de marge.'
+    ],
+    example: { q: 'Portefeuille de 1 000 000 €, LTV initial 50 % (500 000 € emprunté). Le portefeuille chute à 700 000 €.', calc: '500 000 ÷ 700 000', result: '≈ 71,4 % de nouveau LTV — appel de marge probable si le seuil contractuel est, par exemple, de 70 %' },
+    piege: 'Ne jamais emprunter au maximum du LTV autorisé : cela réduit d\'autant la marge de sécurité avant un appel de marge en cas de baisse du marché.',
+    theory: 'th_lombard' },
+  { id: 'ir_escalier', icon: '🪜', pole: 'Fiscalité & transmission', title: 'Barème progressif de l\'IR — calcul par tranches',
+    formula: 'Impôt = Σ (Revenu de chaque tranche × Taux de la tranche) — jamais Revenu total × Taux marginal',
+    steps: [
+      'Répartir le revenu imposable entre les tranches du barème en vigueur (0 %, 11 %, 30 %, 41 %, 45 %).',
+      'Calculer l\'impôt dû sur CHAQUE tranche séparément, au taux qui lui est propre.',
+      'Additionner l\'impôt de chaque tranche — c\'est pourquoi le taux moyen réel est toujours inférieur au TMI.'
+    ],
+    example: { q: 'Revenu imposable de 35 000 € pour une part (barème : 0 % jusqu\'à 11 294 €, 11 % jusqu\'à 28 797 €, puis 30 %).', calc: '(28 797 − 11 294) × 11 % + (35 000 − 28 797) × 30 %', result: '≈ 1 925 € + 1 861 € ≈ 3 786 € d\'impôt (TMI 30 %, mais taux moyen réel ≈ 10,8 %)' },
+    piege: 'Confondre le Taux Marginal d\'Imposition (TMI, qui ne s\'applique qu\'à la dernière tranche) avec le taux moyen réellement supporté sur l\'ensemble du revenu — une confusion extrêmement fréquente.',
+    theory: 'th_ir_escalier' },
+  { id: 'pea_5ans', icon: '📊', pole: 'Les enveloppes', title: 'PEA — fiscalité avant/après 5 ans',
+    formula: 'Avant 5 ans : retrait = clôture, gains taxés au PFU 30 %  ·  Après 5 ans : gains exonérés d\'IR, seuls les 17,2 % de PS restent dus',
+    steps: [
+      'Vérifier l\'ancienneté du plan depuis son OUVERTURE (premier versement), pas depuis chaque versement.',
+      'Avant 5 ans, tout retrait entraîne en principe la clôture du plan et l\'imposition des gains au PFU de 30 %.',
+      'Après 5 ans, les gains sont exonérés d\'impôt sur le revenu ; seuls les 17,2 % de PS restent dus, et des retraits partiels sont possibles sans clôturer le plan.'
+    ],
+    example: { q: 'Un PEA ouvert il y a 7 ans affiche 20 000 € de gains. Retrait partiel.', calc: '20 000 × 17,2 %', result: '3 440 € de prélèvements sociaux dus, aucun impôt sur le revenu' },
+    piege: 'L\'ancienneté se compte depuis la date d\'OUVERTURE du plan, pas depuis chaque versement complémentaire — une règle identique à celle de l\'assurance-vie.',
+    theory: 'th_bourse' },
+  { id: 'is_bareme', icon: '🏢', pole: 'Entreprise & ingénierie', title: 'IS — barème à taux réduit',
+    formula: 'IS = (Bénéfice jusqu\'à 42 500 € × 15 %) + (Bénéfice au-delà × 25 %)',
+    steps: [
+      'Vérifier l\'éligibilité au taux réduit de 15 % (PME répondant à des conditions de chiffre d\'affaires et de détention du capital).',
+      'Appliquer 15 % sur la tranche de bénéfice jusqu\'à 42 500 €.',
+      'Appliquer le taux normal de 25 % sur la fraction du bénéfice au-delà de ce seuil.'
+    ],
+    example: { q: 'Une PME éligible réalise un bénéfice de 80 000 €.', calc: '(42 500 × 15 %) + (37 500 × 25 %)', result: '6 375 € + 9 375 € = 15 750 € d\'IS total' },
+    piege: 'Comme pour l\'IR, c\'est un calcul par tranches : appliquer 25 % à la totalité du bénéfice est une erreur fréquente lorsque la PME est éligible au taux réduit.',
+    theory: 'th_soc' }
+];
+function formuleById(id) { return FORMULES.find(function (f) { return f.id === id; }) || null; }
 function cultureMetier(id) { return CULTURE_METIERS.find(function (m) { return m.id === id; }) || null; }
 function pickCultureTestSet(m, n) {
   var pool = (m && m.quiz || []).slice();
@@ -2714,6 +2862,48 @@ function tplCultureTest(v) {
     (answered ? '<div style="margin:16px 24px 0;padding:13px 14px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);">💡 ' + esc(q.explain) + '</div>' +
       '<div style="padding:20px 24px 30px;"><button data-action="cultureTestNext" style="width:100%;border:none;border-radius:999px;padding:15px;font:600 13px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + (idx + 1 >= total ? 'Voir le résultat →' : 'Question suivante →') + '</button></div>' : '<div style="height:20px;"></div>') +
     '</div>';
+}
+
+function tplFormulas(v) {
+  var toc = v.formulas.map(function (f, i) {
+    var col = poleAccent(f.pole);
+    return '<button data-action="formulaJump" data-i="' + i + '" style="flex-shrink:0;width:30px;height:30px;border-radius:50%;background:' + hexA(col, f.seen ? 0.28 : 0.14) + ';border:1px solid ' + hexA(col, 0.4) + ';color:' + col + ';font:500 11px \'Inter\',sans-serif;cursor:pointer;">' + (f.seen ? '✓' : (i + 1)) + '</button>';
+  }).join('');
+  var cards = v.formulas.map(function (f, i) {
+    var acc = poleAccent(f.pole);
+    var open = v.formulaOpen === f.id;
+    return '<div id="fsec-' + i + '" style="margin-top:12px;border:1px solid var(--line);border-left:3px solid ' + hexA(acc, 0.6) + ';border-radius:16px;overflow:hidden;background:var(--panel);">' +
+      '<button data-action="formulaToggle" data-id="' + esc(f.id) + '" style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;">' +
+      '<span style="flex-shrink:0;width:34px;height:34px;border-radius:50%;background:' + hexA(acc, f.seen ? 0.22 : 0.12) + ';display:flex;align-items:center;justify-content:center;font-size:16px;">' + f.icon + '</span>' +
+      '<span style="flex:1;min-width:0;"><span style="display:block;font:500 9px \'Inter\',sans-serif;letter-spacing:.1em;color:' + acc + ';">' + esc((f.pole || '').toUpperCase()) + '</span>' +
+      '<span style="display:block;font:500 14px \'Inter\',sans-serif;margin-top:2px;">' + esc(f.title) + '</span></span>' +
+      (f.seen ? '<span style="flex-shrink:0;font-size:12px;color:' + acc + ';">✓</span>' : '') +
+      '<span style="flex-shrink:0;transition:transform .25s;transform:rotate(' + (open ? '90deg' : '0deg') + ');color:var(--ink3);">&rsaquo;</span></button>' +
+      (open ? '<div style="padding:0 16px 18px;display:flex;flex-direction:column;gap:12px;">' +
+        '<div style="background:' + hexA(acc, 0.1) + ';border:1px solid ' + hexA(acc, 0.3) + ';border-radius:12px;padding:13px 14px;">' +
+        '<div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:' + acc + ';">LA FORMULE</div>' +
+        '<div style="font:500 14.5px/1.5 Fraunces,serif;color:var(--ink);margin-top:5px;">' + esc(f.formula) + '</div></div>' +
+        '<div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);">LES ÉTAPES</div>' +
+        '<ol style="margin:6px 0 0;padding-left:18px;font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);">' + f.steps.map(function (s) { return '<li style="margin-top:4px;">' + esc(s) + '</li>'; }).join('') + '</ol></div>' +
+        '<div style="background:var(--panel2);border-radius:12px;padding:13px 14px;">' +
+        '<div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);">EXEMPLE CHIFFRÉ</div>' +
+        '<div style="font:400 12px/1.55 \'Inter\',sans-serif;color:var(--ink2);margin-top:5px;">' + esc(f.example.q) + '</div>' +
+        '<div style="font:500 13px \'Inter\',sans-serif;color:var(--ink);margin-top:7px;">' + esc(f.example.calc) + ' = <span style="color:' + acc + ';">' + esc(f.example.result) + '</span></div></div>' +
+        '<div style="display:flex;gap:9px;align-items:flex-start;background:' + hexA('#e2895f', 0.1) + ';border:1px solid ' + hexA('#e2895f', 0.3) + ';border-radius:12px;padding:12px 13px;">' +
+        '<span style="flex-shrink:0;font-size:14px;">⚠️</span><div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--warn);">LE PIÈGE CLASSIQUE</div>' +
+        '<div style="font:400 12px/1.55 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(f.piege) + '</div></div></div>' +
+        (f.theory ? '<button data-action="ficheGo" data-fiche="' + esc(f.theory) + '" class="hv-a" style="width:100%;text-align:left;background:none;border:1px solid var(--line);border-radius:12px;padding:11px 13px;font:500 11.5px \'Inter\',sans-serif;color:' + acc + ';cursor:pointer;">📘 Revoir la fiche de cours liée →</button>' : '') +
+        '</div>' : '') + '</div>';
+  }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:32px 26px 22px;background:linear-gradient(160deg,' + hexA('#4fcfa8', 0.18) + ',transparent 70%);">' +
+    '<button data-action="goBack" class="btn-back hv-a" style="color:#4fcfa8;"><span class="bkarr">&#8249;</span> Retour</button>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);"><div>MÉTHODO</div><div style="color:#4fcfa8;">' + v.formulesSeenCount + '/' + v.formulas.length + ' VUES</div></div>' +
+    '<div style="font:300 30px/1.15 Fraunces,serif;letter-spacing:-.02em;margin-top:10px;">Boîte à <span style="font-style:italic;color:#4fcfa8;">formules</span></div>' +
+    '<div style="font:400 12.5px/1.65 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;">Toutes les méthodologies de calcul de l\'app, en un seul endroit : la formule, les étapes, un exemple chiffré, et le piège classique à éviter.</div>' +
+    '<div style="margin-top:16px;display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;">' + toc + '</div></div>' +
+    '<div style="padding:6px 24px 30px;">' + cards + '</div>' +
+    '<div style="height:10px;"></div></div>';
 }
 
 function tplLabo() {
@@ -3240,6 +3430,7 @@ function render() {
   else if (v.isBuilder) html = tplBuilder(v);
   else if (v.isSearch) html = tplSearch(v);
   else if (v.isParcours) html = tplParcours(v);
+  else if (v.isFormulas) html = tplFormulas(v);
   screenEl.innerHTML = html;
 
   if (v.isSearch && document.activeElement && !document.activeElement.matches('[data-search-input]')) {
@@ -3357,6 +3548,24 @@ function onAppClick(e) {
     case 'goBack': goBack(); break;
     case 'goBrowse': goChild('browse'); break;
     case 'goCulture': goChild('culture'); break;
+    case 'goFormulas': goChild('formulas'); break;
+    case 'formulaToggle':
+      state.formulaOpen = state.formulaOpen === d.id ? null : d.id;
+      if (!store.formulesSeen) store.formulesSeen = {};
+      store.formulesSeen[d.id] = true; save();
+      render();
+      break;
+    case 'formulaJump': {
+      var fjI = +d.i, fjF = FORMULES[fjI];
+      if (!fjF) break;
+      state.formulaOpen = fjF.id;
+      if (!store.formulesSeen) store.formulesSeen = {};
+      store.formulesSeen[fjF.id] = true; save();
+      render();
+      var fsec = document.getElementById('fsec-' + fjI);
+      if (fsec) fsec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      break;
+    }
     case 'cultureGo': {
       var cgId = d.id || d.fiche;
       state.cultureSel = cgId; state.cultureSecOpen = null;
@@ -3504,6 +3713,12 @@ function onAppClick(e) {
         if (!store.cultureSeen) store.cultureSeen = {};
         store.cultureSeen[d.id] = true; save();
         goChild('cultureDetail');
+      }
+      else if (d.kind === 'formula') {
+        state.formulaOpen = d.id;
+        if (!store.formulesSeen) store.formulesSeen = {};
+        store.formulesSeen[d.id] = true; save();
+        goChild('formulas');
       }
       else startCat(d.id, 12);
       break;
