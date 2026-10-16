@@ -581,6 +581,13 @@ function validateCalc() {
   var tol = it.q.tol != null ? it.q.tol : Math.max(0.01, Math.abs(it.q.correct) * 0.02);
   grade(isFinite(v) && Math.abs(v - it.q.correct) <= tol);
 }
+function validateTexteOpen() {
+  var it = cur(); if (!it) return;
+  var pts = it.q.points || [];
+  var normTxt = normalize(state.texte || '');
+  var matched = pts.filter(function (p) { return (p.syn || []).some(function (w) { return normTxt.indexOf(normalize(w)) >= 0; }); }).length;
+  grade(pts.length > 0 && matched >= Math.ceil(pts.length / 2));
+}
 function nextQ() {
   var q = state.quiz;
   if (!q) return;
@@ -924,7 +931,7 @@ function computeVals() {
       v.qExponentNote = exponentNote(v.qFormula);
     }
     var examMode0 = st.quiz.meta.kind === 'exam' && !S.examInstant;
-    var graded = done && !((q.type === 'texte' || q.type === 'open') && ans === 'reveal');
+    var graded = done;
     v.answered = graded && !examMode0; v.wasOk = ans === 'ok'; v.wasKo = ans === 'ko';
     v.examAnswered = graded && examMode0;
     v.koNote = st.quiz.meta.kind === 'exam' ? 'NOTÉ' : 'REVOIR DEMAIN';
@@ -964,8 +971,7 @@ function computeVals() {
 
     var isTexteLike = q.type === 'texte' || q.type === 'open';
     v.texteOpen = isTexteLike && !done; v.texteDone = isTexteLike && done; v.texteVal = st.texte;
-    v.openWide = q.type === 'open';
-    if (q.type === 'open' && v.texteDone) {
+    if (isTexteLike && v.texteDone) {
       var normTxt = normalize(st.texte || '');
       v.openPoints = (q.points || []).map(function (p) {
         var got = (p.syn || []).some(function (w) { return normTxt.indexOf(normalize(w)) >= 0; });
@@ -1001,8 +1007,7 @@ function computeVals() {
 
     v.showValidate = !done && (q.type === 'calc' || q.type === 'texte' || q.type === 'open' || q.type === 'order' || (q.type === 'memviz' && st.memvizPhase === 'recall'));
     v.validateLabel = q.type === 'memviz' ? 'Valider mes réponses' : (q.type === 'order' ? 'Valider l’ordre' : 'Valider');
-    v.showSelfGrade = isTexteLike && ans === 'reveal';
-    v.showNext = done && !isTexteLike;
+    v.showNext = done;
     v.nextLabel = st.qi + 1 >= st.quiz.items.length ? (examMode ? 'Voir le résultat' : 'Terminer') : 'Suivante';
     v.showHint = !done && (v.hasOptions || q.type === 'vf');
   }
@@ -1266,18 +1271,21 @@ function tplCalc(v) {
 }
 function tplTexte(v) {
   var out = '<div style="margin-top:20px;">';
-  var placeholder = v.isOpen ? 'Réponds comme si tu étais face à un client…' : 'Structurez votre réponse en 4-5 phrases…';
-  if (v.texteOpen) out += '<textarea data-texte-input placeholder="' + placeholder + '" style="width:100%;box-sizing:border-box;min-height:150px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;font:400 13px/1.65 \'Inter\',sans-serif;color:var(--ink);resize:none;">' + esc(v.texteVal) + '</textarea>';
+  var placeholder = 'Tapez les mots-clés de votre réponse, séparés par des virgules (quelques mots par idée suffisent)…';
+  if (v.texteOpen) {
+    out += '<textarea data-texte-input placeholder="' + placeholder + '" style="width:100%;box-sizing:border-box;min-height:110px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;font:400 13px/1.65 \'Inter\',sans-serif;color:var(--ink);resize:none;">' + esc(v.texteVal) + '</textarea>' +
+      '<div style="font:400 11px \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;">Validé automatiquement : pas besoin de phrases, les mots-clés attendus suffisent.</div>';
+  }
   if (v.texteDone) {
-    out += '<div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;font:400 12.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);">' + (v.texteVal ? esc(v.texteVal) : '<i>(réponse vide)</i>') + '</div>' +
-      '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--acc);margin:18px 0 8px;">RÉPONSE MODÈLE</div>' +
-      '<div style="font:400 13px/1.75 \'Inter\',sans-serif;color:var(--ink);">' + esc(v.qModele) + '</div>';
-    if (v.isOpen && v.openPoints) {
-      out += '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin:18px 0 8px;">POINTS CLÉS ATTENDUS</div>' +
+    out += '<div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;font:400 12.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);">' + (v.texteVal ? esc(v.texteVal) : '<i>(réponse vide)</i>') + '</div>';
+    if (v.openPoints) {
+      out += '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin:18px 0 8px;">MOTS-CLÉS ATTENDUS</div>' +
         '<div style="display:flex;flex-direction:column;gap:6px;">' + v.openPoints.map(function (p) {
           return '<div style="display:flex;gap:9px;align-items:flex-start;font:400 12.5px/1.5 \'Inter\',sans-serif;color:' + (p.got ? 'var(--ink)' : 'var(--ink3)') + ';"><span style="color:' + (p.got ? 'var(--acc)' : 'var(--dim)') + ';flex-shrink:0;">' + (p.got ? '✓' : '○') + '</span><span>' + esc(p.k) + '</span></div>';
         }).join('') + '</div>';
     }
+    out += '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--acc);margin:18px 0 8px;">RÉPONSE MODÈLE</div>' +
+      '<div style="font:400 13px/1.75 \'Inter\',sans-serif;color:var(--ink);">' + esc(v.qModele) + '</div>';
   }
   out += '</div>';
   return out;
@@ -1679,9 +1687,6 @@ function tplQuiz(v) {
 
   var footer = '<div style="padding:12px 24px 40px;border-top:1px solid var(--line);background:var(--bg);">';
   if (v.showValidate) footer += '<button data-action="validate" style="width:100%;border:none;border-radius:999px;padding:16px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + esc(v.validateLabel) + '</button>';
-  if (v.showSelfGrade) footer += '<div style="display:flex;gap:10px;"><button data-action="selfKo" style="flex:1;background:none;border:1px solid var(--warn);border-radius:999px;padding:15px;font:500 12.5px \'Inter\',sans-serif;color:var(--warn);cursor:pointer;">À revoir</button>' +
-    (v.openWide ? '<button data-action="selfMid" style="flex:1;background:none;border:1px solid var(--gold);border-radius:999px;padding:15px;font:500 12.5px \'Inter\',sans-serif;color:var(--gold);cursor:pointer;">En partie</button>' : '') +
-    '<button data-action="selfOk" style="flex:1;background:none;border:1px solid var(--acc);border-radius:999px;padding:15px;font:500 12.5px \'Inter\',sans-serif;color:var(--acc);cursor:pointer;">Maîtrisé</button></div>';
   if (v.showNext) footer += '<button data-action="next" style="width:100%;border:none;border-radius:999px;padding:16px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + esc(v.nextLabel) + '</button>';
   if (v.showHint) footer += '<div style="text-align:center;font:400 11px \'Inter\',sans-serif;color:var(--ink3);padding:4px 0;">Touchez une réponse.</div>';
   footer += '</div>';
@@ -3747,7 +3752,7 @@ function onAppClick(e) {
     case 'validate': {
       var it = cur(); if (!it) break;
       if (it.q.type === 'calc') validateCalc();
-      else if (it.q.type === 'texte' || it.q.type === 'open') { state.ans = 'reveal'; render(); }
+      else if (it.q.type === 'texte' || it.q.type === 'open') validateTexteOpen();
       else if (it.q.type === 'memviz') { memvizValidate(); }
       else if (it.q.type === 'order') {
         var ok = !!(state.orderCur && state.orderCur.every(function (v, i) { return v === i; }));
@@ -3769,9 +3774,6 @@ function onAppClick(e) {
       }
       break;
     }
-    case 'selfOk': grade(true, nextQ); break;
-    case 'selfMid': grade(true, nextQ); break;
-    case 'selfKo': grade(false, nextQ); break;
     case 'next': nextQ(); break;
     case 'quitQuiz': memvizReset(); goBack(); break;
     case 'doneAgain': {
