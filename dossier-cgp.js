@@ -78,11 +78,13 @@ var state = {
   buildDom: ['all'], buildTypes: ['qcm', 'vf'], buildLevel: 'all', buildN: 15,
   coursePoleSel: null, navStack: [], navDir: null, confirmReset: false, nameInput: null, search: '',
   parcoursOpenWeek: null, parcoursSetupMinutes: 30, parcoursSetupObjective: 60, parcoursSetupPriority: [],
-  formulaOpen: null
+  formulaOpen: null, examEndAt: null, examSecondsLeft: 0,
+  confirmImport: false, pendingImport: null, newStreakMilestone: null
 };
 var store = null;
 var confettiTimer = null;
 var memvizTimer = null;
+var examTimer = null;
 function parseHoles(svg) {
   var out = [], re = /<text[^>]*data-hole="([^"]+)"[^>]*>([^<]*)<\/text>/g, m, idx = 0;
   while ((m = re.exec(svg || ''))) { idx++; out.push({ n: idx, key: m[1], text: m[2] }); }
@@ -98,10 +100,7 @@ function memvizReset() {
   state.memvizPhase = 'announce'; state.memvizTimeLeft = 0; state.memvizTimeTotal = 0; state.memvizAnswers = []; state.memvizResult = null;
 }
 
-function load() {
-  var s = null;
-  try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) { s = null; }
-  store = s || { srs: {}, xp: 0, streak: 0, seen: 0, poles: {}, best: {}, seeded: false };
+function fillStoreDefaults() {
   if (!store.poles) store.poles = {};
   if (!store.best) store.best = {};
   if (store.examInstant == null) store.examInstant = false;
@@ -119,6 +118,76 @@ function load() {
   if (!store.cultureSeen) store.cultureSeen = {};
   if (!store.cultureSpecSeen) store.cultureSpecSeen = {};
   if (!store.formulesSeen) store.formulesSeen = {};
+  if (!store.srs) store.srs = {};
+  if (!store.totalSeconds) store.totalSeconds = 0;
+  if (!store.firstSeenDay) store.firstSeenDay = today();
+  if (store.lastActiveDay === undefined) store.lastActiveDay = null;
+  if (!store.streak) store.streak = 0;
+}
+function load() {
+  var s = null;
+  try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) { s = null; }
+  store = s || { srs: {}, xp: 0, streak: 0, seen: 0, poles: {}, best: {}, seeded: false };
+  fillStoreDefaults();
+}
+function exportData() {
+  try {
+    var blob = new Blob([JSON.stringify(store, null, 1)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'dossier-cgp-sauvegarde-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  } catch (e) {}
+}
+function downloadTextFile(filename, text) {
+  try {
+    var blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  } catch (e) {}
+}
+function generateAttestation() {
+  var S = store;
+  var totalSec = S.totalSeconds || 0;
+  var h = Math.floor(totalSec / 3600), m = Math.round((totalSec % 3600) / 60);
+  var poles = poleNames();
+  var poleLines = poles.length
+    ? poles.map(function (p) { return '  - ' + p + ' : ' + polePct(p) + '% de maîtrise'; }).join('\n')
+    : '  (aucune donnée pour le moment)';
+  var days = Math.max(0, today() - (S.firstSeenDay != null ? S.firstSeenDay : today()));
+  var lines = [
+    'RÉCAPITULATIF PERSONNEL DE RÉVISION — DOSSIER CGP',
+    '==================================================',
+    '',
+    'Généré le ' + new Date().toLocaleDateString('fr-FR') + ' pour ' + (S.name || 'un utilisateur de l\'application') + '.',
+    '',
+    'AVERTISSEMENT : ce document est un récapitulatif d\'usage personnel calculé localement',
+    'sur cet appareil. Ce n\'est PAS une attestation officielle de formation continue délivrée',
+    'par un organisme agréé, et il n\'a aucune valeur certifiée auprès de l\'ACPR, de l\'ORIAS ou',
+    'd\'une association professionnelle. À utiliser comme justificatif personnel d\'auto-formation',
+    'uniquement, à faire valider si besoin par votre organisme de formation continue.',
+    '',
+    '--------------------------------------------------',
+    'Période couverte : ' + days + ' jour' + (days > 1 ? 's' : '') + ' depuis la première utilisation',
+    'Temps cumulé d\'utilisation de l\'application : environ ' + h + ' h ' + (m < 10 ? '0' : '') + m + ' min',
+    'Questions répondues : ' + (S.seen || 0),
+    'Série actuelle : ' + (S.streak || 0) + ' jour' + ((S.streak || 0) > 1 ? 's' : '') + ' de suite',
+    'XP total : ' + (S.xp || 0),
+    '',
+    'Détail par pôle :',
+    poleLines,
+    '--------------------------------------------------'
+  ];
+  downloadTextFile('dossier-cgp-recapitulatif-' + new Date().toISOString().slice(0, 10) + '.txt', lines.join('\n'));
 }
 function logHistory() {
   var h = store.history, last = h[h.length - 1];
@@ -314,6 +383,7 @@ function startList(keys, meta) {
   state.qi = 0; state.ans = null; state.pick = null;
   state.calc = ''; state.texte = ''; state.revealed = false; state.results = [];
   state.orderKey = null; state.orderCur = null;
+  state.newStreakMilestone = null;
   memvizReset();
   state.screen = 'quiz'; state.confetti = false;
   render();
@@ -324,12 +394,21 @@ function startCat(id, n, extra) {
   var cat = quizCats().find(function (c) { return c.id === id; });
   startList(keys, Object.assign({ kind: 'cat', title: cat ? cat.label : 'Série' }, extra || {}));
 }
+function catDifficultyTier(id) {
+  if (/expert$/.test(id) || /_appro$/.test(id)) return 2;
+  if (/fondamentaux$/.test(id)) return 0;
+  return 1;
+}
 function dailyCatIds() {
   var cats = quizCats();
   if (!cats.length) return [];
   if (!store.dailyCats || store.dailyCats.d !== today()) {
+    var lvl = store.level != null ? store.level : 1;
+    var maxTier = lvl >= 2 ? 2 : 1;
+    var pool = cats.filter(function (c) { return catDifficultyTier(c.id) <= maxTier; });
+    if (pool.length < 5) pool = cats;
     var ids = [];
-    for (var i = 0; i < 5; i++) ids.push(cats[Math.floor(Math.random() * cats.length)].id);
+    for (var i = 0; i < 5; i++) ids.push(pool[Math.floor(Math.random() * pool.length)].id);
     store.dailyCats = { d: today(), ids: ids };
     save();
   }
@@ -368,10 +447,46 @@ function startDiagQuiz() {
 }
 function startExam(levelKey, label) {
   if (levelKey === 'niveau_general') { startNiveauGeneral(label); return; }
+  if (levelKey === 'officiel') { startOfficialExam(label); return; }
   var src = D().EXAM_LEVELS[levelKey] || [];
   var picked = src.slice().sort(function () { return Math.random() - 0.5; }).slice(0, 40);
   var keys = picked.map(function (e) { return e.d + '#' + e.i; });
-  startList(keys, { kind: 'exam', title: 'Examen · ' + label, levelKey: levelKey, label: label });
+  startList(keys, { kind: 'exam', title: 'Examen · ' + label, levelKey: levelKey, label: label, seuil: 60 });
+}
+function startOfficialExam(label) {
+  var src = (D().EXAM_LEVELS.technique || []).slice();
+  var picked = src.sort(function () { return Math.random() - 0.5; }).slice(0, 70);
+  var keys = picked.map(function (e) { return e.d + '#' + e.i; });
+  state.examSecondsLeft = 7200; // set before startList's render so the first paint already shows 120:00
+  startList(keys, { kind: 'exam', title: 'Examen · ' + label, levelKey: 'officiel', label: label, seuil: 50, timeLimitSec: 7200 });
+  startExamTimer();
+}
+function startExamTimer() {
+  if (examTimer) { clearInterval(examTimer); examTimer = null; }
+  var q = state.quiz;
+  if (!q || !q.meta.timeLimitSec) return;
+  state.examEndAt = Date.now() + q.meta.timeLimitSec * 1000;
+  state.examSecondsLeft = q.meta.timeLimitSec;
+  examTimer = setInterval(function () {
+    if (!state.quiz || state.quiz.meta.kind !== 'exam' || !state.quiz.meta.timeLimitSec || state.screen !== 'quiz') {
+      clearInterval(examTimer); examTimer = null; return;
+    }
+    state.examSecondsLeft = Math.max(0, Math.round((state.examEndAt - Date.now()) / 1000));
+    if (state.examSecondsLeft <= 0) { clearInterval(examTimer); examTimer = null; finishExamNow(); return; }
+    render();
+  }, 1000);
+}
+function finishExamNow() {
+  var q = state.quiz;
+  if (!q || q.meta.kind !== 'exam') return;
+  var ok = state.results.filter(function (r) { return r.ok; }).length;
+  var pct = Math.round(100 * ok / q.items.length);
+  store.best[q.meta.levelKey] = Math.max(store.best[q.meta.levelKey] || 0, pct);
+  save();
+  state.screen = 'examResult'; state.confetti = pct >= (q.meta.seuil || 60);
+  if (confettiTimer) clearTimeout(confettiTimer);
+  confettiTimer = setTimeout(function () { state.confetti = false; render(); }, 3400);
+  render();
 }
 function startNiveauGeneral(label) {
   var byPole = {};
@@ -548,6 +663,7 @@ function maybeCompleteFiche(id) {
 
 function cur() { return state.quiz ? state.quiz.items[state.qi] : null; }
 
+var STREAK_MILESTONES = [3, 7, 14, 30, 60, 100, 200, 365];
 function grade(ok, after) {
   var it = cur(); if (!it) return;
   var s = store;
@@ -557,6 +673,12 @@ function grade(ok, after) {
   s.srs[it.key] = e;
   s.seen = (s.seen || 0) + 1;
   if (ok) s.xp = (s.xp || 0) + 10;
+  if (s.lastActiveDay !== today()) {
+    var gap = s.lastActiveDay != null ? today() - s.lastActiveDay : null;
+    s.streak = gap === 1 ? (s.streak || 0) + 1 : 1;
+    s.lastActiveDay = today();
+    state.newStreakMilestone = STREAK_MILESTONES.indexOf(s.streak) >= 0 ? s.streak : null;
+  }
   if (it.pole) {
     var p = s.poles[it.pole] || { n: 0, ok: 0 };
     p.n++; if (ok) p.ok++;
@@ -584,8 +706,7 @@ function validateCalc() {
 function validateTexteOpen() {
   var it = cur(); if (!it) return;
   var pts = it.q.points || [];
-  var normTxt = normalize(state.texte || '');
-  var matched = pts.filter(function (p) { return kwPointMatched(normTxt, p.syn); }).length;
+  var matched = scoreKwPoints(state.texte, pts).filter(function (r) { return r.got; }).length;
   grade(pts.length > 0 && matched >= Math.ceil(pts.length / 2));
 }
 function nextQ() {
@@ -595,9 +716,10 @@ function nextQ() {
     var ok = state.results.filter(function (r) { return r.ok; }).length;
     var pct = Math.round(100 * ok / q.items.length);
     if (q.meta.kind === 'exam') {
+      if (examTimer) { clearInterval(examTimer); examTimer = null; }
       store.best[q.meta.levelKey] = Math.max(store.best[q.meta.levelKey] || 0, pct);
       save();
-      state.screen = 'examResult'; state.confetti = pct >= 60;
+      state.screen = 'examResult'; state.confetti = pct >= (q.meta.seuil || 60);
     } else {
       state.screen = 'done'; state.confetti = pct >= 70;
       if (q.meta.theoryId) {
@@ -713,19 +835,29 @@ function computeVals() {
     userName: getUserName(), nameInput: state.nameInput != null ? state.nameInput : ((S && S.name) || ''),
     greeting: 'Bonsoir',
     isConfetti: !!st.confetti,
-    streak: S.streak || 0, xp: S.xp || 0, mastery: st.ready ? masteryPct() : 0,
+    streak: S.streak || 0, streakMilestone: state.newStreakMilestone || null, xp: S.xp || 0, mastery: st.ready ? masteryPct() : 0,
     answeredCount: S.seen || 0, totalQ: st.ready ? totalQ() : 0,
     dueCount: st.ready ? dueKeys().length : 0,
     learnCount: st.ready ? boxCount(function (e) { return e.b >= 1 && e.b <= 3; }) : 0,
     masteredCount: st.ready ? boxCount(function (e) { return e.b >= 4; }) : 0,
     unseenCount: st.ready ? Math.max(0, totalQ() - Object.keys(S.srs).length) : 0,
+    examDate: S.examDate || null,
+    examDaysLeft: S.examDate ? (Math.floor(Date.parse(S.examDate) / 86400000) - today()) : null,
+    examCoveragePct: st.ready && totalQ() ? Math.round(100 * Object.keys(S.srs).length / totalQ()) : 0,
     dailyPct: (function () { var d = S.daily; return d && d.d === today() ? Math.round(100 * d.n / 5) : 0; })(),
     dailyTurn: (function () { var d = S.daily; var n = d && d.d === today() ? d.n : 0; return (n / 5).toFixed(2) + 'turn'; })(),
     dailyTopics: st.ready ? dailyTopicLabels() : [],
     catCount: st.ready ? Dd.CATS.length : 0,
-    examFormatCount: st.ready ? Object.keys(Dd.EXAM_LEVELS).length + 1 : 0,
+    examFormatCount: st.ready ? Object.keys(Dd.EXAM_LEVELS).length + 2 : 0,
     levelLabel: levels[st.level].title,
+    totalTimeLabel: (function () { var s = S.totalSeconds || 0, h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60); return h > 0 ? (h + ' h ' + (m < 10 ? '0' : '') + m) : (m + ' min'); })(),
     notifOn: !!st.notif, notifOff: !st.notif, confirmReset: !!st.confirmReset,
+    confirmImport: !!st.confirmImport,
+    confirmImportSummary: (function () {
+      var p = st.pendingImport; if (!p) return '';
+      var n = p.srs ? Object.keys(p.srs).length : 0;
+      return (p.xp || 0) + ' XP, ' + n + ' question' + (n > 1 ? 's' : '') + ' suivie' + (n > 1 ? 's' : '');
+    })(),
     notifSub: st.notif ? 'Tous les jours à 19:30' : 'Désactivé',
     examInstantOn: !!S.examInstant, examInstantOff: !S.examInstant,
     examInstantSub: S.examInstant ? 'Réponse et explication après chaque question' : 'Correction uniquement à la fin de l\'examen',
@@ -888,6 +1020,7 @@ function computeVals() {
     return { n: i + 1, key: e.k, label: e.label, sub: e.sub, best: (S.best && S.best[e.k]) ? 'RECORD ' + S.best[e.k] + '%' : '—' };
   });
   v.niveauGeneral = { key: 'niveau_general', label: 'Mise à niveau générale', sub: 'Les bases de chaque pôle : PER, assurance-vie, succession…', best: (S.best && S.best.niveau_general) ? 'RECORD ' + S.best.niveau_general + '%' : '—' };
+  v.examOfficiel = { key: 'officiel', label: 'Examen blanc officiel', sub: '70 questions · 2h chronométrées · seuil 50 %, au format du référentiel AMF', best: (S.best && S.best.officiel) ? 'RECORD ' + S.best.officiel + '%' : '—' };
 
   if (st.ready) {
     var typeCounts = {};
@@ -916,6 +1049,12 @@ function computeVals() {
     v.quizTitle = st.quiz.meta.title;
     v.quizPos = (st.qi + 1) + ' / ' + st.quiz.items.length;
     v.quizPct = Math.round(100 * (st.qi + (done ? 1 : 0)) / st.quiz.items.length);
+    if (st.quiz.meta.timeLimitSec) {
+      var secs = Math.max(0, st.examSecondsLeft || 0);
+      var mm = Math.floor(secs / 60), ss = secs % 60;
+      v.examTimerLabel = mm + ':' + (ss < 10 ? '0' : '') + ss;
+      v.examTimerLow = secs <= 300;
+    } else { v.examTimerLabel = null; v.examTimerLow = false; }
     v.qCat = (it.catLabel || '').toUpperCase();
     v.qCatId = it.catId;
     v.qIsReview = !!(st.quiz.meta.reviewKeys && st.quiz.meta.reviewKeys.indexOf(it.key) >= 0);
@@ -972,11 +1111,7 @@ function computeVals() {
     var isTexteLike = q.type === 'texte' || q.type === 'open';
     v.texteOpen = isTexteLike && !done; v.texteDone = isTexteLike && done; v.texteVal = st.texte;
     if (isTexteLike && v.texteDone) {
-      var normTxt = normalize(st.texte || '');
-      v.openPoints = (q.points || []).map(function (p) {
-        var got = kwPointMatched(normTxt, p.syn);
-        return { k: p.k, got: got };
-      });
+      v.openPoints = scoreKwPoints(st.texte, q.points || []);
     }
 
     if (q.type === 'order') {
@@ -1029,7 +1164,8 @@ function computeVals() {
   v.doneShowFicheReview = !!meta.theoryId;
 
   v.examLabel = (meta.label || '').toUpperCase();
-  v.examVerdict = pct >= 60 ? 'Admis.' : 'Sous le seuil de 60 %.';
+  var examSeuil = meta.seuil || 60;
+  v.examVerdict = pct >= examSeuil ? 'Admis.' : 'Sous le seuil de ' + examSeuil + ' %.';
   var byPole = {};
   res.forEach(function (r) {
     var p = r.pole || '—'; byPole[p] = byPole[p] || { n: 0, ok: 0 }; byPole[p].n++; if (r.ok) byPole[p].ok++;
@@ -1179,17 +1315,33 @@ function computeVals() {
 
 // ---- markup helpers --------------------------------------------------------
 function normalize(s) { return (s || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
-function kwPointMatched(normTxt, syn) {
+function scoreKwPoints(rawTxt, points) {
+  // Chaque mot d\u00e9j\u00e0 utilis\u00e9 pour valider un point est "consomm\u00e9" : un m\u00eame mot ne peut pas
+  // compter pour deux points diff\u00e9rents, ce qui emp\u00eache de valider en empilant des synonymes
+  // g\u00e9n\u00e9riques sans r\u00e9pondre \u00e0 chaque point distinctement.
+  var normTxt = normalize(rawTxt || '');
   var tokens = normTxt.split(/[^a-z0-9]+/).filter(function (t) { return t.length > 0; });
-  return (syn || []).some(function (w) {
-    var nw = normalize(w);
-    if (!nw) return false;
-    if (nw.indexOf(' ') >= 0) return normTxt.indexOf(nw) >= 0; // expression enti\u00e8re : correspondance exacte
-    if (nw.length <= 3) return tokens.indexOf(nw) >= 0; // sigle court (PER, UC, IR\u2026) : mot exact, pas de sous-cha\u00eene
-    // mot plus long : accepte aussi une racine commune (singulier/pluriel, conjugaison, variante)
-    return normTxt.indexOf(nw) >= 0 || tokens.some(function (t) {
-      return t.length >= 4 && (t.indexOf(nw) >= 0 || nw.indexOf(t) >= 0);
-    });
+  var used = tokens.map(function () { return false; });
+  return (points || []).map(function (p) {
+    var syn = p.syn || [], got = false;
+    for (var si = 0; si < syn.length && !got; si++) {
+      var nw = normalize(syn[si]);
+      if (!nw) continue;
+      if (nw.indexOf(' ') >= 0) { if (normTxt.indexOf(nw) >= 0) got = true; continue; } // expression enti\u00e8re
+      if (nw.length <= 3) { // sigle court (PER, UC, IR\u2026) : mot exact, pas de sous-cha\u00eene
+        for (var ti = 0; ti < tokens.length; ti++) {
+          if (!used[ti] && tokens[ti] === nw) { used[ti] = true; got = true; break; }
+        }
+        continue;
+      }
+      // mot plus long : accepte aussi une racine commune (singulier/pluriel, conjugaison, variante)
+      for (var tj = 0; tj < tokens.length; tj++) {
+        if (used[tj]) continue;
+        var t = tokens[tj];
+        if (t.length >= 4 && (t.indexOf(nw) >= 0 || nw.indexOf(t) >= 0)) { used[tj] = true; got = true; break; }
+      }
+    }
+    return { k: p.k, got: got };
   });
 }
 function hexA(hex, a) {
@@ -1404,7 +1556,10 @@ function tplOnb(v) {
     }).join('');
     out += '<div style="font:300 34px/1.12 Fraunces,serif;letter-spacing:-.025em;margin-top:20px;">Où en êtes-vous ?</div>' +
       '<div style="display:flex;flex-direction:column;gap:10px;margin-top:24px;">' + lvs + '</div>' +
-      '<div style="margin-top:auto;"><button data-action="onbNext" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 14px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Continuer</button></div>';
+      '<div style="margin-top:22px;"><label style="display:block;font:500 11px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-bottom:8px;">DATE D\'EXAMEN (FACULTATIF)</label>' +
+      '<input type="date" data-exam-date-input value="' + esc(v.examDate || '') + '" style="width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px 16px;font:500 14px \'Inter\',sans-serif;color:var(--ink);outline:none;" />' +
+      '<div style="font:400 11px \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;">Pour suivre un compte à rebours et adapter le rythme. Modifiable à tout moment dans Paramètres.</div></div>' +
+      '<div style="margin-top:auto;padding-top:22px;"><button data-action="onbNext" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 14px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Continuer</button></div>';
   }
   if (v.onb2) {
     var feats = [
@@ -1587,6 +1742,9 @@ function tplHome(v) {
     '<div style="display:flex;align-items:center;gap:14px;">' +
     '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink2);cursor:pointer;">🔍</button></div></div>' +
     '<div style="padding:24px 24px 0;"><div style="font:300 42px/1.02 Fraunces,serif;letter-spacing:-.025em;">' + esc(v.greeting) + '<br><span style="font-style:italic;background:linear-gradient(100deg,var(--acc),var(--gold),var(--acc2),var(--acc));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:kfSweep 9s linear infinite;">' + esc(v.userName) + '</span></div></div>' +
+    (v.examDate ? '<div style="margin:18px 24px 0;display:flex;align-items:center;gap:10px;background:' + hexA('#dbb46f', 0.1) + ';border:1px solid ' + hexA('#dbb46f', 0.3) + ';border-radius:999px;padding:10px 16px;">' +
+      '<span style="font:600 13px \'Inter\',sans-serif;color:var(--acc);flex-shrink:0;">' + (v.examDaysLeft > 0 ? 'J-' + v.examDaysLeft : (v.examDaysLeft === 0 ? 'Aujourd\'hui' : 'Examen passé')) + '</span>' +
+      '<span style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);flex:1;">avant l\'examen · ' + v.examCoveragePct + '% du programme vu au moins une fois</span></div>' : '') +
     '<div style="margin:22px 24px 0;"><button data-action="goParcours" class="hv-a" style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:15px 16px;display:flex;align-items:center;gap:13px;text-align:left;cursor:pointer;color:var(--ink);box-sizing:border-box;">' +
     (v.parcoursStartedFlag
       ? '<span style="flex-shrink:0;position:relative;width:38px;height:38px;border-radius:50%;background:conic-gradient(var(--acc) ' + (v.parcoursOverallPct * 3.6) + 'deg,var(--line) ' + (v.parcoursOverallPct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;"><span style="width:32px;height:32px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font:500 10px \'Inter\',monospace;color:var(--acc);">' + v.parcoursOverallPct + '%</span></span>'
@@ -1708,6 +1866,7 @@ function tplQuiz(v) {
     '<div style="padding:56px 24px 0;"><div style="display:flex;align-items:center;gap:12px;">' +
     '<button data-action="quitQuiz" style="background:none;border:none;padding:0;font:500 12.5px \'Inter\',sans-serif;color:var(--ink3);cursor:pointer;">Fermer</button>' +
     '<div style="flex:1;text-align:center;font:500 11px \'Inter\',sans-serif;color:var(--ink2);">' + esc(v.quizTitle) + '</div>' +
+    (v.examTimerLabel ? '<div style="font:600 11px \'Inter\',sans-serif;color:' + (v.examTimerLow ? 'var(--warn)' : 'var(--acc)') + ';margin-right:10px;">⏱ ' + esc(v.examTimerLabel) + '</div>' : '') +
     '<div style="font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);">' + esc(v.quizPos) + '</div></div>' +
     '<div style="margin-top:14px;height:3px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="width:' + v.quizPct + '%;height:3px;background:linear-gradient(90deg,var(--acc2),var(--acc),var(--gold));transition:width .35s cubic-bezier(.16,1,.3,1);"></div></div></div>' +
     '<div style="flex:1;overflow:auto;min-height:0;padding:0 24px;">' + mid + '</div>' +
@@ -1727,6 +1886,8 @@ function tplDone(v) {
     '<div><div style="font:300 28px/1 Fraunces,serif;color:var(--acc);">+' + v.doneXp + '</div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:5px;">XP GAGNÉS</div></div>' +
     '<div><div style="font:300 28px/1 Fraunces,serif;">' + v.doneKo + '</div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:5px;">À REVOIR</div></div>' +
     '<div><div style="font:300 28px/1 Fraunces,serif;">' + v.streak + '</div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:5px;">JOURS</div></div></div>' +
+    (v.streakMilestone ? '<div class="stagger" style="margin-top:20px;background:' + hexA('#f2cd82', 0.12) + ';border:1px solid var(--gold);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;">' +
+      '<span style="font-size:22px;">🔥</span><span style="font:500 12.5px/1.4 \'Inter\',sans-serif;color:var(--ink);"><b>' + v.streakMilestone + ' jours d\'affilée !</b><br><span style="color:var(--ink2);font-weight:400;">Une régularité qui paie, continue comme ça.</span></span></div>' : '') +
     '<div style="font:400 13px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:22px;">' + esc(v.doneNote) + '</div>' +
     '<div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">' +
     '<button data-action="doneAgain" style="border:none;border-radius:999px;padding:17px;font:600 14px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + esc(v.doneCta) + '</button>' +
@@ -1765,10 +1926,15 @@ function tplBuilder(v) {
 
 function tplExamPick(v) {
   var g = v.niveauGeneral;
+  var o = v.examOfficiel;
   var niveauBtn = '<button data-action="examGo" data-key="' + esc(g.key) + '" data-label="' + esc(g.label) + '" class="hv-a stagger" style="background:linear-gradient(135deg,var(--panel2),var(--panel));border:1px solid var(--gold);border-radius:18px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;">' +
     '<span style="font-size:26px;">⚡</span>' +
     '<span style="flex:1;"><span style="display:block;font:500 14px \'Inter\',sans-serif;">' + esc(g.label) + '</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(g.sub) + '</span></span>' +
     '<span style="font:500 10px \'Inter\',sans-serif;color:var(--gold);">' + esc(g.best) + '</span></button>';
+  var officielBtn = '<button data-action="examGo" data-key="' + esc(o.key) + '" data-label="' + esc(o.label) + '" class="hv-a stagger" style="background:linear-gradient(135deg,' + hexA('#dbb46f', 0.14) + ',var(--panel));border:1px solid var(--acc);border-radius:18px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;">' +
+    '<span style="font-size:26px;">⏱</span>' +
+    '<span style="flex:1;"><span style="display:block;font:500 14px \'Inter\',sans-serif;">' + esc(o.label) + '</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(o.sub) + '</span></span>' +
+    '<span style="font:500 10px \'Inter\',sans-serif;color:var(--acc);">' + esc(o.best) + '</span></button>';
   var lvs = v.examLevels.map(function (e, ei) {
     return '<button data-action="examGo" data-key="' + esc(e.key) + '" data-label="' + esc(e.label) + '" class="hv-a stagger" style="animation-delay:' + (ei * 0.06).toFixed(2) + 's;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;">' +
       '<span style="font:300 30px/1 Fraunces,serif;color:var(--acc);">' + e.n + '</span>' +
@@ -1778,9 +1944,11 @@ function tplExamPick(v) {
   return '<div style="flex:1;overflow:auto;min-height:0;padding:58px 24px 0;">' +
     '<button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
     '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.2em;color:var(--ink3);margin-top:16px;">EXAMEN BLANC</div>' +
-    '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:14px;">Quatre <span style="font-style:italic;">formats</span></div>' +
-    '<div style="font:400 13px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;">Questions tirées au sort, sans correction avant la fin. Seuil de réussite : 60 %.</div>' +
-    '<div style="margin-top:24px;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--gold);">CHECK RAPIDE</div>' +
+    '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:14px;">Cinq <span style="font-style:italic;">formats</span></div>' +
+    '<div style="font:400 13px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;">Questions tirées au sort, sans correction avant la fin. Seuil de réussite : 60 % en entraînement, 50 % sur l\'examen officiel chronométré.</div>' +
+    '<div style="margin-top:24px;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--acc);">FORMAT OFFICIEL</div>' +
+    '<div style="margin-top:10px;">' + officielBtn + '</div>' +
+    '<div style="margin-top:22px;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--gold);">CHECK RAPIDE</div>' +
     '<div style="margin-top:10px;">' + niveauBtn + '</div>' +
     '<div style="margin-top:22px;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">PROGRESSION PAR NIVEAU</div>' +
     '<div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;">' + lvs + '</div>' +
@@ -1965,11 +2133,11 @@ function tplFiche(v) {
       '<span id="ficheTestStatus" style="font:500 11.5px \'Inter\',sans-serif;color:' + (v.ficheTested ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (v.ficheTested ? '✓ test fait' : 'test à faire') + '</span>' : '') +
     '<span id="ficheValidatedBadge" style="margin-left:auto;font:600 10.5px \'Inter\',sans-serif;color:var(--acc2);display:' + (v.ficheValidated ? '' : 'none') + ';">FICHE VALIDÉE</span></div>';
   return '<div style="flex:1;overflow:auto;min-height:0;position:relative;">' +
-    '<div style="position:sticky;top:0;left:0;right:0;height:3px;background:var(--line);z-index:5;"><div id="ficheProgressFill" style="height:3px;width:0%;background:linear-gradient(90deg,var(--acc2),var(--acc),var(--gold));"></div></div>' +
+    '<div style="position:sticky;top:0;left:0;right:0;height:3px;background:var(--line);z-index:5;"><div id="ficheProgressFill" style="height:3px;width:0%;background:' + acc + ';"></div></div>' +
     '<div style="padding:32px 26px 22px;background:linear-gradient(160deg,' + hexA(acc, 0.2) + ',transparent 70%);">' +
     '<button data-action="goBack" class="btn-back hv-a" style="color:' + acc + ';"><span class="bkarr">&#8249;</span> Retour</button>' +
     '<div style="display:flex;align-items:center;gap:14px;margin-top:18px;">' +
-    '<span style="flex-shrink:0;width:52px;height:52px;border-radius:16px;background:' + hexA(acc, 0.18) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;font-size:23px;">' + esc(v.ficheIcon) + '</span>' +
+    '<span style="flex-shrink:0;width:52px;height:52px;border-radius:16px;background:' + hexA(acc, 0.18) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;font-size:23px;animation:kfCalm 3.4s ease-in-out infinite;">' + esc(v.ficheIcon) + '</span>' +
     '<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;align-items:center;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);"><div>' + esc(v.ficheIdx) + '</div><div style="color:' + acc + ';">' + v.ficheMin + ' MIN</div></div>' +
     '<div style="font:300 26px/1.15 Fraunces,serif;letter-spacing:-.02em;margin-top:6px;">' + esc(v.ficheTitle) + '</div></div></div>' +
     '<div style="font:400 10px/1.6 \'Inter\',sans-serif;color:var(--dim);margin-top:16px;">' + esc(v.ficheSource) + '</div>' +
@@ -2088,7 +2256,10 @@ function tplProfile(v) {
     '<div style="margin:22px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin-bottom:10px;">COMPTE</div>' +
     '<div style="display:flex;gap:8px;">' +
     '<input data-name-input value="' + esc(nameVal) + '" placeholder="Votre prénom" maxlength="24" style="flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 15px;font:500 14px \'Inter\',sans-serif;color:var(--ink);outline:none;box-sizing:border-box;" />' +
-    '<button data-action="renameSave" style="flex-shrink:0;border:none;border-radius:14px;padding:13px 18px;font:600 12.5px \'Inter\',sans-serif;color:var(--on);background:var(--acc);cursor:pointer;">Valider</button></div></div>' +
+    '<button data-action="renameSave" style="flex-shrink:0;border:none;border-radius:14px;padding:13px 18px;font:600 12.5px \'Inter\',sans-serif;color:var(--on);background:var(--acc);cursor:pointer;">Valider</button></div>' +
+    '<label style="display:block;font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);margin:14px 0 8px;">DATE D\'EXAMEN</label>' +
+    '<input type="date" data-exam-date-input value="' + esc(v.examDate || '') + '" style="width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 15px;font:500 14px \'Inter\',sans-serif;color:var(--ink);outline:none;" />' +
+    '</div>' +
     '<div style="margin:24px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin-bottom:10px;">PRÉFÉRENCES</div>' +
     '<div style="background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;">' +
     '<button data-action="toggleNotif" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Rappel quotidien</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(v.notifSub) + '</span></span>' + notifSwitch + '</button>' +
@@ -2102,6 +2273,18 @@ function tplProfile(v) {
       '<div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">XP, série, révisions et diagnostic seront définitivement remis à zéro sur cet appareil.</div>' +
       '<div style="display:flex;gap:10px;margin-top:14px;"><button data-action="resetProgressCancel" style="flex:1;background:none;border:1px solid var(--line);border-radius:999px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Annuler</button>' +
       '<button data-action="resetProgressConfirm" style="flex:1;background:var(--warn);border:none;border-radius:999px;padding:12px;font:600 12.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;">Confirmer</button></div></div>' : '') +
+    '<div style="margin:24px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin-bottom:10px;">DONNÉES</div>' +
+    '<div style="background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;">' +
+    '<button data-action="exportData" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Exporter ma progression</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">Télécharge un fichier de sauvegarde (.json)</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
+    '<button data-action="importDataPick" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Importer une sauvegarde</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">Restaure la progression depuis un fichier .json</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
+    '<button data-action="genAttestation" style="width:100%;background:none;border:none;padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Récapitulatif de temps de révision</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(v.totalTimeLabel) + ' cumulées · document personnel, non certifié</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
+    '<input type="file" id="importFileInput" data-import-file-input accept="application/json" style="display:none" />' +
+    '</div><div style="font:400 10.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;">Tout reste stocké sur cet appareil : exporte régulièrement pour ne rien perdre en cas de changement de téléphone ou de vidage du cache.</div></div>' +
+    (v.confirmImport ? '<div class="stagger" style="margin:16px 24px 0;background:var(--panel2);border:1px solid var(--acc);border-radius:18px;padding:16px;">' +
+      '<div style="font:500 13px \'Inter\',sans-serif;color:var(--ink);">Remplacer ta progression actuelle ?</div>' +
+      '<div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">Fichier importé : ' + esc(v.confirmImportSummary || '') + '. Il va remplacer toutes les données actuelles sur cet appareil.</div>' +
+      '<div style="display:flex;gap:10px;margin-top:14px;"><button data-action="importDataCancel" style="flex:1;background:none;border:1px solid var(--line);border-radius:999px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Annuler</button>' +
+      '<button data-action="importDataConfirm" style="flex:1;background:var(--acc);border:none;border-radius:999px;padding:12px;font:600 12.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;">Remplacer</button></div></div>' : '') +
     (v.notifOn ? '<div style="margin:16px 24px 0;background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;gap:12px;align-items:flex-start;">' +
       '<div style="width:9px;height:9px;border-radius:50%;background:var(--acc);margin-top:5px;animation:kfBreathe 2.6s ease-in-out infinite;"></div>' +
       '<div><div style="font:500 12.5px \'Inter\',sans-serif;">Dossier CGP · 19:30</div><div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + v.dueCount + ' questions arrivent à échéance. Trois minutes suffisent.</div></div></div>' : '') +
@@ -3552,12 +3735,21 @@ function onAppClick(e) {
       break;
     case 'toggleNotif': state.notif = !state.notif; render(); break;
     case 'toggleExamInstant': store.examInstant = !store.examInstant; save(); render(); break;
+    case 'exportData': exportData(); break;
+    case 'genAttestation': generateAttestation(); break;
+    case 'importDataPick': { var fi = document.getElementById('importFileInput'); if (fi) fi.click(); break; }
+    case 'importDataCancel': state.pendingImport = null; state.confirmImport = false; render(); break;
+    case 'importDataConfirm':
+      if (state.pendingImport) { store = state.pendingImport; fillStoreDefaults(); save(); }
+      state.pendingImport = null; state.confirmImport = false;
+      go('home');
+      break;
     case 'goTab': go(d.k); break;
     case 'onbNameNext': store.name = (state.nameInput || '').trim() || 'Camille'; save(); state.nameInput = null; state.onb = 0; render(); break;
     case 'renameSave': store.name = (state.nameInput || '').trim() || store.name || 'Camille'; save(); state.nameInput = null; render(); break;
     case 'onbNameSkip': state.nameInput = null; state.onb = 0; render(); break;
     case 'onbNext': state.onb = Math.min(2, state.onb + 1); render(); break;
-    case 'pickLevel': state.level = +d.idx; render(); break;
+    case 'pickLevel': state.level = +d.idx; store.level = state.level; save(); render(); break;
     case 'startDiag': startDiagQuiz(); break;
     case 'startDaily': startDailyQuiz(); break;
     case 'startSrs': startSrsQuiz(); break;
@@ -3813,6 +4005,24 @@ function waitData() {
 document.addEventListener('DOMContentLoaded', function () {
   ensureSkeleton();
   appEl.addEventListener('click', onAppClick);
+  appEl.addEventListener('change', function (e) {
+    if (e.target.matches('[data-exam-date-input]')) { store.examDate = e.target.value || null; save(); render(); }
+    if (e.target.matches('[data-import-file-input]')) {
+      var file = e.target.files && e.target.files[0];
+      e.target.value = '';
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function () {
+        var parsed;
+        try { parsed = JSON.parse(reader.result); } catch (err) { alert('Fichier invalide : ce n\'est pas une sauvegarde JSON valide.'); return; }
+        if (!parsed || typeof parsed !== 'object' || !parsed.srs) { alert('Fichier invalide : ce fichier ne ressemble pas à une sauvegarde Dossier CGP.'); return; }
+        state.pendingImport = parsed;
+        state.confirmImport = true;
+        render();
+      };
+      reader.readAsText(file);
+    }
+  });
   appEl.addEventListener('input', function (e) {
     if (e.target.matches('[data-texte-input]')) state.texte = e.target.value;
     if (e.target.matches('[data-memviz-input]')) state.memvizAnswers[+e.target.dataset.i] = e.target.value;
@@ -3829,6 +4039,11 @@ document.addEventListener('DOMContentLoaded', function () {
   if (!store.seeded) { state.screen = 'onb'; state.onb = -1; }
   render();
   waitData();
+  setInterval(function () {
+    if (!store || document.visibilityState !== 'visible') return;
+    store.totalSeconds = (store.totalSeconds || 0) + 15;
+    save();
+  }, 15000);
 });
 
 })();
