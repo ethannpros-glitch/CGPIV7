@@ -2062,7 +2062,7 @@ function tplProgress(v) {
     '<polygon points="' + v.radarGridOuter + '" fill="none" stroke="var(--line)" stroke-width="1"></polygon>' +
     '<polygon points="' + v.radarGridMid + '" fill="none" stroke="var(--line)" stroke-width="1"></polygon>' +
     '<polygon points="' + v.radarGridInner + '" fill="none" stroke="var(--line)" stroke-width="1"></polygon>' +
-    '<polygon class="v16draw" points="' + v.radarPts + '" fill="rgba(195,226,129,.2)" stroke="var(--acc)" stroke-width="2" style="stroke-dasharray:900;stroke-dashoffset:900;animation:v16draw 1.1s cubic-bezier(.16,1,.3,1) .15s forwards,kfIn .5s ease .15s forwards;"></polygon>' + dots + radarLabels + '</svg></div>' +
+    '<polygon class="v16draw" points="' + v.radarPts + '" fill="rgba(219,180,111,.18)" stroke="var(--acc)" stroke-width="2" style="stroke-dasharray:900;stroke-dashoffset:900;animation:v16draw 1.1s cubic-bezier(.16,1,.3,1) .15s forwards,kfIn .5s ease .15s forwards;"></polygon>' + dots + radarLabels + '</svg></div>' +
     tplMasteryChart(v.masteryHistory) +
     '<div style="margin:16px 24px 0;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">DÉTAIL PAR PÔLE</div>' +
     '<div style="margin:10px 24px 0;display:flex;flex-direction:column;gap:16px;">' + poles + '</div>' +
