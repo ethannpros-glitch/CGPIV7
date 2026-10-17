@@ -585,7 +585,7 @@ function validateTexteOpen() {
   var it = cur(); if (!it) return;
   var pts = it.q.points || [];
   var normTxt = normalize(state.texte || '');
-  var matched = pts.filter(function (p) { return (p.syn || []).some(function (w) { return normTxt.indexOf(normalize(w)) >= 0; }); }).length;
+  var matched = pts.filter(function (p) { return kwPointMatched(normTxt, p.syn); }).length;
   grade(pts.length > 0 && matched >= Math.ceil(pts.length / 2));
 }
 function nextQ() {
@@ -974,7 +974,7 @@ function computeVals() {
     if (isTexteLike && v.texteDone) {
       var normTxt = normalize(st.texte || '');
       v.openPoints = (q.points || []).map(function (p) {
-        var got = (p.syn || []).some(function (w) { return normTxt.indexOf(normalize(w)) >= 0; });
+        var got = kwPointMatched(normTxt, p.syn);
         return { k: p.k, got: got };
       });
     }
@@ -1179,6 +1179,19 @@ function computeVals() {
 
 // ---- markup helpers --------------------------------------------------------
 function normalize(s) { return (s || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+function kwPointMatched(normTxt, syn) {
+  var tokens = normTxt.split(/[^a-z0-9]+/).filter(function (t) { return t.length > 0; });
+  return (syn || []).some(function (w) {
+    var nw = normalize(w);
+    if (!nw) return false;
+    if (nw.indexOf(' ') >= 0) return normTxt.indexOf(nw) >= 0; // expression enti\u00e8re : correspondance exacte
+    if (nw.length <= 3) return tokens.indexOf(nw) >= 0; // sigle court (PER, UC, IR\u2026) : mot exact, pas de sous-cha\u00eene
+    // mot plus long : accepte aussi une racine commune (singulier/pluriel, conjugaison, variante)
+    return normTxt.indexOf(nw) >= 0 || tokens.some(function (t) {
+      return t.length >= 4 && (t.indexOf(nw) >= 0 || nw.indexOf(t) >= 0);
+    });
+  });
+}
 function hexA(hex, a) {
   var h = (hex || '').replace('#', '');
   if (h.length !== 6) return 'rgba(219,180,111,' + a + ')';
