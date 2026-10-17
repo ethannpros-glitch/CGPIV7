@@ -1,0 +1,4049 @@
+(function () {
+'use strict';
+
+var IV = [1, 3, 7, 16, 35, 90];
+var LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
+var KEY = 'cgp_proto_v2';
+function getUserName() { return (store && store.name) || 'Camille'; }
+var today = function () { return Math.floor(Date.now() / 86400000); };
+
+var PROGRAM = [
+  { n: 1, title: 'Les bases du marché', poles: ['Culture financière'], accent: '#a888c9',
+    theory: ['th_mc_interets', 'th_mc_capi', 'th_mc_diversif', 'th_mc_risque', 'th_mc_oblig', 'th_mc_options', 'th_mc_macro', 'th_crypto'],
+    quiz: ['mc_interets', 'mc_oblig', 'mc_action', 'mc_risque', 'mc_options', 'mc_macro', 'mc_portefeuille', 'mc_produits', 'mc_analyse', 'mc_corpo', 'mc_cas', 'crypto_q'],
+    validation: 'Maîtrise du pôle Culture financière ≥ 70 %, toutes les fiches ouvertes au moins une fois.' },
+  { n: 2, title: 'Assurance-vie & capitalisation', poles: ['Les enveloppes'], accent: '#f2cd82',
+    theory: ['th_av', 'th_av_methodo', 'th_av_appro', 'th_capi', 'th_lux'],
+    quiz: ['av_fondamentaux', 'av_rachat', 'lecture_contrat', 'av_appro', 'av_expert', 'capi_fond', 'lux_fond'],
+    validation: '"Fondamentaux de l\'AV" et "Rachats & fiscalité" ≥ 75 %. Tu dois savoir citer de tête la règle des 8 ans.' },
+  { n: 3, title: 'PER, PEA, compte-titres', poles: ['Les enveloppes'], accent: '#f2cd82',
+    theory: ['th_per', 'th_per_methodo', 'th_per_appro', 'th_pee', 'th_bourse'],
+    quiz: ['per_fondamentaux', 'per_fiscalite', 'per_deblocage', 'per_percol', 'per_prefon', 'per_reseau', 'per_appro', 'pee_perco', 'bourse_pea', 'bourse_cto'],
+    validation: 'Session personnalisée "PER" seul, niveau Expert, 15 questions ≥ 75 %.' },
+  { n: 4, title: 'Le pôle le plus dense', poles: ['Supports & actifs'], accent: '#4fcfa8',
+    theory: ['th_fonds', 'th_lire_etf', 'th_etf_actif', 'th_struct_gen', 'th_struct', 'th_lire_structure', 'th_frais_struct', 'th_lire_dic', 'th_immo_levier', 'th_immo', 'th_scpi', 'th_pe', 'th_pe2'],
+    quiz: ['fonds_choix', 'fonds_etf', 'etf_actif', 'struct_dic', 'struct_action', 'struct_lecture', 'frais_struct', 'immo_patrimoine', 'scpi_pierre', 'soc_sci_struct', 'pe_fondamentaux', 'pe_structuration', 'pe_fiscalite', 'pe_strategie'],
+    validation: 'Maîtrise du pôle ≥ 65 % (le plus dur, repris en semaine 8). Sais expliquer une barrière de protection.' },
+  { n: 5, title: 'IR, IFI, succession, démembrement', poles: ['Fiscalité & transmission'], accent: '#6fa8d0',
+    theory: ['th_fisc', 'th_fisc_part_appro', 'th_fisc_patri_appro', 'th_succession', 'th_dutreil', 'th_dem', 'th_mat', 'th_quotient', 'th_ir_escalier', 'th_pvimmo_duree', 'th_av_horssucc'],
+    quiz: ['fisc_ir', 'fisc_part_appro', 'fisc_patri_appro', 'fisc_expert', 'succession', 'ing_donation', 'ing_dutreuil', 'dem_fondamentaux', 'dem_expert', 'mat_regimes'],
+    validation: '"Démembrement" et "Succession" ≥ 75 %. Sais citer de tête 2 tranches du barème art. 669.' },
+  { n: 6, title: 'Retraite, prévoyance, crédit', poles: ['Retraite & protection', 'Financement & levier'], accent: '#d98a9c',
+    theory: ['th_retraite', 'th_retraite_etages', 'th_prev', 'th_prevoyance', 'th_prev_trou', 'th_lombard', 'th_hypo'],
+    quiz: ['retraite_base', 'retraite_compl', 'prev_fondamentaux', 'prev_madelin', 'protection_sociale', 'credit_lombard', 'credit_hypo', 'ing_lombard', 'prev_emprunteur'],
+    validation: '"Crédit Lombard" ≥ 75 %. Sais expliquer un appel de marge sans relire le cours.' },
+  { n: 7, title: 'Ingénierie & réglementation', poles: ['Entreprise & ingénierie', 'Métier & méthode'], accent: '#9db56a',
+    theory: ['th_soc', 'th_gerance_appro', 'th_entreprise_appro', 'th_ing', 'th_holding_sci', 'th_holding_flux', 'th_reg', 'th_amf', 'th_grille_methode', 'th_grille_per', 'th_grille_struct', 'th_arbitrage', 'th_vocab', 'th_esg'],
+    quiz: ['soc_ei_micro', 'soc_sarl', 'soc_sas', 'soc_sel', 'gerance_appro', 'entreprise_appro', 'ing_expert', 'soc_holding', 'soc_holding_v8', 'soc_mbo', 'soc_holding_sci', 'ing_150bter', 'reg_mif', 'reg_lcb', 'amf', 'arbitrage', 'reg_esg'],
+    validation: '"Certification AMF" ≥ 80 %. "Holding" ≥ 70 %.' },
+  { n: 8, title: 'Rattrapage ciblé', poles: [], accent: '#e2895f', consolidation: true,
+    theory: [], quiz: [],
+    validation: 'Examen blanc Niveau 1 ≥ 85 %, Niveau 2 ≥ 75 %, aucun pôle sous 70 % dans Stats.' },
+  { n: 9, title: 'Conditions réelles', poles: [], accent: '#dbb46f', consolidation: true,
+    theory: [], quiz: [],
+    validation: 'Niveau 3 · Technique ≥ 80 % sur 2 tentatives. Mise à niveau générale ≥ 85 %.' }
+];
+var PROGRAM_ONGOING = ['fmt_spot', 'fmt_order', 'fmt_scenario', 'fmt_doc', 'fmt_open', 'fmt_texte', 'fmt_memviz', 'client_pointilleux', 'rentabilite_crm'];
+var PARCOURS_POLE_OPTIONS = ['Culture financière', 'Les enveloppes', 'Supports & actifs', 'Fiscalité & transmission', 'Retraite & protection', 'Financement & levier', 'Entreprise & ingénierie', 'Métier & méthode'];
+function parcoursOrderedProgram(priority) {
+  var content = PROGRAM.filter(function (w) { return !w.consolidation; });
+  var consolidation = PROGRAM.filter(function (w) { return w.consolidation; });
+  if (priority && priority.length) {
+    var pri = content.filter(function (w) { return w.poles.some(function (p) { return priority.indexOf(p) >= 0; }); });
+    var rest = content.filter(function (w) { return !w.poles.some(function (p) { return priority.indexOf(p) >= 0; }); });
+    content = pri.concat(rest);
+  }
+  return content.concat(consolidation);
+}
+function parcoursPrecedingTheory(theoryId) {
+  var ordered = parcoursOrderedProgram(store.parcoursPriorityPoles || []);
+  var flat = [];
+  for (var i = 0; i < ordered.length; i++) {
+    var w = ordered[i];
+    for (var j = 0; j < (w.theory || []).length; j++) {
+      var id = w.theory[j];
+      if (id === theoryId) return flat;
+      flat.push(id);
+    }
+  }
+  return flat;
+}
+
+var state = {
+  ready: false, theme: 'dark', screen: 'home', openPole: null, cat: null,
+  quiz: null, qi: 0, ans: null, pick: null, calc: '', texte: '', revealed: false, results: [],
+  fiche: null, level: 1, onb: 0, confetti: false, notif: true,
+  orderKey: null, orderCur: null,
+  memvizPhase: 'announce', memvizTimeLeft: 0, memvizTimeTotal: 0, memvizAnswers: [], memvizResult: null,
+  buildDom: ['all'], buildTypes: ['qcm', 'vf'], buildLevel: 'all', buildN: 15,
+  coursePoleSel: null, navStack: [], navDir: null, confirmReset: false, nameInput: null, search: '',
+  parcoursOpenWeek: null, parcoursSetupMinutes: 30, parcoursSetupObjective: 60, parcoursSetupPriority: [],
+  formulaOpen: null, examEndAt: null, examSecondsLeft: 0,
+  confirmImport: false, pendingImport: null, newStreakMilestone: null
+};
+var store = null;
+var confettiTimer = null;
+var memvizTimer = null;
+var examTimer = null;
+function parseHoles(svg) {
+  var out = [], re = /<text[^>]*data-hole="([^"]+)"[^>]*>([^<]*)<\/text>/g, m, idx = 0;
+  while ((m = re.exec(svg || ''))) { idx++; out.push({ n: idx, key: m[1], text: m[2] }); }
+  return out;
+}
+function normalizeHoleAnswer(s) {
+  return String(s == null ? '' : s).toLowerCase()
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[€%\s]/g, '');
+}
+function memvizReset() {
+  if (memvizTimer) { clearInterval(memvizTimer); memvizTimer = null; }
+  state.memvizPhase = 'announce'; state.memvizTimeLeft = 0; state.memvizTimeTotal = 0; state.memvizAnswers = []; state.memvizResult = null;
+}
+
+function fillStoreDefaults() {
+  if (!store.poles) store.poles = {};
+  if (!store.best) store.best = {};
+  if (store.examInstant == null) store.examInstant = false;
+  if (!store.fichesSeen) store.fichesSeen = {};
+  if (!store.ficheSectionsSeen) store.ficheSectionsSeen = {};
+  if (!store.ficheTested) store.ficheTested = {};
+  if (!store.ficheTestReview) store.ficheTestReview = {};
+  if (!store.flagged) store.flagged = {};
+  if (store.programStart === undefined) store.programStart = null;
+  if (!store.parcoursMinutesDay) store.parcoursMinutesDay = 30;
+  if (!store.parcoursObjectiveDays) store.parcoursObjectiveDays = 63;
+  if (!store.parcoursPriorityPoles) store.parcoursPriorityPoles = [];
+  if (!store.history) store.history = [];
+  if (!store.cultureBest) store.cultureBest = {};
+  if (!store.cultureSeen) store.cultureSeen = {};
+  if (!store.cultureSpecSeen) store.cultureSpecSeen = {};
+  if (!store.formulesSeen) store.formulesSeen = {};
+  if (!store.srs) store.srs = {};
+  if (!store.totalSeconds) store.totalSeconds = 0;
+  if (!store.firstSeenDay) store.firstSeenDay = today();
+  if (store.lastActiveDay === undefined) store.lastActiveDay = null;
+  if (!store.streak) store.streak = 0;
+}
+function load() {
+  var s = null;
+  try { s = JSON.parse(localStorage.getItem(KEY)); } catch (e) { s = null; }
+  store = s || { srs: {}, xp: 0, streak: 0, seen: 0, poles: {}, best: {}, seeded: false };
+  fillStoreDefaults();
+}
+function exportData() {
+  try {
+    var blob = new Blob([JSON.stringify(store, null, 1)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'dossier-cgp-sauvegarde-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  } catch (e) {}
+}
+function downloadTextFile(filename, text) {
+  try {
+    var blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  } catch (e) {}
+}
+function generateAttestation() {
+  var S = store;
+  var totalSec = S.totalSeconds || 0;
+  var h = Math.floor(totalSec / 3600), m = Math.round((totalSec % 3600) / 60);
+  var poles = poleNames();
+  var poleLines = poles.length
+    ? poles.map(function (p) { return '  - ' + p + ' : ' + polePct(p) + '% de maîtrise'; }).join('\n')
+    : '  (aucune donnée pour le moment)';
+  var days = Math.max(0, today() - (S.firstSeenDay != null ? S.firstSeenDay : today()));
+  var lines = [
+    'RÉCAPITULATIF PERSONNEL DE RÉVISION — DOSSIER CGP',
+    '==================================================',
+    '',
+    'Généré le ' + new Date().toLocaleDateString('fr-FR') + ' pour ' + (S.name || 'un utilisateur de l\'application') + '.',
+    '',
+    'AVERTISSEMENT : ce document est un récapitulatif d\'usage personnel calculé localement',
+    'sur cet appareil. Ce n\'est PAS une attestation officielle de formation continue délivrée',
+    'par un organisme agréé, et il n\'a aucune valeur certifiée auprès de l\'ACPR, de l\'ORIAS ou',
+    'd\'une association professionnelle. À utiliser comme justificatif personnel d\'auto-formation',
+    'uniquement, à faire valider si besoin par votre organisme de formation continue.',
+    '',
+    '--------------------------------------------------',
+    'Période couverte : ' + days + ' jour' + (days > 1 ? 's' : '') + ' depuis la première utilisation',
+    'Temps cumulé d\'utilisation de l\'application : environ ' + h + ' h ' + (m < 10 ? '0' : '') + m + ' min',
+    'Questions répondues : ' + (S.seen || 0),
+    'Série actuelle : ' + (S.streak || 0) + ' jour' + ((S.streak || 0) > 1 ? 's' : '') + ' de suite',
+    'XP total : ' + (S.xp || 0),
+    '',
+    'Détail par pôle :',
+    poleLines,
+    '--------------------------------------------------'
+  ];
+  downloadTextFile('dossier-cgp-recapitulatif-' + new Date().toISOString().slice(0, 10) + '.txt', lines.join('\n'));
+}
+function logHistory() {
+  var h = store.history, last = h[h.length - 1];
+  if (!last || last.d !== today()) {
+    h.push({ d: today(), mastery: masteryPct(), xp: store.xp || 0 });
+    if (h.length > 120) h.splice(0, h.length - 120);
+    save();
+  }
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+
+// ---- data helpers -------------------------------------------------------
+function D() { return window.CGP_DATA || { BANK: {}, THEORY: {}, CATS: [], EXAM_LEVELS: {} }; }
+function bank(id) { var b = D().BANK[id]; return Array.isArray(b) ? b : []; }
+function allCats() {
+  var out = [];
+  D().CATS.forEach(function (c) {
+    (c.sub || []).forEach(function (s) {
+      out.push(Object.assign({}, s, { pole: c.pole, parent: c.label, parentId: c.id }));
+    });
+  });
+  return out;
+}
+function quizCats() { return allCats().filter(function (s) { return !s.theory && bank(s.id).length; }); }
+var _sub2cat = null;
+function sub2cat() {
+  if (_sub2cat) return _sub2cat;
+  _sub2cat = {};
+  D().CATS.forEach(function (c) { (c.sub || []).forEach(function (s) { _sub2cat[s.id] = c.id; }); });
+  return _sub2cat;
+}
+function qIsExpert(q, d) {
+  d = d || '';
+  if (/(_expert|_appro|_reseau|pointilleux|_v8|holding|150bter|dutreuil|lombard|struct_|lecture_contrat|^mc_|mccorp|lux_|^ing_|^soc_|mat_regimes|scpi_)/.test(d)) return true;
+  if (['spot', 'scenario', 'doc', 'open'].indexOf(q.type) >= 0) return true;
+  return false;
+}
+var BUILD_TYPES = [
+  ['qcm', 'QCM'], ['vf', 'Vrai / Faux'], ['calc', 'Calcul'], ['spot', 'Repère l’erreur'],
+  ['order', 'Priorisation'], ['scenario', 'Scénario'], ['doc', 'Lecture de document'],
+  ['open', 'Question ouverte'], ['texte', 'Texte libre'], ['memviz', 'Mémoire visuelle']
+];
+function buildPass(q, d) {
+  if (state.buildTypes.indexOf(q.type) < 0) return false;
+  var cat = sub2cat()[d] || d;
+  if (state.buildDom.indexOf('all') < 0 && state.buildDom.indexOf(cat) < 0) return false;
+  if (state.buildLevel === 'facile' && qIsExpert(q, d)) return false;
+  if (state.buildLevel === 'expert' && !qIsExpert(q, d)) return false;
+  return true;
+}
+function buildPool() {
+  var pool = [];
+  Object.keys(D().BANK).forEach(function (d) {
+    (bank(d) || []).forEach(function (q, i) { if (buildPass(q, d)) pool.push(d + '#' + i); });
+  });
+  return pool;
+}
+function startBuilder() {
+  var pool = buildPool().sort(function () { return Math.random() - 0.5; }).slice(0, state.buildN);
+  startList(pool, { kind: 'custom', title: 'Session personnalisée' });
+}
+function poleNames() {
+  var seen = {}, out = [];
+  D().CATS.forEach(function (c) { if (c.pole && !seen[c.pole]) { seen[c.pole] = true; out.push(c.pole); } });
+  return out;
+}
+
+var _searchIdx = null;
+function searchIndex() {
+  if (_searchIdx) return _searchIdx;
+  var Dd = D(), idx = [];
+  Dd.CATS.forEach(function (c) {
+    (c.sub || []).forEach(function (s) {
+      if (s.theory) {
+        var t = Dd.THEORY[s.theory];
+        if (!t) return;
+        var heads = (t.sections || []).map(function (sec) { return sec.h || ''; }).join(' | ');
+        var bodies = (t.sections || []).map(function (sec) { return sec.body || ''; }).join(' | ');
+        idx.push({
+          kind: 'fiche', id: s.theory, catId: c.id, pole: c.pole, catLabel: c.label,
+          title: t.title || s.label,
+          titleN: normalize(t.title || s.label),
+          headN: normalize(heads),
+          bodyN: normalize(bodies)
+        });
+      } else if (bank(s.id).length) {
+        var qs = bank(s.id);
+        idx.push({
+          kind: 'quiz', id: s.id, catId: c.id, pole: c.pole, catLabel: c.label,
+          title: s.label, count: qs.length,
+          titleN: normalize(s.label),
+          headN: '',
+          bodyN: normalize(qs.map(function (q) { return q.q + ' ' + (q.options || []).join(' '); }).join(' | '))
+        });
+      }
+    });
+  });
+  CULTURE_METIERS.forEach(function (m) {
+    var specNames = m.specialites.map(function (s) { return s.name + ' ' + s.desc; }).join(' | ');
+    idx.push({
+      kind: 'culture', id: m.id, catId: 'culture', pole: 'Culture générale', catLabel: 'Métiers',
+      title: m.name,
+      titleN: normalize(m.name),
+      headN: normalize(specNames),
+      bodyN: normalize(m.intro + ' ' + m.parcours + ' ' + m.remuneration + ' ' + m.statut + ' ' + (m.investLimites || '') + ' ' + m.etablissements.join(' '))
+    });
+  });
+  FORMULES.forEach(function (f) {
+    idx.push({
+      kind: 'formula', id: f.id, catId: 'formulas', pole: f.pole, catLabel: 'Boîte à formules',
+      title: f.title,
+      titleN: normalize(f.title),
+      headN: normalize(f.formula),
+      bodyN: normalize(f.steps.join(' ') + ' ' + f.example.q + ' ' + f.example.result + ' ' + f.piege)
+    });
+  });
+  _searchIdx = idx;
+  return idx;
+}
+function countOcc(hay, needle) {
+  var c = 0, i = 0;
+  while ((i = hay.indexOf(needle, i)) !== -1) { c++; i += needle.length; }
+  return c;
+}
+function bodyIsDense(item, needle) {
+  var n = countOcc(item.bodyN, needle);
+  if (item.kind === 'quiz' && item.count) return n >= 4 && (n / item.count) >= 0.15;
+  return n >= 3;
+}
+function doSearch(query) {
+  var qn = normalize(query).trim();
+  if (qn.length < 2) return [];
+  var tokens = qn.split(/\s+/).filter(function (t) { return t.length >= 2; });
+  if (!tokens.length) tokens = [qn];
+  var idx = searchIndex(), scored = [];
+  idx.forEach(function (item) {
+    var score = 0;
+    if (item.titleN.indexOf(qn) >= 0) score += 100;
+    else if (item.headN.indexOf(qn) >= 0) score += 70;
+    else if (bodyIsDense(item, qn)) score += 35;
+    if (score === 0 && tokens.length > 1) {
+      var hit = 0;
+      tokens.forEach(function (tk) {
+        if (item.titleN.indexOf(tk) >= 0) hit += 30;
+        else if (item.headN.indexOf(tk) >= 0) hit += 18;
+        else if (bodyIsDense(item, tk)) hit += 10;
+      });
+      score = hit >= 30 ? hit : 0;
+    }
+    if (score > 0) scored.push({ item: item, score: score });
+  });
+  scored.sort(function (a, b) { return b.score - a.score || a.item.title.localeCompare(b.item.title); });
+  return scored.slice(0, 30).map(function (r) {
+    var it = r.item;
+    return {
+      kind: it.kind, id: it.id, catId: it.catId, title: it.title,
+      path: it.pole + ' › ' + it.catLabel,
+      meta: it.kind === 'fiche' ? 'Cours' : it.kind === 'culture' ? 'Culture générale' : it.kind === 'formula' ? 'Formule' : (it.count + (it.count > 1 ? ' questions' : ' question'))
+    };
+  });
+}
+
+function seed() {
+  if (store.seeded) return;
+  store.seeded = true;
+  save();
+}
+
+function polePct(p) { var e = store.poles[p]; return e && e.n ? Math.round(100 * e.ok / e.n) : 0; }
+function masteryPct() {
+  var ps = poleNames(); if (!ps.length) return 0;
+  return Math.round(ps.reduce(function (a, p) { return a + polePct(p); }, 0) / ps.length);
+}
+function dueKeys() { var t = today(); return Object.keys(store.srs).filter(function (k) { return store.srs[k].d <= t; }); }
+function boxCount(fn) { return Object.keys(store.srs).filter(function (k) { return fn(store.srs[k]); }).length; }
+function totalQ() { return quizCats().reduce(function (a, c) { return a + bank(c.id).length; }, 0); }
+
+function qFromKey(k) {
+  var i = k.lastIndexOf('#'), id = k.slice(0, i), idx = +k.slice(i + 1);
+  var q = bank(id)[idx];
+  if (!q) return null;
+  var cat = quizCats().find(function (c) { return c.id === id; });
+  return { q: q, key: k, catId: id, catLabel: cat ? cat.label : id, pole: cat ? cat.pole : '' };
+}
+
+// ---- quiz flow ------------------------------------------------------------
+function startList(keys, meta) {
+  var items = keys.map(qFromKey).filter(Boolean);
+  if (!items.length) return;
+  state.navStack.push(navSnapshot());
+  state.navDir = 'fwd';
+  state.quiz = { items: items, meta: meta };
+  state.qi = 0; state.ans = null; state.pick = null;
+  state.calc = ''; state.texte = ''; state.revealed = false; state.results = [];
+  state.orderKey = null; state.orderCur = null;
+  state.newStreakMilestone = null;
+  memvizReset();
+  state.screen = 'quiz'; state.confetti = false;
+  render();
+}
+function startCat(id, n, extra) {
+  var qs = bank(id);
+  var keys = qs.map(function (q, i) { return id + '#' + i; }).sort(function () { return Math.random() - 0.5; }).slice(0, n || 12);
+  var cat = quizCats().find(function (c) { return c.id === id; });
+  startList(keys, Object.assign({ kind: 'cat', title: cat ? cat.label : 'Série' }, extra || {}));
+}
+function catDifficultyTier(id) {
+  if (/expert$/.test(id) || /_appro$/.test(id)) return 2;
+  if (/fondamentaux$/.test(id)) return 0;
+  return 1;
+}
+function dailyCatIds() {
+  var cats = quizCats();
+  if (!cats.length) return [];
+  if (!store.dailyCats || store.dailyCats.d !== today()) {
+    var lvl = store.level != null ? store.level : 1;
+    var maxTier = lvl >= 2 ? 2 : 1;
+    var pool = cats.filter(function (c) { return catDifficultyTier(c.id) <= maxTier; });
+    if (pool.length < 5) pool = cats;
+    var ids = [];
+    for (var i = 0; i < 5; i++) ids.push(pool[Math.floor(Math.random() * pool.length)].id);
+    store.dailyCats = { d: today(), ids: ids };
+    save();
+  }
+  return store.dailyCats.ids;
+}
+function dailyTopicLabels() {
+  var ids = dailyCatIds(), cats = quizCats(), seen = {}, out = [];
+  ids.forEach(function (id) {
+    var c = cats.find(function (x) { return x.id === id; });
+    var label = c ? (c.parent || c.label) : null;
+    if (label && !seen[label]) { seen[label] = true; out.push(label); }
+  });
+  return out;
+}
+function startDailyQuiz() {
+  var ids = dailyCatIds(), keys = ids.map(function (id) {
+    var qs = bank(id);
+    return id + '#' + Math.floor(Math.random() * qs.length);
+  });
+  startList(keys, { kind: 'daily', title: 'Défi du jour' });
+}
+function startSrsQuiz() {
+  var keys = dueKeys().slice(0, 20);
+  if (!keys.length) { startDailyQuiz(); return; }
+  startList(keys, { kind: 'srs', title: 'Révision du jour' });
+}
+function startDiagQuiz() {
+  var poles = poleNames(), keys = [];
+  poles.slice(0, 5).forEach(function (p) {
+    var cs = quizCats().filter(function (c) { return c.pole === p; });
+    if (!cs.length) return;
+    var c = cs[Math.floor(Math.random() * cs.length)];
+    keys.push(c.id + '#' + Math.floor(Math.random() * bank(c.id).length));
+  });
+  startList(keys, { kind: 'diag', title: 'Diagnostic' });
+}
+function startExam(levelKey, label) {
+  if (levelKey === 'niveau_general') { startNiveauGeneral(label); return; }
+  if (levelKey === 'officiel') { startOfficialExam(label); return; }
+  var src = D().EXAM_LEVELS[levelKey] || [];
+  var picked = src.slice().sort(function () { return Math.random() - 0.5; }).slice(0, 40);
+  var keys = picked.map(function (e) { return e.d + '#' + e.i; });
+  startList(keys, { kind: 'exam', title: 'Examen · ' + label, levelKey: levelKey, label: label, seuil: 60 });
+}
+function startOfficialExam(label) {
+  var src = (D().EXAM_LEVELS.technique || []).slice();
+  var picked = src.sort(function () { return Math.random() - 0.5; }).slice(0, 70);
+  var keys = picked.map(function (e) { return e.d + '#' + e.i; });
+  state.examSecondsLeft = 7200; // set before startList's render so the first paint already shows 120:00
+  startList(keys, { kind: 'exam', title: 'Examen · ' + label, levelKey: 'officiel', label: label, seuil: 50, timeLimitSec: 7200 });
+  startExamTimer();
+}
+function startExamTimer() {
+  if (examTimer) { clearInterval(examTimer); examTimer = null; }
+  var q = state.quiz;
+  if (!q || !q.meta.timeLimitSec) return;
+  state.examEndAt = Date.now() + q.meta.timeLimitSec * 1000;
+  state.examSecondsLeft = q.meta.timeLimitSec;
+  examTimer = setInterval(function () {
+    if (!state.quiz || state.quiz.meta.kind !== 'exam' || !state.quiz.meta.timeLimitSec || state.screen !== 'quiz') {
+      clearInterval(examTimer); examTimer = null; return;
+    }
+    state.examSecondsLeft = Math.max(0, Math.round((state.examEndAt - Date.now()) / 1000));
+    if (state.examSecondsLeft <= 0) { clearInterval(examTimer); examTimer = null; finishExamNow(); return; }
+    render();
+  }, 1000);
+}
+function finishExamNow() {
+  var q = state.quiz;
+  if (!q || q.meta.kind !== 'exam') return;
+  var ok = state.results.filter(function (r) { return r.ok; }).length;
+  var pct = Math.round(100 * ok / q.items.length);
+  store.best[q.meta.levelKey] = Math.max(store.best[q.meta.levelKey] || 0, pct);
+  save();
+  state.screen = 'examResult'; state.confetti = pct >= (q.meta.seuil || 60);
+  if (confettiTimer) clearTimeout(confettiTimer);
+  confettiTimer = setTimeout(function () { state.confetti = false; render(); }, 3400);
+  render();
+}
+function startNiveauGeneral(label) {
+  var byPole = {};
+  quizCats().forEach(function (c) {
+    if (!c.pole) return;
+    (byPole[c.pole] = byPole[c.pole] || []).push(c.id);
+  });
+  var keys = [];
+  Object.keys(byPole).forEach(function (pole) {
+    var pool = [];
+    byPole[pole].forEach(function (id) {
+      bank(id).forEach(function (q, i) {
+        if ((q.type === 'qcm' || q.type === 'vf') && !qIsExpert(q, id)) pool.push(id + '#' + i);
+      });
+    });
+    pool.sort(function () { return Math.random() - 0.5; });
+    keys = keys.concat(pool.slice(0, 3));
+  });
+  keys.sort(function () { return Math.random() - 0.5; });
+  startList(keys, { kind: 'exam', title: 'Mise à niveau générale', levelKey: 'niveau_general', label: label || 'Mise à niveau générale' });
+}
+var FICHE_QUIZ_MAP = {
+  th_per: ['per_fondamentaux'],
+  th_av: ['av_fondamentaux', 'lecture_contrat'],
+  th_dem: ['dem_fondamentaux', 'dem_expert'],
+  th_mat: ['mat_regimes'],
+  th_soc: ['soc_ei_micro', 'soc_sarl', 'soc_sas', 'soc_sel'],
+  th_ing: ['ing_150bter'],
+  th_bourse: ['bourse_pea', 'bourse_cto'],
+  th_prev: ['prev_madelin'],
+  th_reg: ['reg_mif', 'reg_lcb'],
+  th_struct: ['struct_dic'],
+  th_capi: ['capi_fond'],
+  th_lux: ['lux_fond'],
+  th_pee: ['per_percol', 'pee_perco'],
+  th_av_methodo: ['av_rachat'],
+  th_per_methodo: ['per_fiscalite', 'per_deblocage'],
+  th_vocab: ['client_pointilleux', 'rentabilite_crm'],
+  th_lombard: ['credit_lombard', 'ing_lombard'],
+  th_hypo: ['credit_hypo', 'prev_emprunteur'],
+  th_grille_per: ['per_reseau'],
+  th_grille_struct: ['struct_lecture'],
+  th_struct_gen: ['struct_action'],
+  th_retraite: ['retraite_compl'],
+  th_fonds: ['fonds_choix'],
+  th_scpi: ['scpi_pierre', 'soc_sci_struct'],
+  th_fisc: ['fisc_ir'],
+  th_succession: ['succession', 'ing_donation'],
+  th_immo: ['immo_patrimoine'],
+  th_prevoyance: ['protection_sociale'],
+  th_grille_methode: [],
+  th_holding_sci: ['soc_holding_sci', 'soc_holding_v8', 'soc_mbo'],
+  th_lire_etf: ['fonds_etf'],
+  th_lire_structure: ['struct_lecture'],
+  th_av_appro: ['av_appro', 'av_expert'],
+  th_per_appro: ['per_appro', 'per_prefon'],
+  th_gerance_appro: ['gerance_appro'],
+  th_entreprise_appro: ['entreprise_appro', 'ing_expert'],
+  th_fisc_part_appro: ['fisc_part_appro'],
+  th_fisc_patri_appro: ['fisc_patri_appro', 'fisc_expert'],
+  th_etf_actif: ['etf_actif'],
+  th_arbitrage: ['arbitrage'],
+  th_amf: ['amf'],
+  th_frais_struct: ['frais_struct'],
+  th_lire_dic: ['struct_dic'],
+  th_dutreil: ['ing_dutreuil'],
+  th_mc_interets: ['mc_interets'],
+  th_mc_risque: ['mc_risque'],
+  th_mc_oblig: ['mc_oblig'],
+  th_mc_options: ['mc_options'],
+  th_mc_macro: ['mc_macro'],
+  th_mc_capi: [],
+  th_mc_diversif: [],
+  th_ir_escalier: [],
+  th_av_horssucc: [],
+  th_retraite_etages: [],
+  th_immo_levier: [],
+  th_prev_trou: [],
+  th_holding_flux: [],
+  th_pvimmo_duree: [],
+  th_quotient: [],
+  th_pe: ['pe_fondamentaux'],
+  th_pe2: ['pe_structuration', 'pe_fiscalite', 'pe_strategie'],
+  th_esg: ['reg_esg'],
+  th_crypto: ['crypto_q']
+};
+var CAT_TO_THEORY = {};
+Object.keys(FICHE_QUIZ_MAP).forEach(function (thId) {
+  FICHE_QUIZ_MAP[thId].forEach(function (catId) {
+    if (!CAT_TO_THEORY[catId]) CAT_TO_THEORY[catId] = thId;
+  });
+});
+function catPct(catId) {
+  var total = 0, seen = 0;
+  bank(catId).forEach(function (q, i) {
+    total++;
+    if (store.srs[catId + '#' + i]) seen++;
+  });
+  return total ? Math.round(100 * seen / total) : 0;
+}
+function fichePct(theoryId) {
+  var quizIds = FICHE_QUIZ_MAP[theoryId] || [];
+  if (!quizIds.length) return 100;
+  var total = 0, seen = 0;
+  quizIds.forEach(function (id) {
+    bank(id).forEach(function (q, i) {
+      total++;
+      if (store.srs[id + '#' + i]) seen++;
+    });
+  });
+  return total ? Math.round(100 * seen / total) : 100;
+}
+function startFicheQ(theoryId) {
+  var quizIds = FICHE_QUIZ_MAP[theoryId] || [];
+  var keys = [];
+  quizIds.forEach(function (id) { bank(id).forEach(function (q, i) { keys.push(id + '#' + i); }); });
+  if (!keys.length) { startDailyQuiz(); return; }
+  keys = keys.sort(function () { return Math.random() - 0.5; }).slice(0, 8);
+  var reviewKeys = [];
+  var inProgram = PROGRAM.some(function (w) { return (w.theory || []).indexOf(theoryId) >= 0; });
+  if (store.programStart != null && inProgram) {
+    var preceding = parcoursPrecedingTheory(theoryId).filter(function (id) { return store.fichesSeen && store.fichesSeen[id]; });
+    var pool = [];
+    preceding.forEach(function (id) {
+      (FICHE_QUIZ_MAP[id] || []).forEach(function (catId) {
+        bank(catId).forEach(function (q, i) { pool.push(catId + '#' + i); });
+      });
+    });
+    pool = pool.filter(function (k) { return keys.indexOf(k) < 0; });
+    pool.sort(function () { return Math.random() - 0.5; });
+    reviewKeys = pool.slice(0, 3);
+  }
+  var allKeys = keys.concat(reviewKeys).sort(function () { return Math.random() - 0.5; });
+  startList(allKeys, { kind: 'cat', title: 'Test de la fiche', theoryId: theoryId, reviewKeys: reviewKeys });
+}
+function startFicheReview(theoryId) {
+  var pole = '';
+  allCats().forEach(function (c) { if (c.theory === theoryId) pole = c.pole; });
+  var pool = [];
+  var inProgram = PROGRAM.some(function (w) { return (w.theory || []).indexOf(theoryId) >= 0; });
+  if (store.programStart != null && inProgram) {
+    var preceding = parcoursPrecedingTheory(theoryId).filter(function (id) { return store.fichesSeen && store.fichesSeen[id]; });
+    preceding.forEach(function (id) {
+      (FICHE_QUIZ_MAP[id] || []).forEach(function (catId) {
+        bank(catId).forEach(function (q, i) { pool.push(catId + '#' + i); });
+      });
+    });
+  }
+  if (!pool.length && pole) {
+    quizCats().filter(function (c) { return c.pole === pole; }).forEach(function (c) {
+      bank(c.id).forEach(function (q, i) { pool.push(c.id + '#' + i); });
+    });
+  }
+  if (!pool.length) { startDailyQuiz(); return; }
+  pool.sort(function (a, b) {
+    var ea = store.srs[a], eb = store.srs[b];
+    var da = ea ? (ea.next || 0) : -1, db = eb ? (eb.next || 0) : -1;
+    return da - db;
+  });
+  startList(pool.slice(0, 8), { kind: 'ficheReview', title: 'Révision liée à la fiche', theoryId: theoryId });
+}
+function maybeCompleteFiche(id) {
+  var t = D().THEORY[id];
+  if (!t) return;
+  var total = (t.sections || []).length;
+  var seenMap = store.ficheSectionsSeen && store.ficheSectionsSeen[id];
+  var seenCount = seenMap ? Object.keys(seenMap).length : 0;
+  if (total && seenCount < total) return;
+  var quizIds = FICHE_QUIZ_MAP[id] || [];
+  if (quizIds.length && !(store.ficheTested && store.ficheTested[id])) return;
+  if (!store.fichesSeen) store.fichesSeen = {};
+  store.fichesSeen[id] = true;
+}
+
+function cur() { return state.quiz ? state.quiz.items[state.qi] : null; }
+
+var STREAK_MILESTONES = [3, 7, 14, 30, 60, 100, 200, 365];
+function grade(ok, after) {
+  var it = cur(); if (!it) return;
+  var s = store;
+  var e = s.srs[it.key] || { b: 0, d: 0, ok: 0, ko: 0 };
+  if (ok) { e.ok++; e.b = Math.min(e.b + 1, IV.length - 1); } else { e.ko++; e.b = 0; }
+  e.d = today() + IV[e.b];
+  s.srs[it.key] = e;
+  s.seen = (s.seen || 0) + 1;
+  if (ok) s.xp = (s.xp || 0) + 10;
+  if (s.lastActiveDay !== today()) {
+    var gap = s.lastActiveDay != null ? today() - s.lastActiveDay : null;
+    s.streak = gap === 1 ? (s.streak || 0) + 1 : 1;
+    s.lastActiveDay = today();
+    state.newStreakMilestone = STREAK_MILESTONES.indexOf(s.streak) >= 0 ? s.streak : null;
+  }
+  if (it.pole) {
+    var p = s.poles[it.pole] || { n: 0, ok: 0 };
+    p.n++; if (ok) p.ok++;
+    s.poles[it.pole] = p;
+  }
+  if (state.quiz && state.quiz.meta && state.quiz.meta.kind === 'daily') {
+    if (!s.daily || s.daily.d !== today()) s.daily = { d: today(), n: 0 };
+    s.daily.n = Math.min(5, s.daily.n + 1);
+  }
+  save();
+  state.results = state.results.concat([{ ok: ok, key: it.key, pole: it.pole, pick: state.pick, calc: state.calc }]);
+  state.ans = ok ? 'ok' : 'ko';
+  render();
+  if (after) after();
+}
+
+function answerQcm(i) { var it = cur(); if (!it) return; state.pick = i; grade(i === it.q.correct); }
+function answerVf(i) { var it = cur(); if (!it) return; state.pick = i; grade(i === it.q.correct); }
+function validateCalc() {
+  var it = cur(); if (!it) return;
+  var v = parseFloat((state.calc || '').replace(',', '.'));
+  var tol = it.q.tol != null ? it.q.tol : Math.max(0.01, Math.abs(it.q.correct) * 0.02);
+  grade(isFinite(v) && Math.abs(v - it.q.correct) <= tol);
+}
+function validateTexteOpen() {
+  var it = cur(); if (!it) return;
+  var pts = it.q.points || [];
+  var matched = scoreKwPoints(state.texte, pts).filter(function (r) { return r.got; }).length;
+  grade(pts.length > 0 && matched >= Math.ceil(pts.length / 2));
+}
+function nextQ() {
+  var q = state.quiz;
+  if (!q) return;
+  if (state.qi + 1 >= q.items.length) {
+    var ok = state.results.filter(function (r) { return r.ok; }).length;
+    var pct = Math.round(100 * ok / q.items.length);
+    if (q.meta.kind === 'exam') {
+      if (examTimer) { clearInterval(examTimer); examTimer = null; }
+      store.best[q.meta.levelKey] = Math.max(store.best[q.meta.levelKey] || 0, pct);
+      save();
+      state.screen = 'examResult'; state.confetti = pct >= (q.meta.seuil || 60);
+    } else {
+      state.screen = 'done'; state.confetti = pct >= 70;
+      if (q.meta.theoryId) {
+        if (!store.ficheTested) store.ficheTested = {};
+        store.ficheTested[q.meta.theoryId] = true;
+        if (!store.ficheTestReview) store.ficheTestReview = {};
+        store.ficheTestReview[q.meta.theoryId] = q.items.map(function (it, idx) {
+          var r = state.results[idx] || {};
+          return {
+            type: it.q.type, text: it.q.q || it.q.titre || '', options: it.q.options || null,
+            correct: it.q.correct, pick: r.pick, calc: r.calc, ok: r.ok,
+            explain: it.q.explain || it.q.modele || '', catId: it.catId,
+            isReview: !!(q.meta.reviewKeys && q.meta.reviewKeys.indexOf(it.key) >= 0)
+          };
+        });
+        maybeCompleteFiche(q.meta.theoryId);
+        save();
+      }
+    }
+    if (confettiTimer) clearTimeout(confettiTimer);
+    confettiTimer = setTimeout(function () { state.confetti = false; render(); }, 3400);
+    memvizReset();
+    render();
+    return;
+  }
+  state.qi++; state.ans = null; state.pick = null; state.calc = ''; state.texte = ''; state.revealed = false;
+  memvizReset();
+  render();
+}
+function memvizHoleCount(q) { return parseHoles(q.svg).length; }
+function memvizStart() {
+  var it = cur(); if (!it || it.q.type !== 'memviz') return;
+  var n = memvizHoleCount(it.q);
+  var total = Math.max(8, n * 4 + 4);
+  state.memvizPhase = 'memorize';
+  state.memvizTimeTotal = total;
+  state.memvizTimeLeft = total;
+  render();
+  if (memvizTimer) clearInterval(memvizTimer);
+  memvizTimer = setInterval(function () {
+    if (state.screen !== 'quiz' || state.memvizPhase !== 'memorize') { clearInterval(memvizTimer); memvizTimer = null; return; }
+    state.memvizTimeLeft--;
+    if (state.memvizTimeLeft <= 0) { memvizEnterRecall(); return; }
+    render();
+  }, 1000);
+}
+function memvizEnterRecall() {
+  if (memvizTimer) { clearInterval(memvizTimer); memvizTimer = null; }
+  var it = cur();
+  state.memvizAnswers = it ? new Array(memvizHoleCount(it.q)).fill('') : [];
+  state.memvizPhase = 'recall';
+  render();
+}
+function memvizValidate() {
+  var it = cur(); if (!it) return;
+  var holes = parseHoles(it.q.svg);
+  var correctCount = 0;
+  holes.forEach(function (h, i) {
+    var given = normalizeHoleAnswer(state.memvizAnswers[i]);
+    var expect = normalizeHoleAnswer(h.text);
+    if (given && expect && given === expect) correctCount++;
+  });
+  state.memvizResult = holes.map(function (h, i) {
+    return { n: h.n, text: h.text, given: state.memvizAnswers[i] || '', ok: normalizeHoleAnswer(state.memvizAnswers[i]) === normalizeHoleAnswer(h.text) };
+  });
+  var allOk = holes.length > 0 && correctCount === holes.length;
+  grade(allOk);
+}
+function setScreen(screen, patch) {
+  if (state.screen === 'mental' && screen !== 'mental' && mentalState.timer) {
+    clearInterval(mentalState.timer); mentalState.timer = null;
+  }
+  state.screen = screen; if (patch) Object.assign(state, patch);
+}
+function navSnapshot() {
+  return { screen: state.screen, cat: state.cat, fiche: state.fiche, openPole: state.openPole, coursePoleSel: state.coursePoleSel };
+}
+function go(screen, patch) {
+  setScreen(screen, patch);
+  state.navStack = [];
+  state.navDir = null;
+  render();
+}
+function goChild(screen, patch) {
+  state.navStack.push(navSnapshot());
+  setScreen(screen, patch);
+  state.navDir = 'fwd';
+  render();
+}
+function goBack() {
+  var prev = state.navStack.pop();
+  if (!prev) { go('home'); return; }
+  setScreen(prev.screen, prev);
+  state.navDir = 'back';
+  render();
+}
+
+// ---- computed view values (mirrors the design's renderVals) --------------
+function computeVals() {
+  var st = state, S = store || { srs: {}, poles: {}, best: {} };
+  var Dd = D();
+  var scr = st.screen;
+  var levels = [
+    { title: 'Débutant', sub: 'Je découvre les enveloppes' },
+    { title: 'Intermédiaire', sub: 'Je connais les bases, je consolide' },
+    { title: 'Confirmé', sub: 'Je vise le sans-faute technique' }
+  ];
+  var pNames = st.ready ? poleNames() : [];
+  var pctOf = function (p) { return polePct(p); };
+
+  var v = {
+    screenKey: scr + ':' + st.qi + ':' + (st.cat || '') + ':' + (st.fiche || ''),
+    userName: getUserName(), nameInput: state.nameInput != null ? state.nameInput : ((S && S.name) || ''),
+    greeting: 'Bonsoir',
+    isConfetti: !!st.confetti,
+    streak: S.streak || 0, streakMilestone: state.newStreakMilestone || null, xp: S.xp || 0, mastery: st.ready ? masteryPct() : 0,
+    answeredCount: S.seen || 0, totalQ: st.ready ? totalQ() : 0,
+    dueCount: st.ready ? dueKeys().length : 0,
+    learnCount: st.ready ? boxCount(function (e) { return e.b >= 1 && e.b <= 3; }) : 0,
+    masteredCount: st.ready ? boxCount(function (e) { return e.b >= 4; }) : 0,
+    unseenCount: st.ready ? Math.max(0, totalQ() - Object.keys(S.srs).length) : 0,
+    examDate: S.examDate || null,
+    examDaysLeft: S.examDate ? (Math.floor(Date.parse(S.examDate) / 86400000) - today()) : null,
+    examCoveragePct: st.ready && totalQ() ? Math.round(100 * Object.keys(S.srs).length / totalQ()) : 0,
+    dailyPct: (function () { var d = S.daily; return d && d.d === today() ? Math.round(100 * d.n / 5) : 0; })(),
+    dailyTurn: (function () { var d = S.daily; var n = d && d.d === today() ? d.n : 0; return (n / 5).toFixed(2) + 'turn'; })(),
+    dailyTopics: st.ready ? dailyTopicLabels() : [],
+    catCount: st.ready ? Dd.CATS.length : 0,
+    examFormatCount: st.ready ? Object.keys(Dd.EXAM_LEVELS).length + 2 : 0,
+    levelLabel: levels[st.level].title,
+    totalTimeLabel: (function () { var s = S.totalSeconds || 0, h = Math.floor(s / 3600), m = Math.round((s % 3600) / 60); return h > 0 ? (h + ' h ' + (m < 10 ? '0' : '') + m) : (m + ' min'); })(),
+    notifOn: !!st.notif, notifOff: !st.notif, confirmReset: !!st.confirmReset,
+    confirmImport: !!st.confirmImport,
+    confirmImportSummary: (function () {
+      var p = st.pendingImport; if (!p) return '';
+      var n = p.srs ? Object.keys(p.srs).length : 0;
+      return (p.xp || 0) + ' XP, ' + n + ' question' + (n > 1 ? 's' : '') + ' suivie' + (n > 1 ? 's' : '');
+    })(),
+    notifSub: st.notif ? 'Tous les jours à 19:30' : 'Désactivé',
+    examInstantOn: !!S.examInstant, examInstantOff: !S.examInstant,
+    examInstantSub: S.examInstant ? 'Réponse et explication après chaque question' : 'Correction uniquement à la fin de l\'examen',
+
+    isOnb: scr === 'onb', isHome: scr === 'home', isBrowse: scr === 'browse', isCat: scr === 'cat',
+    isQuiz: scr === 'quiz', isDone: scr === 'done', isExamPick: scr === 'examPick',
+    isExamResult: scr === 'examResult', isSrs: scr === 'srs', isCourses: scr === 'courses',
+    isFiche: scr === 'fiche', isFicheReview: scr === 'ficheReview', isProgress: scr === 'progress', isProfile: scr === 'profile',
+    isLabo: scr === 'labo', isMental: scr === 'mental', isBuilder: scr === 'builder',
+    isCulture: scr === 'culture', isCultureDetail: scr === 'cultureDetail', isCultureTest: scr === 'cultureTest',
+    cultureSel: st.cultureSel || null, cultureSecOpen: st.cultureSecOpen != null ? st.cultureSecOpen : null,
+    cultureTestIdx: st.cultureTestIdx || 0, cultureTestScore: st.cultureTestScore || 0,
+    cultureTestPick: st.cultureTestPick != null ? st.cultureTestPick : null, cultureTestAnswered: !!st.cultureTestAnswered,
+    cultureTestSet: st.cultureTestSet || [],
+    cultureBestAll: (S && S.cultureBest) || {}, cultureSeenAll: (S && S.cultureSeen) || {},
+    cultureSpecSeenAll: (S && S.cultureSpecSeen) || {},
+    cultureTestedCount: st.ready ? CULTURE_METIERS.filter(function (m) { return S.cultureBest && S.cultureBest[m.id] != null; }).length : 0,
+    cultureOverallPct: st.ready ? (function () {
+      var tested = CULTURE_METIERS.filter(function (m) { return S.cultureBest && S.cultureBest[m.id] != null; });
+      if (!tested.length) return 0;
+      var sumBest = 0, sumTot = 0;
+      tested.forEach(function (m) { sumBest += S.cultureBest[m.id]; sumTot += m.quiz.length; });
+      return sumTot ? Math.round(100 * sumBest / sumTot) : 0;
+    })() : 0,
+    isSearch: scr === 'search',
+    isFormulas: scr === 'formulas',
+    formulaOpen: st.formulaOpen != null ? st.formulaOpen : null,
+    formulas: FORMULES.map(function (f) {
+      return { id: f.id, icon: f.icon, pole: f.pole, title: f.title, formula: f.formula, steps: f.steps, example: f.example, piege: f.piege, theory: f.theory, seen: !!(S.formulesSeen && S.formulesSeen[f.id]) };
+    }),
+    formulesSeenCount: st.ready ? FORMULES.filter(function (f) { return S.formulesSeen && S.formulesSeen[f.id]; }).length : 0,
+    showTabs: ['home', 'browse', 'cat', 'srs', 'courses', 'fiche', 'ficheReview', 'coursePole', 'progress', 'profile', 'examPick', 'labo', 'mental', 'builder', 'search', 'parcours', 'formulas'].indexOf(scr) >= 0,
+    mentalBest: S.mentalBest || 0,
+    searchQuery: st.search || '',
+    searchResults: (scr === 'search' && st.ready) ? doSearch(st.search || '') : [],
+
+    onbName: st.onb === -1, onb0: st.onb === 0, onb1: st.onb === 1, onb2: st.onb === 2,
+    onbStepLabel: st.onb >= 0 ? 'ÉTAPE ' + (st.onb + 1) + ' / 3' : 'BIENVENUE',
+    levels: levels.map(function (l, i) { return { n: i + 1, title: l.title, sub: l.sub, on: st.level === i }; }),
+    poleChips: pNames.map(function (p) { return { label: p }; }),
+
+    tabs: [
+      { label: 'Jouer', k: 'home' }, { label: 'Réviser', k: 'srs' }, { label: 'Cours', k: 'courses' },
+      { label: 'Stats', k: 'progress' }, { label: 'Paramètres', k: 'profile' }
+    ].map(function (t) {
+      var on = scr === t.k || (t.k === 'home' && (scr === 'browse' || scr === 'cat' || scr === 'examPick' || scr === 'labo' || scr === 'mental' || scr === 'builder')) || (t.k === 'courses' && (scr === 'fiche' || scr === 'coursePole'));
+      return { label: t.label, k: t.k, on: on, off: !on };
+    })
+  };
+
+  v.poles = pNames.map(function (p) {
+    var cats = Dd.CATS.filter(function (c) { return c.pole === p; });
+    var pe = S.poles && S.poles[p];
+    return {
+      label: p, pct: pctOf(p), open: st.openPole === p,
+      ratio: pe && pe.n ? pe.ok + '/' + pe.n : '—',
+      cats: cats.map(function (c) {
+        return { label: c.label, id: c.id, badge: ((c.sub || []).filter(function (s) { return !s.theory; }).length) + ' séries' };
+      })
+    };
+  });
+
+  var catObj = Dd.CATS.find(function (c) { return c.id === st.cat; });
+  v.catLabel = catObj ? catObj.label : '';
+  v.catPole = catObj ? catObj.pole : '';
+  v.subs = catObj ? (catObj.sub || []).map(function (s) {
+    var n = bank(s.id).length;
+    return { label: s.label, badge: s.theory ? 'FICHE' : (s.simu ? 'SIMULATEUR' : n + ' Q.'), theory: s.theory || null, simu: s.simu || null, id: s.id };
+  }) : [];
+
+  var tKeys = Object.keys(Dd.THEORY || {});
+  v.ficheCount = tKeys.length;
+  var theoryPole = {};
+  allCats().forEach(function (c) { if (c.theory) theoryPole[c.theory] = c.pole; });
+  v.fiches = tKeys.map(function (k) {
+    var t = Dd.THEORY[k];
+    return {
+      key: k, title: t.title, icon: t.icon || '📘', pole: theoryPole[k] || '',
+      meta: ((t.sections || []).length) + ' SECTIONS · ' + Math.max(2, Math.round((t.sections || []).length * 1.2)) + ' MIN',
+      progress: st.ready ? fichePct(k) : 0
+    };
+  });
+  v.fichesByPole = pNames.map(function (p) {
+    return { label: p, fiches: v.fiches.filter(function (f) { return f.pole === p; }) };
+  }).filter(function (g) { return g.fiches.length; });
+  v.coursePoles = v.fichesByPole.map(function (g) {
+    var avgPct = g.fiches.length ? pctOf(g.label) : 0;
+    var readCount = g.fiches.filter(function (f) { return !!(S.fichesSeen && S.fichesSeen[f.key]); }).length;
+    return { label: g.label, count: g.fiches.length, accent: poleAccent(g.label), glyph: poleGlyph(g.label), pct: avgPct, readCount: readCount };
+  });
+  v.isCoursePole = scr === 'coursePole';
+  v.coursePoleLabel = st.coursePoleSel || '';
+  v.coursePoleAccent = poleAccent(st.coursePoleSel || '');
+  v.coursePoleGlyph = poleGlyph(st.coursePoleSel || '');
+  var selGroup = v.fichesByPole.find(function (g) { return g.label === st.coursePoleSel; });
+  v.coursePoleFichesList = selGroup ? selGroup.fiches : [];
+  v.coursePolePct = selGroup ? pctOf(selGroup.label) : 0;
+  v.coursePoleReadCount = selGroup ? selGroup.fiches.filter(function (f) { return !!(S.fichesSeen && S.fichesSeen[f.key]); }).length : 0;
+  var fi = Dd.THEORY ? Dd.THEORY[st.fiche] : null;
+  v.ficheTitle = fi ? fi.title : '';
+  v.ficheIcon = fi ? (fi.icon || '📘') : '📘';
+  v.ficheSource = fi ? (fi.source || '') : '';
+  v.fichePole = theoryPole[st.fiche] || '';
+  v.ficheAccent = poleAccent(v.fichePole);
+  v.ficheIdx = fi ? 'FICHE ' + (tKeys.indexOf(st.fiche) + 1) + ' / ' + tKeys.length : '';
+  v.ficheMin = fi ? Math.max(2, Math.round((fi.sections || []).length * 1.2)) : 0;
+  var calloutRe = /^(EXEMPLE|À RETENIR|ATTENTION|NUANCE DE CONSEIL|BON À SAVOIR|POINT DE VIGILANCE|À NE PAS DIRE AU CLIENT)\s*:?\s*/i;
+  v.ficheSections = fi ? (fi.sections || []).map(function (s, i) {
+    var paras = (s.body || '').split(/\n\n+/).map(function (p) {
+      var m = p.match(calloutRe);
+      return m ? { callout: true, label: m[1].toUpperCase(), text: p.slice(m[0].length) } : { callout: false, text: p };
+    });
+    var warnish = /attention|vigilance|risque|à ne pas dire/i.test(s.h || '') || paras.some(function (p) { return p.callout && /attention|vigilance/i.test(p.label); });
+    var seenMap = S.ficheSectionsSeen && S.ficheSectionsSeen[st.fiche];
+    return { h: (s.h || '').toUpperCase(), paras: paras, svg: s.svg || '', warnish: warnish, seen: !!(seenMap && seenMap[i]) };
+  }) : [];
+  v.ficheTocDots = v.ficheSections.map(function (s, i) { return { n: i + 1, warnish: s.warnish }; });
+  v.ficheSectionsSeenCount = v.ficheSections.filter(function (s) { return s.seen; }).length;
+  v.ficheAllSectionsSeen = v.ficheSections.length > 0 && v.ficheSectionsSeenCount === v.ficheSections.length;
+  v.ficheHasTest = !!(FICHE_QUIZ_MAP[st.fiche] && FICHE_QUIZ_MAP[st.fiche].length);
+  v.ficheTested = !!(S.ficheTested && S.ficheTested[st.fiche]);
+  v.ficheValidated = !!(S.fichesSeen && S.fichesSeen[st.fiche]);
+  v.ficheHasReview = !!(S.ficheTestReview && S.ficheTestReview[st.fiche] && S.ficheTestReview[st.fiche].length);
+  v.ficheReviewItems = (scr === 'ficheReview' && S.ficheTestReview && S.ficheTestReview[st.fiche]) ? S.ficheTestReview[st.fiche].map(function (it, i) {
+    var pickTxt = '—', correctTxt = '';
+    if (it.type === 'vf') {
+      pickTxt = it.pick === 0 ? 'Vrai' : (it.pick === 1 ? 'Faux' : '—');
+      correctTxt = it.correct === 0 ? 'Vrai' : 'Faux';
+    } else if (it.options) {
+      pickTxt = (it.pick != null && it.options[it.pick] != null) ? it.options[it.pick] : '—';
+      correctTxt = it.options[it.correct] != null ? it.options[it.correct] : '';
+    } else if (it.type === 'calc') {
+      pickTxt = it.calc || '—';
+      correctTxt = String(it.correct);
+    }
+    var formula = '', narrative = it.explain, expNote = '';
+    if (it.type === 'calc' && it.explain) {
+      var calcSplit2 = splitCalcExplain(it.explain, it.correct);
+      formula = calcSplit2.formula; narrative = calcSplit2.formula ? calcSplit2.narrative : it.explain;
+      expNote = exponentNote(formula);
+    }
+    return {
+      n: i + 1, text: it.text, ok: it.ok, pickTxt: pickTxt, correctTxt: correctTxt, explain: narrative, formula: formula, exponentNote: expNote,
+      showCorrect: it.type !== 'texte' && it.type !== 'open', catId: it.catId,
+      flagged: !!(S.flagged && it.catId && S.flagged[it.catId]), isReview: !!it.isReview
+    };
+  }) : [];
+  v.flaggedTopics = Object.keys(S.flagged || {}).map(function (catId) {
+    var cat = quizCats().find(function (c) { return c.id === catId; });
+    var thId = CAT_TO_THEORY[catId];
+    return { catId: catId, label: cat ? cat.label : catId, pct: catPct(catId), theoryId: thId || null, ficheTitle: thId && Dd.THEORY[thId] ? Dd.THEORY[thId].title : null };
+  }).filter(function (t) { return !!quizCats().find(function (c) { return c.id === t.catId; }); });
+
+  var exLabels = [
+    { k: 'facile', label: 'Niveau 1 · Fondamentaux', sub: 'Les réflexes de base' },
+    { k: 'avance', label: 'Niveau 2 · Avancé', sub: 'Cas concrets et calculs' },
+    { k: 'technique', label: 'Niveau 3 · Technique', sub: "Le niveau de l'examen réel" }
+  ];
+  v.examLevels = exLabels.map(function (e, i) {
+    return { n: i + 1, key: e.k, label: e.label, sub: e.sub, best: (S.best && S.best[e.k]) ? 'RECORD ' + S.best[e.k] + '%' : '—' };
+  });
+  v.niveauGeneral = { key: 'niveau_general', label: 'Mise à niveau générale', sub: 'Les bases de chaque pôle : PER, assurance-vie, succession…', best: (S.best && S.best.niveau_general) ? 'RECORD ' + S.best.niveau_general + '%' : '—' };
+  v.examOfficiel = { key: 'officiel', label: 'Examen blanc officiel', sub: '70 questions · 2h chronométrées · seuil 50 %, au format du référentiel AMF', best: (S.best && S.best.officiel) ? 'RECORD ' + S.best.officiel + '%' : '—' };
+
+  if (st.ready) {
+    var typeCounts = {};
+    BUILD_TYPES.forEach(function (t) { typeCounts[t[0]] = 0; });
+    Object.values(Dd.BANK).forEach(function (arr) { (arr || []).forEach(function (q) { if (typeCounts[q.type] !== undefined) typeCounts[q.type]++; }); });
+    v.buildLevels = [['all', 'Tous'], ['facile', 'Facile'], ['expert', 'Expert ultime']].map(function (l) {
+      return { key: l[0], label: l[1], on: st.buildLevel === l[0] };
+    });
+    v.buildDoms = [{ id: 'all', label: 'Tous les domaines', on: st.buildDom.indexOf('all') >= 0 }].concat(
+      Dd.CATS.map(function (c) { return { id: c.id, label: c.label, on: st.buildDom.indexOf(c.id) >= 0 }; })
+    );
+    v.buildTypeOpts = BUILD_TYPES.map(function (t) {
+      return { id: t[0], label: t[1], count: typeCounts[t[0]] || 0, on: st.buildTypes.indexOf(t[0]) >= 0 };
+    });
+    var avail = buildPool().length;
+    v.buildMaxN = Math.max(1, Math.min(40, avail || 1));
+    if (st.buildN > v.buildMaxN) st.buildN = v.buildMaxN;
+    v.buildN = st.buildN;
+    v.buildAvail = avail;
+  }
+
+  var it = cur();
+  if (it) {
+    var q = it.q, ans = st.ans;
+    var done = !!ans;
+    v.quizTitle = st.quiz.meta.title;
+    v.quizPos = (st.qi + 1) + ' / ' + st.quiz.items.length;
+    v.quizPct = Math.round(100 * (st.qi + (done ? 1 : 0)) / st.quiz.items.length);
+    if (st.quiz.meta.timeLimitSec) {
+      var secs = Math.max(0, st.examSecondsLeft || 0);
+      var mm = Math.floor(secs / 60), ss = secs % 60;
+      v.examTimerLabel = mm + ':' + (ss < 10 ? '0' : '') + ss;
+      v.examTimerLow = secs <= 300;
+    } else { v.examTimerLabel = null; v.examTimerLow = false; }
+    v.qCat = (it.catLabel || '').toUpperCase();
+    v.qCatId = it.catId;
+    v.qIsReview = !!(st.quiz.meta.reviewKeys && st.quiz.meta.reviewKeys.indexOf(it.key) >= 0);
+    v.qFlagged = !!(S.flagged && S.flagged[it.catId]);
+    v.qText = q.q || q.titre || '';
+    v.qUnit = q.unit || '';
+    v.qExplain = q.explain || q.modele || '';
+    v.qModele = q.modele || '';
+    v.qFormula = ''; v.qNarrative = ''; v.qExponentNote = '';
+    if (q.type === 'calc' && q.explain) {
+      var calcSplit = splitCalcExplain(q.explain, q.correct);
+      v.qFormula = calcSplit.formula; v.qNarrative = calcSplit.narrative;
+      v.qExponentNote = exponentNote(v.qFormula);
+    }
+    var examMode0 = st.quiz.meta.kind === 'exam' && !S.examInstant;
+    var graded = done;
+    v.answered = graded && !examMode0; v.wasOk = ans === 'ok'; v.wasKo = ans === 'ko';
+    v.examAnswered = graded && examMode0;
+    v.koNote = st.quiz.meta.kind === 'exam' ? 'NOTÉ' : 'REVOIR DEMAIN';
+    var e = S.srs[it.key];
+    v.nextIn = e ? IV[e.b] : 1;
+    var tl = {
+      qcm: 'QCM', vf: 'VRAI / FAUX', calc: 'CALCUL', texte: 'RÉDACTION', memviz: 'MÉMORISATION',
+      scenario: 'SCÉNARIO', spot: 'REPÈRE L’ERREUR', doc: 'DOCUMENT', order: 'PRIORISATION', open: 'QUESTION OUVERTE'
+    };
+    v.qTypeLabel = tl[q.type] || 'QUESTION';
+    v.isQcm = q.type === 'qcm'; v.isVf = q.type === 'vf'; v.isCalc = q.type === 'calc';
+    v.isTexte = q.type === 'texte'; v.isMemviz = q.type === 'memviz';
+    v.isScenario = q.type === 'scenario'; v.isSpot = q.type === 'spot'; v.isDoc = q.type === 'doc'; v.isOrder = q.type === 'order';
+    v.isOpen = q.type === 'open';
+    v.hasOptions = v.isQcm || v.isScenario || v.isSpot || v.isDoc;
+    v.qContexte = q.contexte || ''; v.qDoc = q.doc || '';
+    var examMode = examMode0;
+
+    v.qHasSvg = !!q.svg && q.type !== 'memviz' && done && !examMode0;
+    v.qSvg = q.svg || '';
+
+    var st8 = function (i) {
+      return {
+        pending: !done,
+        sel: done && examMode0 && i === st.pick,
+        good: done && !examMode0 && i === q.correct,
+        bad: done && !examMode0 && i === st.pick && i !== q.correct,
+        mute: done && (examMode0 ? i !== st.pick : (i !== q.correct && i !== st.pick))
+      };
+    };
+    v.options = (q.options || []).map(function (txt, i) { return Object.assign({ letter: LETTERS[i], text: txt, i: i }, st8(i)); });
+    v.vfBtns = ['Vrai', 'Faux'].map(function (label, i) { return Object.assign({ label: label, i: i }, st8(i)); });
+
+    v.calcDisplay = st.calc || '—';
+    v.calcOpen = !done;
+    v.keys = ['7', '8', '9', '4', '5', '6', '1', '2', '3', ',', '0', '⌫', '−'];
+
+    var isTexteLike = q.type === 'texte' || q.type === 'open';
+    v.texteOpen = isTexteLike && !done; v.texteDone = isTexteLike && done; v.texteVal = st.texte;
+    if (isTexteLike && v.texteDone) {
+      v.openPoints = scoreKwPoints(st.texte, q.points || []);
+    }
+
+    if (q.type === 'order') {
+      if (state.orderKey !== st.qi) {
+        var oi = q.items.map(function (_x, i) { return i; });
+        for (var oz = oi.length - 1; oz > 0; oz--) { var ow = Math.floor(Math.random() * (oz + 1)); var otmp = oi[oz]; oi[oz] = oi[ow]; oi[ow] = otmp; }
+        if (oi.length > 1 && oi.every(function (vv, i) { return vv === i; })) { var ot0 = oi[0]; oi[0] = oi[1]; oi[1] = ot0; }
+        state.orderCur = oi; state.orderKey = st.qi;
+      }
+      v.orderConsigne = q.consigne || 'Remets les éléments dans le bon ordre (du premier au dernier).';
+      v.orderItems = state.orderCur.map(function (oidx, pos) { return { idx: oidx, pos: pos, text: q.items[oidx], isFirst: pos === 0, isLast: pos === state.orderCur.length - 1 }; });
+      v.orderCorrectList = done ? q.items : [];
+    }
+
+    if (q.type === 'memviz') {
+      var mvHoles = parseHoles(q.svg);
+      v.memvizNextTime = Math.max(8, mvHoles.length * 4 + 4);
+      v.memvizPhase = st.memvizPhase;
+      v.memvizTimeLeft = st.memvizTimeLeft;
+      v.memvizTimeTotal = st.memvizTimeTotal || 1;
+      v.memvizFullSvg = q.svg;
+      v.memvizBlankSvg = (q.svg || '').replace(/(<[^>]*data-hole="[^"]*"[^>]*)>/g, function (m, g) { return g + ' opacity="0">'; });
+      v.memvizInputs = mvHoles.map(function (h, i) { return { i: i, n: h.n, value: st.memvizAnswers[i] || '' }; });
+      v.memvizResult = st.memvizResult;
+    } else {
+      v.memvizPhase = ''; v.memvizFullSvg = ''; v.memvizBlankSvg = ''; v.memvizInputs = []; v.memvizResult = null;
+    }
+
+    v.showValidate = !done && (q.type === 'calc' || q.type === 'texte' || q.type === 'open' || q.type === 'order' || (q.type === 'memviz' && st.memvizPhase === 'recall'));
+    v.validateLabel = q.type === 'memviz' ? 'Valider mes réponses' : (q.type === 'order' ? 'Valider l’ordre' : 'Valider');
+    v.showNext = done;
+    v.nextLabel = st.qi + 1 >= st.quiz.items.length ? (examMode ? 'Voir le résultat' : 'Terminer') : 'Suivante';
+    v.showHint = !done && (v.hasOptions || q.type === 'vf');
+  }
+
+  var res = st.results, n = res.length || 1, okN = res.filter(function (r) { return r.ok; }).length;
+  var pct = Math.round(100 * okN / n);
+  v.donePct = pct; v.doneRatio = okN + ' / ' + res.length; v.doneKo = res.length - okN;
+  v.doneXp = okN * 10;
+  var meta = st.quiz ? st.quiz.meta : { kind: 'daily', title: '' };
+  v.doneKicker = (meta.title || '').toUpperCase();
+  v.doneTitle = meta.kind === 'diag' ? 'Diagnostic terminé.' : (pct >= 70 ? 'Belle série.' : 'Série terminée.');
+  v.doneNote = meta.kind === 'diag'
+    ? 'Vos révisions démarrent sur vos deux pôles les plus fragiles. Vous pourrez ajuster à tout moment.'
+    : (v.doneKo > 0 ? v.doneKo + ' question(s) reviennent demain, puis de plus en plus tard à chaque réussite.'
+      : 'Aucune erreur : ces questions reviendront beaucoup plus tard.');
+  v.doneCta = meta.kind === 'diag' ? 'Voir mon plan' : 'Enchaîner 5 questions';
+  v.doneIsDiag = meta.kind === 'diag';
+  v.doneShowParcours = !!(S.programStart != null && (meta.theoryId || meta.fromParcours || meta.kind === 'exam'));
+  v.doneShowFicheReview = !!meta.theoryId;
+
+  v.examLabel = (meta.label || '').toUpperCase();
+  var examSeuil = meta.seuil || 60;
+  v.examVerdict = pct >= examSeuil ? 'Admis.' : 'Sous le seuil de ' + examSeuil + ' %.';
+  var byPole = {};
+  res.forEach(function (r) {
+    var p = r.pole || '—'; byPole[p] = byPole[p] || { n: 0, ok: 0 }; byPole[p].n++; if (r.ok) byPole[p].ok++;
+  });
+  v.examByPole = Object.keys(byPole).map(function (p) {
+    return { label: p, pct: Math.round(100 * byPole[p].ok / byPole[p].n), ratio: byPole[p].ok + '/' + byPole[p].n };
+  });
+
+  var weak = pNames.map(function (p) { var e = S.poles[p]; return { p: p, pct: pctOf(p), n: (e && e.n) || 0 }; })
+    .filter(function (w) { return w.n > 0; })
+    .sort(function (a, b) { return a.pct - b.pct; }).slice(0, 3);
+  v.weakChips = weak.map(function (w) { return { label: w.p, pct: w.pct }; });
+
+  var R = 95, cx = 200, cy = 160, nP = Math.max(1, pNames.length);
+  function ngon(r) {
+    var out = [];
+    for (var i = 0; i < nP; i++) {
+      var a = -Math.PI / 2 + i * 2 * Math.PI / nP;
+      out.push((cx + r * Math.cos(a)).toFixed(1) + ',' + (cy + r * Math.sin(a)).toFixed(1));
+    }
+    return out.join(' ');
+  }
+  function shortPole(p) {
+    var base = p.split(' & ')[0].replace(/^(Les|La|Le|L’|L')\s+/, '');
+    if (base.length > 12) {
+      base = base.split(' ')[0];
+      if (base.length > 12) base = base.slice(0, 11) + '…';
+    }
+    return base;
+  }
+  v.radarGridOuter = ngon(R);
+  v.radarGridMid = ngon(R * 0.667);
+  v.radarGridInner = ngon(R * 0.333);
+  var pts = pNames.map(function (p, i) {
+    var a = -Math.PI / 2 + i * 2 * Math.PI / nP;
+    var r = R * Math.max(0.12, pctOf(p) / 100);
+    var lr = R + 20;
+    var cosA = Math.cos(a), sinA = Math.sin(a);
+    var anchor = Math.abs(cosA) < 0.35 ? 'middle' : (cosA > 0 ? 'start' : 'end');
+    return {
+      x: +(cx + r * Math.cos(a)).toFixed(1), y: +(cy + r * Math.sin(a)).toFixed(1),
+      lx: +(cx + lr * cosA).toFixed(1), ly: +(cy + lr * sinA).toFixed(1),
+      label: shortPole(p), pct: pctOf(p), anchor: anchor
+    };
+  });
+  v.radarPts = pts.map(function (p) { return p.x + ',' + p.y; }).join(' ');
+  v.radarDots = pts;
+
+  v.isParcours = scr === 'parcours';
+  var objDays = S.parcoursObjectiveDays || 63;
+  var weekLenDays = Math.max(4, Math.round(objDays / 9));
+  var minutesDay = S.parcoursMinutesDay || 30;
+  var questionsPerDay = Math.max(3, Math.round(minutesDay / 1.5));
+  var priorityPoles = S.parcoursPriorityPoles || [];
+  var pStart = S.programStart;
+  v.parcoursStarted = pStart != null;
+  v.parcoursSetupMinutes = st.parcoursSetupMinutes || 30;
+  v.parcoursSetupObjective = st.parcoursSetupObjective || 60;
+  v.parcoursSetupPriority = st.parcoursSetupPriority || [];
+  v.poleOptions = PARCOURS_POLE_OPTIONS;
+  var daysSince = pStart != null ? today() - pStart : 0;
+  var expectedWeek = pStart != null ? Math.min(9, Math.max(1, Math.floor(daysSince / weekLenDays) + 1)) : 1;
+  v.parcoursExpectedWeek = expectedWeek;
+  var fmtDay = function (d) { var dt = new Date(d * 86400000); return ('0' + dt.getDate()).slice(-2) + '/' + ('0' + (dt.getMonth() + 1)).slice(-2); };
+  var order = parcoursOrderedProgram(priorityPoles);
+  var built = order.map(function (w) {
+    var tasks = [];
+    w.theory.forEach(function (id) {
+      var t = Dd.THEORY[id];
+      tasks.push({ type: 'fiche', id: id, title: t ? t.title : id, done: !!(S.fichesSeen && S.fichesSeen[id]) });
+    });
+    var isPriorityWeek = w.poles.some(function (p) { return priorityPoles.indexOf(p) >= 0; });
+    var qpd = isPriorityWeek ? Math.round(questionsPerDay * 1.5) : questionsPerDay;
+    w.quiz.forEach(function (id) {
+      var cat = allCats().find(function (c) { return c.id === id; });
+      var qs = bank(id), tot = qs.length, seen = 0;
+      qs.forEach(function (q, i) { if (S.srs[id + '#' + i]) seen++; });
+      var pct = tot ? Math.round(100 * seen / tot) : 0;
+      tasks.push({ type: 'quiz', id: id, label: cat ? cat.label : id, pct: pct, count: tot, target: Math.min(tot, qpd), done: pct >= 100 });
+    });
+    var doneCount = tasks.filter(function (t) { return t.done; }).length;
+    var quizTasks = tasks.filter(function (t) { return t.type === 'quiz'; });
+    var quizAvg = quizTasks.length ? Math.round(quizTasks.reduce(function (a, t) { return a + t.pct; }, 0) / quizTasks.length) : 0;
+    var fichesCount = tasks.length - quizTasks.length;
+    var fichesDone = doneCount - quizTasks.filter(function (t) { return t.done; }).length;
+    var pct = Math.min(100, w.consolidation ? quizAvg : Math.round((fichesCount ? fichesDone / fichesCount : 1) * 50 + quizAvg * 0.5));
+    var validated;
+    if (w.n === 8) {
+      var allPolesOk = poleNames().every(function (p) { return polePct(p) >= 70; });
+      validated = !!(S.best && S.best.facile >= 85 && S.best.avance >= 75) && allPolesOk;
+    } else if (w.n === 9) {
+      validated = !!(S.best && S.best.technique >= 80 && S.best.niveau_general >= 85);
+    } else {
+      validated = pct >= 70;
+    }
+    return {
+      originalN: w.n, title: w.title, accent: w.accent, poles: w.poles, consolidation: !!w.consolidation,
+      tasks: tasks, pct: pct, validation: w.validation, validated: validated, priority: isPriorityWeek
+    };
+  });
+  var unlockedIdx = 0;
+  for (var bi = 0; bi < built.length; bi++) { if (!built[bi].validated) { unlockedIdx = bi; break; } if (bi === built.length - 1) unlockedIdx = bi; }
+  v.parcoursCurrentWeek = unlockedIdx + 1;
+  var dayInWeek = Math.max(0, daysSince - unlockedIdx * weekLenDays);
+  v.parcoursDayInWeek = Math.min(weekLenDays, dayInWeek + 1);
+  v.parcoursWeekLenDays = weekLenDays;
+  v.parcoursWeeks = built.map(function (w, idx) {
+    var locked = idx > unlockedIdx;
+    var isActive = idx === unlockedIdx;
+    var range = pStart != null ? fmtDay(pStart + idx * weekLenDays) + ' → ' + fmtDay(pStart + (idx + 1) * weekLenDays - 1) : null;
+    var todayTask = null;
+    if (isActive && !w.consolidation) {
+      for (var ti = 0; ti < w.tasks.length; ti++) { if (!w.tasks[ti].done) { todayTask = w.tasks[ti]; break; } }
+    }
+    return {
+      n: idx + 1, originalN: w.originalN, title: w.title, accent: w.accent, poles: w.poles, consolidation: w.consolidation,
+      tasks: w.tasks, pct: w.pct, validation: w.validation, validated: w.validated, priority: w.priority,
+      range: range, locked: locked, current: isActive, todayTask: todayTask,
+      open: locked ? false : (state.parcoursOpenWeek != null ? state.parcoursOpenWeek === (idx + 1) : isActive)
+    };
+  });
+  v.parcoursOverallPct = Math.round(v.parcoursWeeks.reduce(function (a, w) { return a + w.pct; }, 0) / v.parcoursWeeks.length);
+  v.parcoursOngoing = PROGRAM_ONGOING.map(function (id) {
+    var cat = allCats().find(function (c) { return c.id === id; });
+    return { id: id, label: cat ? cat.label : id };
+  });
+  v.parcoursQuestionsPerDay = questionsPerDay;
+  v.parcoursMinutesDay = minutesDay;
+  v.parcoursObjectiveDays = objDays;
+  v.parcoursPriorityPoles = priorityPoles;
+  v.parcoursDeadlineLabel = pStart != null ? fmtDay(pStart + weekLenDays * 9) : null;
+  if (pStart != null) {
+    var delta = v.parcoursCurrentWeek - expectedWeek;
+    v.parcoursPaceDelta = delta;
+    v.parcoursPaceStatus = delta > 0 ? 'avance' : delta < 0 ? 'retard' : 'ok';
+    v.parcoursPaceLabel = delta > 0 ? 'En avance : semaine ' + v.parcoursCurrentWeek + ' pour un objectif semaine ' + expectedWeek
+      : delta < 0 ? 'En retard : tu es en semaine ' + v.parcoursCurrentWeek + ', l’objectif est semaine ' + expectedWeek
+      : 'Dans les temps par rapport à ton objectif';
+  }
+  var fmtDay2 = function (d) { var dt = new Date(d * 86400000); return ('0' + dt.getDate()).slice(-2) + '/' + ('0' + (dt.getMonth() + 1)).slice(-2); };
+  v.masteryHistory = (S.history || []).map(function (h) { return { d: h.d, mastery: h.mastery, label: fmtDay2(h.d) }; });
+  v.parcoursStartedFlag = !!(S.programStart != null);
+  v.parcoursWeekLabel = S.programStart != null ? 'Semaine ' + v.parcoursCurrentWeek + ' / 9' : 'Pas encore commencé';
+
+  return v;
+}
+
+// ---- markup helpers --------------------------------------------------------
+function normalize(s) { return (s || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+function scoreKwPoints(rawTxt, points) {
+  // Chaque mot d\u00e9j\u00e0 utilis\u00e9 pour valider un point est "consomm\u00e9" : un m\u00eame mot ne peut pas
+  // compter pour deux points diff\u00e9rents, ce qui emp\u00eache de valider en empilant des synonymes
+  // g\u00e9n\u00e9riques sans r\u00e9pondre \u00e0 chaque point distinctement.
+  var normTxt = normalize(rawTxt || '');
+  var tokens = normTxt.split(/[^a-z0-9]+/).filter(function (t) { return t.length > 0; });
+  var used = tokens.map(function () { return false; });
+  return (points || []).map(function (p) {
+    var syn = p.syn || [], got = false;
+    for (var si = 0; si < syn.length && !got; si++) {
+      var nw = normalize(syn[si]);
+      if (!nw) continue;
+      if (nw.indexOf(' ') >= 0) { if (normTxt.indexOf(nw) >= 0) got = true; continue; } // expression enti\u00e8re
+      if (nw.length <= 3) { // sigle court (PER, UC, IR\u2026) : mot exact, pas de sous-cha\u00eene
+        for (var ti = 0; ti < tokens.length; ti++) {
+          if (!used[ti] && tokens[ti] === nw) { used[ti] = true; got = true; break; }
+        }
+        continue;
+      }
+      // mot plus long : accepte aussi une racine commune (singulier/pluriel, conjugaison, variante)
+      for (var tj = 0; tj < tokens.length; tj++) {
+        if (used[tj]) continue;
+        var t = tokens[tj];
+        if (t.length >= 4 && (t.indexOf(nw) >= 0 || nw.indexOf(t) >= 0)) { used[tj] = true; got = true; break; }
+      }
+    }
+    return { k: p.k, got: got };
+  });
+}
+function hexA(hex, a) {
+  var h = (hex || '').replace('#', '');
+  if (h.length !== 6) return 'rgba(219,180,111,' + a + ')';
+  var r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
+  return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
+}
+var poleStyle = {
+  'Les enveloppes': { accent: '#f2cd82', glyph: '🛡️' },
+  'Supports & actifs': { accent: '#4fcfa8', glyph: '📈' },
+  'Financement & levier': { accent: '#e2895f', glyph: '⚖️' },
+  'Retraite & protection': { accent: '#d98a9c', glyph: '🕰️' },
+  'Fiscalité & transmission': { accent: '#6fa8d0', glyph: '📜' },
+  'Entreprise & ingénierie': { accent: '#9db56a', glyph: '🏢' },
+  'Métier & méthode': { accent: '#dbb46f', glyph: '🎯' },
+  'Culture financière': { accent: '#a888c9', glyph: '🌐' }
+};
+function poleAccent(p) { return (poleStyle[p] && poleStyle[p].accent) || 'var(--acc)'; }
+function poleGlyph(p) { return (poleStyle[p] && poleStyle[p].glyph) || '📘'; }
+function splitCalcExplain(explain, correct) {
+  if (!explain) return { formula: '', narrative: '' };
+  if (/^Formule\b/.test(explain)) {
+    var m = explain.match(/\n(?:À retenir|Attention)\s*:[\s\S]*$/);
+    if (m) return { formula: explain.slice(0, m.index).trim(), narrative: explain.slice(m.index).replace(/^\n/, '').trim() };
+    return { formula: explain.trim(), narrative: '' };
+  }
+  var sents = explain.match(/[^.!?]+[.!?]+(?=\s|\n|$)|[^.!?]+$/g) || [explain];
+  sents = sents.map(function (s) { return s.trim(); }).filter(Boolean);
+  var tol = Math.max(1, Math.abs(correct) * 0.03);
+  function numsIn(s) {
+    var out = [], re = /[−-]?\d[\d\s.,]*\d|\d/g, m;
+    while ((m = re.exec(s))) {
+      var raw = m[0].replace(/\s/g, '');
+      var neg = /^[−-]/.test(raw);
+      raw = raw.replace(/^[−-]/, '').replace(/\./g, '').replace(',', '.');
+      var n = parseFloat(raw);
+      if (!isNaN(n)) out.push(neg ? -n : n);
+    }
+    return out;
+  }
+  var idx = -1;
+  for (var k = 0; k < sents.length && k < 5; k++) {
+    if (numsIn(sents[k]).some(function (n) { return Math.abs(n - correct) <= tol; })) { idx = k; break; }
+  }
+  if (idx < 0) return { formula: '', narrative: explain };
+  return { formula: sents.slice(0, idx + 1).join(' '), narrative: sents.slice(idx + 1).join(' ') };
+}
+function exponentNote(text) {
+  if (!text || text.indexOf('^') < 0) return '';
+  var m = text.match(/\(?([\d][\d.,]*)\)?\^(\d+)/);
+  if (!m) return 'ℹ️ Le symbole ^ veut dire « élevé à la puissance » : le nombre est multiplié plusieurs fois par lui-même.';
+  var base = m[1], exp = +m[2];
+  var mult = exp <= 4 ? new Array(exp).fill(base).join(' × ') : (base + ' multiplié par lui-même ' + exp + ' fois');
+  return 'ℹ️ ' + base + '^' + exp + ' veut dire « ' + base + ' élevé à la puissance ' + exp + ' » : ' + mult + '.';
+}
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function tplOption(o) {
+  var out = '', delay = (o.i * 0.05).toFixed(2) + 's';
+  if (o.pending) out += '<button data-action="answerQcm" data-i="' + o.i + '" class="hv-b stagger" style="animation-delay:' + delay + ';display:flex;gap:13px;align-items:flex-start;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--ink);cursor:pointer;"><span style="font:400 15px Fraunces,serif;color:var(--acc);">' + o.letter + '</span><span>' + esc(o.text) + '</span></button>';
+  if (o.good) out += '<div class="stagger" style="animation-delay:' + delay + ';display:flex;gap:13px;align-items:flex-start;border-radius:16px;padding:15px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--on);background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 12s linear infinite,kfPop .3s ease both,kfPulseRing 1s ease-out .3s both;"><span style="font:400 15px Fraunces,serif;opacity:.75;">' + o.letter + '</span><span>' + esc(o.text) + '</span></div>';
+  if (o.bad) out += '<div class="shake" style="display:flex;gap:13px;align-items:flex-start;border-radius:16px;padding:15px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--warn);border:1px solid var(--warn);"><span style="font:400 15px Fraunces,serif;">' + o.letter + '</span><span>' + esc(o.text) + '</span></div>';
+  if (o.mute) out += '<div class="stagger" style="animation-delay:' + delay + ';display:flex;gap:13px;align-items:flex-start;border-radius:16px;padding:15px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--ink3);border:1px solid var(--line);"><span style="font:400 15px Fraunces,serif;">' + o.letter + '</span><span>' + esc(o.text) + '</span></div>';
+  if (o.sel) out += '<div class="shake" style="display:flex;gap:13px;align-items:flex-start;border-radius:16px;padding:15px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--ink);border:1px solid var(--ink3);background:var(--panel2);"><span style="font:400 15px Fraunces,serif;color:var(--ink3);">' + o.letter + '</span><span>' + esc(o.text) + '</span></div>';
+  return out;
+}
+function tplVf(b) {
+  var out = '', delay = (b.i * 0.06).toFixed(2) + 's';
+  if (b.pending) out += '<button data-action="answerVf" data-i="' + b.i + '" class="hv-b stagger" style="animation-delay:' + delay + ';flex:1;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:26px 0;font:400 25px Fraunces,serif;color:var(--ink);cursor:pointer;">' + esc(b.label) + '</button>';
+  if (b.good) out += '<div style="flex:1;border-radius:22px;padding:26px 0;text-align:center;font:400 25px Fraunces,serif;color:var(--on);background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 12s linear infinite,kfPop .3s ease both;">' + esc(b.label) + '</div>';
+  if (b.bad) out += '<div class="shake" style="flex:1;border-radius:22px;padding:26px 0;text-align:center;font:400 25px Fraunces,serif;color:var(--warn);border:1px solid var(--warn);">' + esc(b.label) + '</div>';
+  if (b.mute) out += '<div style="flex:1;border-radius:22px;padding:26px 0;text-align:center;font:400 25px Fraunces,serif;color:var(--dim);border:1px solid var(--line);">' + esc(b.label) + '</div>';
+  if (b.sel) out += '<div class="shake" style="flex:1;border-radius:22px;padding:26px 0;text-align:center;font:400 25px Fraunces,serif;color:var(--ink);border:1px solid var(--ink3);background:var(--panel2);">' + esc(b.label) + '</div>';
+  return out;
+}
+function tplCalc(v) {
+  var keys = v.keys.map(function (k) {
+    return '<button data-action="calcKey" data-k="' + esc(k) + '" class="hv-a" style="background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 0;font:500 17px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">' + esc(k) + '</button>';
+  }).join('');
+  return '<div style="margin-top:22px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;">' +
+    '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">VOTRE RÉPONSE</div>' +
+    '<div style="display:flex;align-items:baseline;gap:10px;margin-top:10px;border-bottom:2px solid var(--acc);padding-bottom:8px;">' +
+    '<div style="flex:1;font:500 30px \'Inter\',sans-serif;letter-spacing:-.02em;">' + esc(v.calcDisplay) + '</div>' +
+    '<div style="font:500 15px \'Inter\',sans-serif;color:var(--ink3);">' + esc(v.qUnit) + '</div></div>' +
+    (v.calcOpen ? '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:16px;">' + keys + '</div>' : '') +
+    '</div>';
+}
+function tplTexte(v) {
+  var out = '<div style="margin-top:20px;">';
+  var placeholder = 'Tapez les mots-clés de votre réponse, séparés par des virgules (quelques mots par idée suffisent)…';
+  if (v.texteOpen) {
+    out += '<textarea data-texte-input placeholder="' + placeholder + '" style="width:100%;box-sizing:border-box;min-height:110px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;font:400 13px/1.65 \'Inter\',sans-serif;color:var(--ink);resize:none;">' + esc(v.texteVal) + '</textarea>' +
+      '<div style="font:400 11px \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;">Validé automatiquement : pas besoin de phrases, les mots-clés attendus suffisent.</div>';
+  }
+  if (v.texteDone) {
+    out += '<div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px;font:400 12.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);">' + (v.texteVal ? esc(v.texteVal) : '<i>(réponse vide)</i>') + '</div>';
+    if (v.openPoints) {
+      out += '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin:18px 0 8px;">MOTS-CLÉS ATTENDUS</div>' +
+        '<div style="display:flex;flex-direction:column;gap:6px;">' + v.openPoints.map(function (p) {
+          return '<div style="display:flex;gap:9px;align-items:flex-start;font:400 12.5px/1.5 \'Inter\',sans-serif;color:' + (p.got ? 'var(--ink)' : 'var(--ink3)') + ';"><span style="color:' + (p.got ? 'var(--acc)' : 'var(--dim)') + ';flex-shrink:0;">' + (p.got ? '✓' : '○') + '</span><span>' + esc(p.k) + '</span></div>';
+        }).join('') + '</div>';
+    }
+    out += '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--acc);margin:18px 0 8px;">RÉPONSE MODÈLE</div>' +
+      '<div style="font:400 13px/1.75 \'Inter\',sans-serif;color:var(--ink);">' + esc(v.qModele) + '</div>';
+  }
+  out += '</div>';
+  return out;
+}
+
+function tplOrder(v) {
+  var items = v.orderItems.map(function (it) {
+    return '<div data-order-row data-idx="' + it.idx + '" style="display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 13px;">' +
+      '<span style="flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font:600 12px \'Inter\',sans-serif;color:var(--ink2);">' + (it.pos + 1) + '</span>' +
+      '<span style="flex:1;font:400 12.5px/1.4 \'Inter\',sans-serif;">' + esc(it.text) + '</span>' +
+      (v.showValidate ? '<span style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">' +
+        '<button data-action="orderUp" data-pos="' + it.pos + '"' + (it.isFirst ? ' disabled' : '') + ' aria-label="Monter" style="width:34px;height:26px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--ink);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;' + (it.isFirst ? 'opacity:.3;' : '') + '">▲</button>' +
+        '<button data-action="orderDown" data-pos="' + it.pos + '"' + (it.isLast ? ' disabled' : '') + ' aria-label="Descendre" style="width:34px;height:26px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--ink);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;' + (it.isLast ? 'opacity:.3;' : '') + '">▼</button></span>' : '') +
+      '</div>';
+  }).join('');
+  var out = '<div style="margin-top:14px;font:400 12px/1.5 \'Inter\',sans-serif;color:var(--ink2);">' + esc(v.orderConsigne) + '</div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">' + items + '</div>';
+  if (!v.showValidate && v.orderCorrectList && v.orderCorrectList.length) {
+    out += '<div style="margin-top:18px;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">ORDRE ATTENDU</div>' +
+      '<ol style="margin:8px 0 0;padding-left:20px;font:400 12.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);">' + v.orderCorrectList.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ol></div>';
+  }
+  return out;
+}
+
+function tplMemviz(v) {
+  if (v.memvizPhase === 'announce') {
+    return '<div style="margin-top:22px;padding:24px;background:var(--panel);border:1px solid var(--line);border-radius:18px;text-align:center;">' +
+      '<div style="font-size:30px;">🧠</div>' +
+      '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--gold);margin-top:12px;">QUESTION DE MÉMORISATION</div>' +
+      '<div style="font:400 13px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;">Le visuel va s\'afficher ' + v.memvizNextTime + ' secondes. Mémorise bien les éléments en surbrillance : ils seront ensuite masqués et à retrouver.</div>' +
+      '<button data-action="memvizStart" style="margin-top:18px;border:none;border-radius:999px;padding:14px 24px;font:600 13px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Je suis prêt·e, afficher</button>' +
+      '</div>';
+  }
+  if (v.memvizPhase === 'memorize') {
+    var pct = Math.max(0, Math.min(100, v.memvizTimeLeft / v.memvizTimeTotal * 100));
+    return '<div style="margin-top:16px;display:flex;align-items:center;gap:12px;">' +
+      '<div style="flex:1;height:4px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="height:4px;width:' + pct + '%;background:linear-gradient(90deg,var(--acc2),var(--gold));transition:width 1s linear;"></div></div>' +
+      '<div style="font:600 13px \'Inter\',sans-serif;color:' + (v.memvizTimeLeft <= 3 ? 'var(--warn)' : 'var(--gold)') + ';flex-shrink:0;">' + v.memvizTimeLeft + ' s</div></div>' +
+      '<div style="margin-top:14px;border-radius:16px;overflow:hidden;background:#faf8f3;">' + v.memvizFullSvg + '</div>' +
+      '<div style="text-align:center;margin-top:14px;"><button data-action="memvizSkipToRecall" style="background:none;border:none;color:var(--ink3);font:400 11.5px \'Inter\',sans-serif;cursor:pointer;text-decoration:underline;">J\'ai fini de mémoriser →</button></div>';
+  }
+  var svg = v.memvizResult ? v.memvizFullSvg : v.memvizBlankSvg;
+  var out = '<div style="margin-top:14px;border-radius:16px;overflow:hidden;background:#faf8f3;">' + svg + '</div>';
+  if (v.memvizResult) {
+    out += '<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">' + v.memvizResult.map(function (r) {
+      var col = r.ok ? 'var(--acc2)' : 'var(--warn)';
+      return '<div style="display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;">' +
+        '<span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:' + hexA(col, 0.18) + ';border:1px solid ' + hexA(col, 0.4) + ';display:flex;align-items:center;justify-content:center;font:600 10px \'Inter\',sans-serif;color:' + col + ';">' + (r.ok ? '✓' : '✕') + '</span>' +
+        '<span style="flex:1;font:400 12px/1.5 \'Inter\',sans-serif;color:var(--ink2);">' + (r.given ? 'Votre réponse : <b style="color:var(--ink);">' + esc(r.given) + '</b>' : '<i style="color:var(--dim);">Pas de réponse</i>') + (!r.ok ? ' — Bonne réponse : <b style="color:' + col + ';">' + esc(r.text) + '</b>' : '') + '</span>' +
+        '</div>';
+    }).join('') + '</div>';
+  } else {
+    out += '<div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;">' + v.memvizInputs.map(function (inp) {
+      return '<div><label style="display:block;font:500 10px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--ink3);margin-bottom:5px;">ÉLÉMENT MASQUÉ ' + inp.n + '</label>' +
+        '<input data-memviz-input data-i="' + inp.i + '" value="' + esc(inp.value) + '" placeholder="Votre réponse" style="width:100%;box-sizing:border-box;font:500 14px \'Inter\',sans-serif;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--ink);outline:none;" /></div>';
+    }).join('') + '</div>';
+  }
+  return out;
+}
+
+function confettiHtml() {
+  var pieces = [
+    ['8%', '0', '7px', '12px', '2px', '#f2cd82', '2.4s', '.05s'],
+    ['18%', '0', '6px', '10px', '2px', '#dbb46f', '2.8s', '.3s'],
+    ['28%', '0', '8px', '8px', '50%', '#4fcfa8', '2.2s', '.18s'],
+    ['37%', '0', '6px', '13px', '2px', '#ef8b7a', '3s', '.5s'],
+    ['46%', '0', '7px', '11px', '2px', '#f2cd82', '2.6s', '.1s'],
+    ['55%', '0', '9px', '9px', '50%', '#dbb46f', '2.9s', '.42s'],
+    ['64%', '0', '6px', '12px', '2px', '#4fcfa8', '2.3s', '.24s'],
+    ['73%', '0', '7px', '10px', '2px', '#f2cd82', '3.1s', '.6s'],
+    ['82%', '0', '8px', '8px', '50%', '#ef8b7a', '2.5s', '.34s'],
+    ['91%', '0', '6px', '12px', '2px', '#dbb46f', '2.7s', '.14s']
+  ];
+  return pieces.map(function (p) {
+    return '<span style="position:absolute;left:' + p[0] + ';top:' + p[1] + ';width:' + p[2] + ';height:' + p[3] + ';border-radius:' + p[4] + ';background:' + p[5] + ';animation:kfFall ' + p[6] + ' linear ' + p[7] + ' both;"></span>';
+  }).join('');
+}
+
+function tplOnb(v) {
+  var out = '<div style="flex:1;display:flex;flex-direction:column;padding:64px 26px 40px;overflow:auto;">' +
+    '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.2em;color:var(--ink3);">DOSSIER CGP · ' + esc(v.onbStepLabel) + '</div>';
+  if (v.onbName) {
+    out += '<div style="font:300 38px/1.12 Fraunces,serif;letter-spacing:-.025em;margin-top:20px;">Comment doit-on<br><span style="font-style:italic;background:linear-gradient(100deg,var(--acc),var(--gold),var(--acc2),var(--acc));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:kfSweep 9s linear infinite;">vous appeler</span> ?</div>' +
+      '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:16px;">Pour personnaliser vos rappels, votre tableau de bord et vos statistiques.</div>' +
+      '<input data-name-input value="' + esc(v.nameInput || '') + '" placeholder="Votre prénom" maxlength="24" style="margin-top:28px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:17px 18px;font:500 16px \'Inter\',sans-serif;color:var(--ink);outline:none;" />' +
+      '<div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">' +
+      '<button data-action="onbNameNext" style="border:none;border-radius:999px;padding:17px;font:600 14px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Continuer</button>' +
+      '<button data-action="onbNameSkip" style="background:none;border:none;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink3);cursor:pointer;">Passer</button></div>';
+  }
+  if (v.onb0) {
+    out += '<div style="font:300 42px/1.06 Fraunces,serif;letter-spacing:-.03em;margin-top:20px;">Préparez la<br><span style="font-style:italic;background:linear-gradient(100deg,var(--acc),var(--gold),var(--acc2),var(--acc));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:kfSweep 9s linear infinite;">certification</span><br>en dix minutes par jour.</div>' +
+      '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:18px;">' + v.totalQ + ' questions, ' + v.ficheCount + ' fiches, ' + v.poleChips.length + ' pôles. L\'application choisit à votre place ce qu\'il faut revoir.</div>' +
+      '<div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">' +
+      '<button data-action="onbNext" style="border:none;border-radius:999px;padding:17px;font:600 14px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Commencer</button>' +
+      '<button data-action="goHome" style="background:none;border:none;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink3);cursor:pointer;">Passer</button></div>';
+  }
+  if (v.onb1) {
+    var lvs = v.levels.map(function (lv, i) {
+      return '<button data-action="pickLevel" data-idx="' + i + '" class="hv-a" style="display:flex;align-items:center;gap:14px;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:17px;cursor:pointer;color:var(--ink);">' +
+        '<span style="font:400 22px Fraunces,serif;color:var(--acc);">' + lv.n + '</span>' +
+        '<span style="flex:1;"><span style="display:block;font:500 14px \'Inter\',sans-serif;">' + esc(lv.title) + '</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(lv.sub) + '</span></span>' +
+        (lv.on ? '<span style="width:9px;height:9px;border-radius:50%;background:var(--acc);"></span>' : '') + '</button>';
+    }).join('');
+    out += '<div style="font:300 34px/1.12 Fraunces,serif;letter-spacing:-.025em;margin-top:20px;">Où en êtes-vous ?</div>' +
+      '<div style="display:flex;flex-direction:column;gap:10px;margin-top:24px;">' + lvs + '</div>' +
+      '<div style="margin-top:22px;"><label style="display:block;font:500 11px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-bottom:8px;">DATE D\'EXAMEN (FACULTATIF)</label>' +
+      '<input type="date" data-exam-date-input value="' + esc(v.examDate || '') + '" style="width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px 16px;font:500 14px \'Inter\',sans-serif;color:var(--ink);outline:none;" />' +
+      '<div style="font:400 11px \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;">Pour suivre un compte à rebours et adapter le rythme. Modifiable à tout moment dans Paramètres.</div></div>' +
+      '<div style="margin-top:auto;padding-top:22px;"><button data-action="onbNext" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 14px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Continuer</button></div>';
+  }
+  if (v.onb2) {
+    var feats = [
+      { icon: '◈', title: 'Mon parcours', sub: 'Un programme guidé, semaine après semaine, à ton rythme.' },
+      { icon: '📘', title: 'Fiches de cours', sub: v.ficheCount + ' fiches illustrées, chacune avec son test de validation.' },
+      { icon: '⏱', title: 'Calcul mental', sub: 'Des réflexes de calcul chronométrés, avec la méthode expliquée.' },
+      { icon: '∑', title: 'Labo', sub: 'Des simulateurs pour visualiser intérêts, frais, crédit et PER.' }
+    ];
+    var featRows = feats.map(function (f) {
+      return '<div style="display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;">' +
+        '<span style="flex-shrink:0;width:40px;height:40px;border-radius:12px;background:' + hexA('#dbb46f', 0.16) + ';display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--acc);">' + f.icon + '</span>' +
+        '<span style="flex:1;min-width:0;"><span style="display:block;font:500 13.5px \'Inter\',sans-serif;">' + esc(f.title) + '</span><span style="display:block;font:400 11.5px/1.4 \'Inter\',sans-serif;color:var(--ink2);margin-top:2px;">' + esc(f.sub) + '</span></span></div>';
+    }).join('');
+    out += '<div style="font:300 34px/1.12 Fraunces,serif;letter-spacing:-.025em;margin-top:20px;">Un tour rapide de l\'application.</div>' +
+      '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:16px;">' + v.totalQ + ' questions vérifiées, ' + v.ficheCount + ' fiches de cours, ' + v.poleChips.length + ' pôles. Voici l\'essentiel :</div>' +
+      '<div style="margin:22px 0 0;display:flex;flex-direction:column;gap:10px;">' + featRows + '</div>' +
+      '<div style="margin-top:auto;"><button data-action="goHome" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 14px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">C\'est parti</button></div>';
+  }
+  out += '</div>';
+  return out;
+}
+
+function parcoursChip(action, v, label, selected) {
+  return '<button data-action="' + action + '" data-v="' + v + '" style="flex:1;border:1px solid ' + (selected ? 'var(--acc)' : 'var(--line)') + ';background:' + (selected ? 'var(--acc)' : 'none') + ';color:' + (selected ? 'var(--on)' : 'var(--ink)') + ';border-radius:999px;padding:10px 6px;font:600 12px \'Inter\',sans-serif;cursor:pointer;text-align:center;">' + label + '</button>';
+}
+function parcoursTaskRow(t, isToday, acc, locked) {
+  if (locked) {
+    var subL = t.type === 'quiz' ? (t.count + ' questions') : 'Fiche de cours';
+    return '<div style="width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:12px;padding:9px 10px;display:flex;align-items:center;gap:11px;color:var(--ink3);margin-top:3px;box-sizing:border-box;opacity:.5;">' +
+      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font:600 10px \'Inter\',sans-serif;color:var(--ink3);">🔒</span>' +
+      '<span style="flex:1;min-width:0;"><span style="display:block;font:500 12.5px \'Inter\',sans-serif;">' + esc(t.type === 'quiz' ? t.label : t.title) + '</span>' +
+      '<span style="display:block;font:400 10.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:2px;">' + subL + '</span></span></div>';
+  }
+  var icon = t.done ? '✓' : (isToday ? '▶' : '');
+  var iconBg = t.done ? acc : (isToday ? acc : 'var(--panel2)');
+  var iconColor = t.done || isToday ? 'var(--on)' : 'var(--ink3)';
+  var sub = t.type === 'quiz' ? (t.count + ' questions · ' + t.pct + '% déjà vues') : 'Fiche de cours';
+  var action = t.type === 'fiche' ? 'data-action="ficheGo" data-fiche="' + esc(t.id) + '"' : 'data-action="parcoursStartQuiz" data-sub="' + esc(t.id) + '" data-n="' + t.target + '"';
+  return '<button ' + action + ' class="hv-a" style="width:100%;text-align:left;background:' + (isToday ? hexA(acc, 0.14) : 'none') + ';border:1px solid ' + (isToday ? hexA(acc, 0.35) : 'transparent') + ';border-radius:12px;padding:9px 10px;display:flex;align-items:center;gap:11px;cursor:pointer;color:var(--ink);margin-top:3px;box-sizing:border-box;">' +
+    '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + iconBg + ';display:flex;align-items:center;justify-content:center;font:600 11px \'Inter\',sans-serif;color:' + iconColor + ';">' + icon + '</span>' +
+    '<span style="flex:1;min-width:0;"><span style="display:block;font:500 12.5px \'Inter\',sans-serif;' + (t.done ? 'color:var(--ink2);' : '') + '">' + esc(t.type === 'quiz' ? t.label : t.title) + '</span>' +
+    '<span style="display:block;font:400 10.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:2px;">' + sub + '</span></span></button>';
+}
+function tplParcours(v) {
+  if (!v.parcoursStarted) {
+    var mChip = function (n) { return parcoursChip('parcoursSetMinutes', n, n + ' min', v.parcoursSetupMinutes === n); };
+    var oChip = function (n, l) { return parcoursChip('parcoursSetObjective', n, l, v.parcoursSetupObjective === n); };
+    var previewQpd = Math.max(3, Math.round(v.parcoursSetupMinutes / 1.5));
+    var previewWeekLen = Math.max(4, Math.round(v.parcoursSetupObjective / 9));
+    var objLabelMap = { 30: '1 mois', 60: '2 mois', 90: '3 mois' };
+    var objLabel = objLabelMap[v.parcoursSetupObjective] || 'ton rythme';
+    var poleChips = v.poleOptions.map(function (p) {
+      var sel = v.parcoursSetupPriority.indexOf(p) >= 0;
+      return '<button data-action="parcoursTogglePriority" data-pole="' + esc(p) + '" style="width:100%;box-sizing:border-box;border:1px solid ' + (sel ? poleAccent(p) : 'var(--line)') + ';background:' + (sel ? hexA(poleAccent(p), 0.16) : 'var(--panel)') + ';color:' + (sel ? 'var(--ink)' : 'var(--ink2)') + ';border-radius:12px;padding:10px 12px;font:500 11.5px \'Inter\',sans-serif;cursor:pointer;text-align:left;display:flex;align-items:center;gap:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
+        '<span style="flex-shrink:0;">' + poleGlyph(p) + '</span><span style="overflow:hidden;text-overflow:ellipsis;">' + esc(p) + '</span></button>';
+    }).join('');
+    return '<div style="flex:1;overflow:auto;min-height:0;">' +
+      '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
+      '<div style="font:500 10px \'Inter\',monospace;letter-spacing:.2em;color:var(--ink3);margin-top:16px;">MON PARCOURS</div>' +
+      '<div style="font:300 32px/1.15 Fraunces,serif;letter-spacing:-.02em;margin-top:14px;">Prêt en <span style="font-style:italic;color:var(--acc);">' + esc(objLabel) + '</span>, à ta façon.</div>' +
+      '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">Un programme construit sur les ' + v.ficheCount + ' fiches et ' + v.totalQ + ' questions de l\'app, réparti en 9 étapes. Chaque jour, une seule chose à faire. Chaque étape se débloque quand la précédente est validée — pas d\'avance sans avoir vraiment travaillé le sujet. Choisis ci-dessous le rythme et la durée qui te conviennent.</div></div>' +
+      '<div style="margin:26px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">COMBIEN DE TEMPS PAR JOUR ?</div>' +
+      '<div style="display:flex;gap:8px;margin-top:10px;">' + mChip(15) + mChip(30) + mChip(45) + mChip(60) + '</div></div>' +
+      '<div style="margin:22px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">TON OBJECTIF</div>' +
+      '<div style="display:flex;gap:8px;margin-top:10px;">' + oChip(30, '1 mois') + oChip(60, '2 mois') + oChip(90, '3 mois') + oChip(63, 'À mon rythme') + '</div></div>' +
+      '<div style="margin:22px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">THÉMATIQUES PRIORITAIRES <span style="color:var(--ink3);text-transform:none;letter-spacing:0;">(jusqu\'à 3, optionnel)</span></div>' +
+      '<div style="font:400 11.5px/1.6 \'Inter\',sans-serif;color:var(--ink3);margin-top:6px;">Les semaines liées à ces thèmes passent en premier et reçoivent 50% de questions en plus par jour.</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">' + poleChips + '</div></div>' +
+      '<div style="margin:20px 24px 0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;font:400 12px/1.7 \'Inter\',sans-serif;color:var(--ink2);">≈ <b style="color:var(--ink);">' + previewQpd + ' questions/jour</b> et des semaines d\'environ <b style="color:var(--ink);">' + previewWeekLen + ' jours</b>, soit <b style="color:var(--ink);">' + (previewWeekLen * 9) + ' jours au total</b> pour les 9 étapes.</div>' +
+      '<div style="margin:20px 24px 0;"><button data-action="startParcours" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Commencer mon parcours</button></div>' +
+      '<div style="height:26px;"></div></div>';
+  }
+  var weeks = v.parcoursWeeks.map(function (w) {
+    var acc = w.accent;
+    if (w.locked) {
+      return '<div style="margin-top:12px;border:1px solid var(--line);border-radius:16px;padding:15px 16px;background:var(--panel);opacity:.55;display:flex;align-items:center;gap:12px;">' +
+        '<span style="flex-shrink:0;width:38px;height:38px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font:500 15px \'Inter\',sans-serif;color:var(--ink3);">🔒</span>' +
+        '<span style="flex:1;min-width:0;"><span style="display:block;font:500 9.5px \'Inter\',monospace;letter-spacing:.08em;color:var(--ink3);">SEMAINE ' + w.n + ' · VERROUILLÉE' + (w.priority ? ' · priorisée' : '') + '</span>' +
+        '<span style="display:block;font:500 13.5px \'Inter\',sans-serif;margin-top:3px;color:var(--ink2);">' + esc(w.title) + '</span></span></div>';
+    }
+    var statusTag = w.validated ? ' · validée ✓' : (w.current ? ' · en cours' : '');
+    var body;
+    if (w.consolidation) {
+      body = '<div style="display:flex;flex-direction:column;gap:9px;">' +
+        '<button data-action="examGo" data-key="facile" data-label="Niveau 1 · Fondamentaux" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Examen blanc · Niveau 1 Fondamentaux</button>' +
+        '<button data-action="examGo" data-key="avance" data-label="Niveau 2 · Avancé" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Examen blanc · Niveau 2 Avancé</button>' +
+        '<button data-action="examGo" data-key="technique" data-label="Niveau 3 · Technique" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Examen blanc · Niveau 3 Technique</button>' +
+        '<button data-action="examGo" data-key="niveau_general" data-label="Mise à niveau générale" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Mise à niveau générale</button>' +
+        '<button data-action="goTab" data-k="progress" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Voir Stats — repérer les pôles faibles</button>' +
+        '<button data-action="startSrs" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Réviser — vider les questions à revoir</button></div>';
+    } else {
+      var todayCard = '';
+      if (w.current) {
+        if (w.todayTask) {
+          var tt = w.todayTask;
+          var ctaLabel = tt.type === 'fiche' ? 'Lire la fiche' : ('Faire ' + tt.target + ' questions');
+          var ctaAction = tt.type === 'fiche' ? 'data-action="ficheGo" data-fiche="' + esc(tt.id) + '"' : 'data-action="parcoursStartQuiz" data-sub="' + esc(tt.id) + '" data-n="' + tt.target + '"';
+          todayCard = '<div style="background:' + hexA(acc, 0.12) + ';border:1px solid ' + hexA(acc, 0.35) + ';border-radius:14px;padding:14px;margin-bottom:12px;">' +
+            '<div style="font:500 9.5px \'Inter\',monospace;letter-spacing:.1em;color:' + acc + ';">AUJOURD\'HUI · JOUR ' + v.parcoursDayInWeek + '/' + v.parcoursWeekLenDays + '</div>' +
+            '<div style="font:500 14px \'Inter\',sans-serif;margin-top:7px;">' + esc(tt.type === 'quiz' ? tt.label : tt.title) + '</div>' +
+            '<button ' + ctaAction + ' style="margin-top:11px;width:100%;border:none;border-radius:999px;padding:12px;font:600 12.5px \'Inter\',sans-serif;color:var(--on);background:' + acc + ';cursor:pointer;">' + ctaLabel + '</button></div>';
+        } else {
+          todayCard = '<div style="background:' + hexA(acc, 0.12) + ';border:1px solid ' + hexA(acc, 0.35) + ';border-radius:14px;padding:14px;margin-bottom:12px;font:400 12px/1.5 \'Inter\',sans-serif;color:var(--ink2);">🎉 Semaine terminée — elle va se valider et débloquer la suivante.</div>';
+        }
+      }
+      var todayIdx = w.todayTask ? w.tasks.indexOf(w.todayTask) : -1;
+      var rows = w.tasks.map(function (t, ti) {
+        var lockedTask = w.current && todayIdx >= 0 && ti > todayIdx;
+        return parcoursTaskRow(t, t === w.todayTask, acc, lockedTask);
+      }).join('');
+      body = todayCard + '<div style="display:flex;flex-direction:column;">' + rows + '</div>';
+    }
+    return '<div style="margin-top:12px;border:1px solid var(--line);border-left:3px solid ' + acc + ';border-radius:16px;overflow:hidden;background:var(--panel);">' +
+      '<button data-action="parcoursToggleWeek" data-n="' + w.n + '" style="width:100%;background:none;border:none;padding:15px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;">' +
+      '<span style="flex-shrink:0;position:relative;width:38px;height:38px;border-radius:50%;background:conic-gradient(' + acc + ' ' + (w.pct * 3.6) + 'deg,var(--line) ' + (w.pct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
+      '<span style="width:32px;height:32px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font:500 10px \'Inter\',monospace;color:' + acc + ';">' + (w.validated ? '✓' : w.n) + '</span></span>' +
+      '<span style="flex:1;min-width:0;"><span style="display:block;font:500 9.5px \'Inter\',monospace;letter-spacing:.08em;color:' + acc + ';">SEMAINE ' + w.n + (w.range ? ' · ' + esc(w.range) : '') + (w.priority ? ' · priorisée' : '') + esc(statusTag) + '</span>' +
+      '<span style="display:block;font:500 13.5px \'Inter\',sans-serif;margin-top:3px;">' + esc(w.title) + '</span></span>' +
+      '<span style="flex-shrink:0;font:400 15px Fraunces,serif;color:' + acc + ';transition:transform .25s;transform:rotate(' + (w.open ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
+      (w.open ? '<div style="padding:0 16px 16px;">' + body + '<div style="margin-top:14px;background:var(--panel2);border-left:3px solid var(--acc2);border-radius:10px;padding:11px 13px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);"><b style="color:var(--ink);">Validation —</b> ' + esc(w.validation) + '</div></div>' : '') +
+      '</div>';
+  }).join('');
+  var ongoing = v.parcoursOngoing.map(function (o) {
+    return '<button data-action="subGo" data-sub="' + esc(o.id) + '" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 13px;font:500 11.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">' + esc(o.label) + '</button>';
+  }).join('');
+  var paceColor = v.parcoursPaceStatus === 'avance' ? 'var(--acc2)' : v.parcoursPaceStatus === 'retard' ? 'var(--warn)' : 'var(--ink2)';
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
+    '<div style="font:500 10px \'Inter\',monospace;letter-spacing:.2em;color:var(--ink3);margin-top:16px;">MON PARCOURS</div>' +
+    '<div style="display:flex;align-items:center;gap:16px;margin-top:14px;">' +
+    '<div style="flex-shrink:0;position:relative;width:64px;height:64px;border-radius:50%;background:conic-gradient(var(--acc) ' + (v.parcoursOverallPct * 3.6) + 'deg,var(--line) ' + (v.parcoursOverallPct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
+    '<span style="width:54px;height:54px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:500 14px \'Inter\',monospace;color:var(--acc);">' + v.parcoursOverallPct + '%</span></div>' +
+    '<div><div style="font:300 26px/1.1 Fraunces,serif;letter-spacing:-.02em;">Semaine ' + v.parcoursCurrentWeek + ' <span style="font-style:italic;color:var(--ink3);font-size:18px;">/ 9</span></div>' +
+    '<div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:4px;">Jour ' + v.parcoursDayInWeek + '/' + v.parcoursWeekLenDays + ' de cette semaine</div></div></div>' +
+    '<div style="margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;">' +
+    '<span style="font:500 12px \'Inter\',sans-serif;color:' + paceColor + ';">' + esc(v.parcoursPaceLabel || '') + '</span>' +
+    '<span style="font:400 11px \'Inter\',sans-serif;color:var(--ink3);flex-shrink:0;">Objectif · ' + esc(v.parcoursDeadlineLabel || '') + '</span></div></div>' +
+    '<div style="margin:22px 24px 0;">' + weeks + '</div>' +
+    '<div style="margin:22px 24px 0;"><div style="font:500 9.5px \'Inter\',monospace;letter-spacing:.1em;color:var(--ink3);">ENTRAÎNEMENT CONTINU · TOUTE L\'ANNÉE</div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">' + ongoing + '</div></div>' +
+    '<div style="height:26px;"></div></div>';
+}
+
+function tplSearch(v) {
+  var q = v.searchQuery, qTrim = q.trim();
+  var results = v.searchResults;
+  var list;
+  if (results.length) {
+    list = results.map(function (r, i) {
+      var icon = r.kind === 'fiche' ? '📘' : r.kind === 'culture' ? '🎓' : '✏️';
+      return '<button data-action="searchGo" data-kind="' + esc(r.kind) + '" data-id="' + esc(r.id) + '" class="hv-a stagger" style="animation-delay:' + (i * 0.03).toFixed(2) + 's;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);box-sizing:border-box;">' +
+        '<span style="font-size:18px;flex-shrink:0;">' + icon + '</span>' +
+        '<span style="flex:1;min-width:0;"><span style="display:block;font:500 9.5px \'Inter\',sans-serif;letter-spacing:.05em;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(r.path) + '</span>' +
+        '<span style="display:block;font:500 13.5px \'Inter\',sans-serif;margin-top:3px;">' + esc(r.title) + '</span></span>' +
+        '<span style="font:500 9.5px \'Inter\',sans-serif;color:var(--dim);flex-shrink:0;text-align:right;">' + esc(r.meta) + '</span></button>';
+    }).join('');
+  } else if (qTrim.length >= 2) {
+    list = '<div class="stagger" style="text-align:center;padding:44px 20px;color:var(--ink3);font:400 13px \'Inter\',sans-serif;">Aucun résultat pour « ' + esc(qTrim) + ' ».</div>';
+  } else if (qTrim.length === 1) {
+    list = '<div style="text-align:center;padding:44px 20px;color:var(--ink3);font:400 13px \'Inter\',sans-serif;">Continuez à taper…</div>';
+  } else {
+    list = '<div style="text-align:center;padding:44px 20px;color:var(--ink3);font:400 13px \'Inter\',sans-serif;">Cherchez un cours, une notion ou une catégorie de questions — par exemple « crypto », « lombard » ou « succession ».</div>';
+  }
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
+    '<div style="font:300 30px/1.15 Fraunces,serif;letter-spacing:-.02em;margin-top:16px;">Rechercher</div></div>' +
+    '<div style="margin:20px 24px 0;">' +
+    '<input id="searchInput" data-search-input value="' + esc(q) + '" placeholder="Crypto, PER, succession…" style="width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font:500 14px \'Inter\',sans-serif;color:var(--ink);outline:none;" /></div>' +
+    '<div style="margin:16px 24px 0;display:flex;flex-direction:column;gap:9px;">' + list + '</div>' +
+    '<div style="height:26px;"></div></div>';
+}
+
+function tplHome(v) {
+  var weak = v.weakChips.map(function (w) {
+    return '<button data-action="weakGo" data-pole="' + esc(w.label) + '" class="hv-a" style="background:none;border:1px solid var(--line);border-radius:999px;padding:8px 13px;font:500 12px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">' + esc(w.label) + ' <span style="font-family:\'Inter\',sans-serif;font-size:10.5px;color:var(--warn);">' + w.pct + '</span></button>';
+  }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;display:flex;justify-content:space-between;align-items:center;">' +
+    '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.2em;color:var(--ink3);">CGP</div>' +
+    '<div style="display:flex;align-items:center;gap:14px;">' +
+    '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink2);cursor:pointer;">🔍</button></div></div>' +
+    '<div style="padding:24px 24px 0;"><div style="font:300 42px/1.02 Fraunces,serif;letter-spacing:-.025em;">' + esc(v.greeting) + '<br><span style="font-style:italic;background:linear-gradient(100deg,var(--acc),var(--gold),var(--acc2),var(--acc));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:kfSweep 9s linear infinite;">' + esc(v.userName) + '</span></div></div>' +
+    (v.examDate ? '<div style="margin:18px 24px 0;display:flex;align-items:center;gap:10px;background:' + hexA('#dbb46f', 0.1) + ';border:1px solid ' + hexA('#dbb46f', 0.3) + ';border-radius:999px;padding:10px 16px;">' +
+      '<span style="font:600 13px \'Inter\',sans-serif;color:var(--acc);flex-shrink:0;">' + (v.examDaysLeft > 0 ? 'J-' + v.examDaysLeft : (v.examDaysLeft === 0 ? 'Aujourd\'hui' : 'Examen passé')) + '</span>' +
+      '<span style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);flex:1;">avant l\'examen · ' + v.examCoveragePct + '% du programme vu au moins une fois</span></div>' : '') +
+    '<div style="margin:22px 24px 0;"><button data-action="goParcours" class="hv-a" style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:15px 16px;display:flex;align-items:center;gap:13px;text-align:left;cursor:pointer;color:var(--ink);box-sizing:border-box;">' +
+    (v.parcoursStartedFlag
+      ? '<span style="flex-shrink:0;position:relative;width:38px;height:38px;border-radius:50%;background:conic-gradient(var(--acc) ' + (v.parcoursOverallPct * 3.6) + 'deg,var(--line) ' + (v.parcoursOverallPct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;"><span style="width:32px;height:32px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font:500 10px \'Inter\',monospace;color:var(--acc);">' + v.parcoursOverallPct + '%</span></span>'
+      : '<span style="font:400 22px Fraunces,serif;color:var(--acc);">◈</span>') +
+    '<span style="flex:1;"><span style="display:block;font:500 13.5px \'Inter\',sans-serif;">Mon parcours</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(v.parcoursWeekLabel) + '</span></span>' +
+    '<span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button></div>' +
+    '<div style="margin:22px 24px 0;border-radius:24px;padding:22px;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;gap:18px;">' +
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;"><div>' +
+    '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.16em;color:var(--ink3);">DÉFI DU JOUR</div>' +
+    '<div style="font:300 30px/1.15 Fraunces,serif;margin-top:10px;">5 <span style="font-size:15px;font-family:\'Inter\',sans-serif;font-weight:500;color:var(--ink2);">questions sur</span></div>' +
+    '<div style="font:500 13px/1.5 \'Inter\',sans-serif;color:var(--acc);margin-top:4px;">' + esc(v.dailyTopics.join(' · ') || 'toutes les thématiques') + '</div></div>' +
+    '<div style="width:58px;height:58px;border-radius:50%;background:conic-gradient(var(--acc) 0turn ' + v.dailyTurn + ',var(--line) ' + v.dailyTurn + ' 1turn);display:flex;align-items:center;justify-content:center;"><div style="width:46px;height:46px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font:500 12px \'Inter\',sans-serif;">' + v.dailyPct + '%</div></div></div>' +
+    '<div style="height:3px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="width:' + v.dailyPct + '%;height:3px;background:linear-gradient(90deg,var(--acc2),var(--acc));transform-origin:left;animation:kfFill 1.1s cubic-bezier(.16,1,.3,1) both;"></div></div>' +
+    '<button data-action="startDaily" style="border:none;background:var(--acc);color:var(--on);border-radius:999px;padding:14px;text-align:center;font:600 13.5px \'Inter\',sans-serif;cursor:pointer;animation:kfGlow 3.2s ease-in-out infinite;">Je me lance · 3 min</button>' +
+    '<div style="font:400 10.5px \'Inter\',sans-serif;color:var(--ink3);text-align:center;margin-top:-10px;">Se tromper aussi, ça fait progresser.</div></div>' +
+    '<div style="margin:26px 24px 0;display:flex;align-items:flex-end;gap:22px;">' +
+    '<div><div style="font:300 52px/0.9 Fraunces,serif;letter-spacing:-.03em;"><span data-countup="' + v.mastery + '" data-countup-suffix="%">0%</span></div><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin-top:6px;">MAÎTRISE</div></div>' +
+    '<button data-action="goSrs" style="background:none;border:none;border-left:1px solid var(--line);padding:0 0 0 22px;text-align:left;cursor:pointer;"><div style="font:300 52px/0.9 Fraunces,serif;letter-spacing:-.03em;color:var(--warn);"><span data-countup="' + v.dueCount + '">0</span></div><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin-top:6px;">À REVOIR</div></button></div>' +
+    '<div style="margin:8px 24px 0;font:400 10.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);">Ce sont deux choses différentes : <b style="color:var(--ink2);">maîtrise</b> = % de bonnes réponses (moyenne tous pôles) · <b style="color:var(--ink2);">à revoir</b> = nombre de questions dont la répétition espacée arrive à échéance aujourd\'hui, quel que soit ton niveau dessus.</div>' +
+    (v.weakChips.length ? '<div style="margin:26px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">POINTS FAIBLES</div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">' + weak + '</div></div>' : '') +
+    (v.flaggedTopics.length ? '<div style="margin:26px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--warn);">🚩 À RETRAVAILLER</div>' +
+      '<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">' + v.flaggedTopics.map(function (t) {
+        return '<div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:13px 14px;">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
+          '<span style="font:500 12.5px \'Inter\',sans-serif;flex:1;min-width:0;">' + esc(t.label) + '</span>' +
+          '<button data-action="flagTopic" data-cat="' + esc(t.catId) + '" style="flex-shrink:0;background:none;border:none;padding:2px 4px;font:400 13px \'Inter\',sans-serif;color:var(--ink3);cursor:pointer;">✕</button></div>' +
+          '<div style="display:flex;gap:8px;margin-top:10px;">' +
+          (t.theoryId ? '<button data-action="subGo" data-theory="' + esc(t.theoryId) + '" style="flex:1;background:none;border:1px solid var(--line);border-radius:999px;padding:9px;font:500 11.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Revoir le cours</button>' : '') +
+          '<button data-action="subGo" data-sub="' + esc(t.catId) + '" style="flex:1;background:var(--warn);border:none;border-radius:999px;padding:9px;font:600 11.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;">S\'entraîner</button>' +
+          '</div></div>';
+      }).join('') + '</div></div>' : '') +
+    '<div style="margin:26px 24px 0;display:flex;gap:10px;">' +
+    '<button data-action="goBrowse" class="hv-a" style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;cursor:pointer;color:var(--ink);"><div style="font:300 26px/1 Fraunces,serif;">' + v.catCount + '</div><div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:7px;">Catégories</div></button>' +
+    '<button data-action="goExamPick" class="hv-a" style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;cursor:pointer;color:var(--ink);"><div style="font:300 26px/1 Fraunces,serif;">' + v.examFormatCount + '</div><div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:7px;">Examens blancs</div></button></div>' +
+    '<div style="margin:26px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">OUTILS</div>' +
+    '<button data-action="goBuilder" class="hv-a" style="width:100%;margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;align-items:center;gap:14px;text-align:left;cursor:pointer;color:var(--ink);box-sizing:border-box;">' +
+    '<span style="font:400 24px Fraunces,serif;color:var(--acc);">◎</span><span style="flex:1;"><span style="display:block;font:500 13.5px \'Inter\',sans-serif;">Créer ma session</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">Domaines, formats et niveau au choix</span></span>' +
+    '<span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
+    '<div style="margin-top:10px;display:flex;gap:10px;">' +
+    '<button data-action="goLabo" class="hv-a" style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;cursor:pointer;color:var(--ink);"><div style="font:400 22px Fraunces,serif;color:var(--acc);">∑</div><div style="font:500 13px \'Inter\',sans-serif;margin-top:9px;">Labo</div><div style="font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:2px;">5 simulateurs</div></button>' +
+    '<button data-action="goMental" class="hv-a" style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;cursor:pointer;color:var(--ink);"><div style="font:400 22px Fraunces,serif;color:var(--gold);">⏱</div><div style="font:500 13px \'Inter\',sans-serif;margin-top:9px;">Calcul mental</div><div style="font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:2px;">10 questions chrono</div></button></div></div>' +
+    '<div style="height:26px;"></div></div>';
+}
+
+function tplBrowse(v) {
+  var poles = v.poles.map(function (p, i) {
+    var cats = p.cats.map(function (c) {
+      return '<button data-action="catGo" data-cat="' + esc(c.id) + '" class="hv-c" style="width:100%;background:none;border:none;padding:12px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;font:400 12.5px/1.4 \'Inter\',sans-serif;">' + esc(c.label) + '</span><span style="font:500 10px \'Inter\',sans-serif;color:var(--dim);">' + esc(c.badge) + '</span></button>';
+    }).join('');
+    return '<div class="stagger" style="animation-delay:' + (i * 0.05).toFixed(2) + 's;background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;">' +
+      '<button data-action="poleToggle" data-pole="' + esc(p.label) + '" class="hv-c" style="width:100%;background:none;border:none;padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;">' +
+      '<span style="flex:1;min-width:0;"><span style="display:block;font:500 13.5px \'Inter\',sans-serif;">' + esc(p.label) + '</span><span style="display:block;font:500 9px \'Inter\',sans-serif;color:var(--dim);margin-top:3px;">' + esc(p.ratio) + '</span></span>' +
+      '<span style="width:52px;height:4px;border-radius:3px;background:var(--line);overflow:hidden;flex-shrink:0;"><span style="display:block;width:' + p.pct + '%;height:4px;background:linear-gradient(90deg,var(--acc2),var(--acc));transition:width .5s cubic-bezier(.16,1,.3,1);"></span></span>' +
+      '<span style="font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);width:26px;text-align:right;flex-shrink:0;">' + p.pct + '%</span>' +
+      '<span style="font:400 13px Fraunces,serif;color:var(--ink3);transition:transform .25s;transform:rotate(' + (p.open ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
+      (p.open ? '<div class="stagger" style="border-top:1px solid var(--line);padding:6px 0;">' + cats + '</div>' : '') + '</div>';
+  }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;display:flex;justify-content:space-between;align-items:flex-start;">' +
+    '<div><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.2em;color:var(--ink3);">BANQUE</div>' +
+    '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:14px;">' + v.poles.length + ' <span style="font-style:italic;">pôles</span></div></div>' +
+    '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink2);cursor:pointer;flex-shrink:0;margin-top:2px;">🔍</button></div>' +
+    '<div style="margin:22px 24px 0;display:flex;flex-direction:column;gap:10px;">' + poles + '</div>' +
+    '<div style="height:26px;"></div></div>';
+}
+
+function tplCat(v) {
+  var subs = v.subs.map(function (s) {
+    return '<button data-action="subGo" data-sub="' + esc(s.id) + '"' + (s.theory ? ' data-theory="' + esc(s.theory) + '"' : '') + (s.simu ? ' data-simu="' + esc(s.simu) + '"' : '') + ' class="hv-a" style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;font:500 13px/1.4 \'Inter\',sans-serif;">' + esc(s.label) + '</span><span style="font:500 10px \'Inter\',sans-serif;color:var(--dim);letter-spacing:.08em;">' + esc(s.badge) + '</span></button>';
+  }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> ' + esc(v.catPole) + '</button>' +
+    '<div style="font:300 32px/1.14 Fraunces,serif;letter-spacing:-.025em;margin-top:16px;">' + esc(v.catLabel) + '</div></div>' +
+    '<div style="margin:20px 24px 0;display:flex;flex-direction:column;gap:9px;">' + subs + '</div>' +
+    '<div style="height:26px;"></div></div>';
+}
+
+function tplQuiz(v) {
+  var mid = '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);"><div>' + esc(v.qCat) + (v.qIsReview ? ' <span style="color:var(--gold);">· RÉVISION</span>' : '') + '</div><div style="color:var(--acc);">' + esc(v.qTypeLabel) + '</div></div>' +
+    '<div style="font:300 25px/1.3 Fraunces,serif;letter-spacing:-.01em;margin-top:16px;text-wrap:pretty;">' + esc(v.qText) + '</div>';
+  if (v.qHasSvg) mid += '<div style="margin-top:16px;border-radius:16px;overflow:hidden;background:#faf8f3;">' + v.qSvg + '</div>';
+  if (v.isScenario) mid += '<div style="margin-top:16px;background:var(--panel2);border-left:3px solid var(--acc);border-radius:10px;padding:13px 15px;font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);"><b style="color:var(--ink);">Scénario —</b> ' + esc(v.qContexte) + '</div>';
+  if (v.isSpot) mid += '<div style="margin-top:14px;font:400 12px/1.5 \'Inter\',sans-serif;color:var(--warn);">Une seule affirmation est fausse. Repère-la.</div>';
+  if (v.isDoc) mid += '<div style="margin-top:16px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;font:400 12px/1.7 \'Inter\',sans-serif;color:var(--ink2);white-space:pre-line;">' + esc(v.qDoc) + '</div>';
+  if (v.hasOptions) mid += '<div style="display:flex;flex-direction:column;gap:9px;margin-top:22px;">' + v.options.map(tplOption).join('') + '</div>';
+  if (v.isVf) mid += '<div style="display:flex;gap:12px;margin-top:26px;">' + v.vfBtns.map(tplVf).join('') + '</div>';
+  if (v.isCalc) mid += tplCalc(v);
+  if (v.isTexte || v.isOpen) mid += tplTexte(v);
+  if (v.isMemviz) mid += tplMemviz(v);
+  if (v.isOrder) mid += tplOrder(v);
+  if (v.examAnswered) mid += '<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line);animation:kfIn .3s ease both;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">RÉPONSE ENREGISTRÉE · CORRECTION À LA FIN DE L\'ÉPREUVE</div></div>';
+  if (v.answered) {
+    mid += '<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line);animation:kfIn .3s ease both;">';
+    if (v.wasOk) mid += '<div style="font:300 30px/1 Fraunces,serif;color:var(--acc);">Exact. <span style="font:500 12px \'Inter\',sans-serif;">+10 XP</span></div>';
+    if (v.wasKo) mid += '<div style="font:300 30px/1 Fraunces,serif;color:var(--warn);">Raté. <span style="font:500 12px \'Inter\',sans-serif;">' + esc(v.koNote) + '</span></div>';
+    mid += (v.qFormula
+      ? '<div style="margin-top:12px;padding:12px 14px;background:' + hexA(v.wasOk ? '#4fcfa8' : '#e2895f', 0.12) + ';border:1px solid ' + hexA(v.wasOk ? '#4fcfa8' : '#e2895f', 0.35) + ';border-radius:12px;">' +
+        '<div style="font:600 9.5px \'Inter\',sans-serif;letter-spacing:.1em;color:' + (v.wasOk ? 'var(--acc2)' : 'var(--warn)') + ';margin-bottom:5px;">📐 LE CALCUL</div>' +
+        '<div style="font:500 13.5px/1.6 \'Inter\',sans-serif;color:var(--ink);white-space:pre-line;">' + esc(v.qFormula) + '</div>' +
+        (v.qExponentNote ? '<div style="font:400 11.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;padding-top:8px;border-top:1px solid ' + hexA(v.wasOk ? '#4fcfa8' : '#e2895f', 0.25) + ';">' + esc(v.qExponentNote) + '</div>' : '') +
+        '</div>' +
+        (v.qNarrative ? '<div style="font:400 13px/1.75 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;text-wrap:pretty;white-space:pre-line;">' + esc(v.qNarrative) + '</div>' : '')
+      : '<div style="font:400 13px/1.75 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;text-wrap:pretty;white-space:pre-line;">' + esc(v.qExplain) + '</div>') +
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;">' +
+      '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">REVOIR DANS ' + v.nextIn + ' J</div>' +
+      (v.qCatId ? '<button data-action="flagTopic" data-cat="' + esc(v.qCatId) + '" style="background:none;border:1px solid ' + (v.qFlagged ? 'var(--warn)' : 'var(--line)') + ';border-radius:999px;padding:6px 11px;font:500 10.5px \'Inter\',sans-serif;color:' + (v.qFlagged ? 'var(--warn)' : 'var(--ink3)') + ';cursor:pointer;white-space:nowrap;">' + (v.qFlagged ? '🚩 Sujet marqué' : '🚩 Retravailler ce sujet') + '</button>' : '') +
+      '</div></div>';
+  }
+  mid += '<div style="height:20px;"></div>';
+
+  var footer = '<div style="padding:12px 24px 40px;border-top:1px solid var(--line);background:var(--bg);">';
+  if (v.showValidate) footer += '<button data-action="validate" style="width:100%;border:none;border-radius:999px;padding:16px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + esc(v.validateLabel) + '</button>';
+  if (v.showNext) footer += '<button data-action="next" style="width:100%;border:none;border-radius:999px;padding:16px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + esc(v.nextLabel) + '</button>';
+  if (v.showHint) footer += '<div style="text-align:center;font:400 11px \'Inter\',sans-serif;color:var(--ink3);padding:4px 0;">Touchez une réponse.</div>';
+  footer += '</div>';
+
+  return '<div style="flex:1;display:flex;flex-direction:column;min-height:0;">' +
+    '<div style="padding:56px 24px 0;"><div style="display:flex;align-items:center;gap:12px;">' +
+    '<button data-action="quitQuiz" style="background:none;border:none;padding:0;font:500 12.5px \'Inter\',sans-serif;color:var(--ink3);cursor:pointer;">Fermer</button>' +
+    '<div style="flex:1;text-align:center;font:500 11px \'Inter\',sans-serif;color:var(--ink2);">' + esc(v.quizTitle) + '</div>' +
+    (v.examTimerLabel ? '<div style="font:600 11px \'Inter\',sans-serif;color:' + (v.examTimerLow ? 'var(--warn)' : 'var(--acc)') + ';margin-right:10px;">⏱ ' + esc(v.examTimerLabel) + '</div>' : '') +
+    '<div style="font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);">' + esc(v.quizPos) + '</div></div>' +
+    '<div style="margin-top:14px;height:3px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="width:' + v.quizPct + '%;height:3px;background:linear-gradient(90deg,var(--acc2),var(--acc),var(--gold));transition:width .35s cubic-bezier(.16,1,.3,1);"></div></div></div>' +
+    '<div style="flex:1;overflow:auto;min-height:0;padding:0 24px;">' + mid + '</div>' +
+    footer + '</div>';
+}
+
+function tplDone(v) {
+  return '<div style="flex:1;display:flex;flex-direction:column;padding:64px 26px 40px;overflow:auto;">' +
+    '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.2em;color:var(--ink3);">' + esc(v.doneKicker) + '</div>' +
+    '<div style="font:300 38px/1.08 Fraunces,serif;letter-spacing:-.03em;margin-top:16px;">' + esc(v.doneTitle) + '</div>' +
+    '<div style="margin:30px auto 0;position:relative;width:196px;height:196px;">' +
+    '<div style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--acc2),var(--acc),var(--gold),var(--warn),var(--acc2));animation:kfSpin 22s linear infinite;"></div>' +
+    '<div style="position:absolute;inset:11px;border-radius:50%;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;">' +
+    '<div style="font:300 60px/1 Fraunces,serif;letter-spacing:-.03em;">' + v.donePct + '<span style="font-size:20px;">%</span></div>' +
+    '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin-top:6px;">' + esc(v.doneRatio) + '</div></div></div>' +
+    '<div style="margin-top:26px;display:flex;justify-content:space-between;">' +
+    '<div><div style="font:300 28px/1 Fraunces,serif;color:var(--acc);">+' + v.doneXp + '</div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:5px;">XP GAGNÉS</div></div>' +
+    '<div><div style="font:300 28px/1 Fraunces,serif;">' + v.doneKo + '</div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:5px;">À REVOIR</div></div>' +
+    '<div><div style="font:300 28px/1 Fraunces,serif;">' + v.streak + '</div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:5px;">JOURS</div></div></div>' +
+    (v.streakMilestone ? '<div class="stagger" style="margin-top:20px;background:' + hexA('#f2cd82', 0.12) + ';border:1px solid var(--gold);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;">' +
+      '<span style="font-size:22px;">🔥</span><span style="font:500 12.5px/1.4 \'Inter\',sans-serif;color:var(--ink);"><b>' + v.streakMilestone + ' jours d\'affilée !</b><br><span style="color:var(--ink2);font-weight:400;">Une régularité qui paie, continue comme ça.</span></span></div>' : '') +
+    '<div style="font:400 13px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:22px;">' + esc(v.doneNote) + '</div>' +
+    '<div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">' +
+    '<button data-action="doneAgain" style="border:none;border-radius:999px;padding:17px;font:600 14px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + esc(v.doneCta) + '</button>' +
+    (v.doneShowFicheReview ? '<button data-action="goFicheReviewFromDone" style="background:none;border:1px solid var(--line);border-radius:999px;padding:15px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Revoir mes réponses</button>' : '') +
+    (v.doneShowParcours ? '<button data-action="goParcoursFromDone" style="background:none;border:1px solid var(--acc);border-radius:999px;padding:15px;font:600 12.5px \'Inter\',sans-serif;color:var(--acc);cursor:pointer;">Retour au parcours</button>' : '') +
+    '<button data-action="goHome" style="background:none;border:1px solid var(--line);border-radius:999px;padding:15px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Retour à l\'accueil</button></div></div>';
+}
+
+function tplBuilder(v) {
+  var levels = v.buildLevels.map(function (l) {
+    return '<button data-action="buildLevel" data-lv="' + l.key + '" class="lab-seg' + (l.on ? ' on' : '') + '" style="flex:1;">' + l.label + '</button>';
+  }).join('');
+  var doms = v.buildDoms.map(function (d) {
+    return '<button data-action="buildDom" data-dom="' + esc(d.id) + '" class="hv-c" style="background:' + (d.on ? 'var(--ink)' : 'var(--panel)') + ';color:' + (d.on ? 'var(--bg)' : 'var(--ink)') + ';border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:500 12px \'Inter\',sans-serif;cursor:pointer;text-align:left;">' + (d.on ? '✓ ' : '') + esc(d.label) + '</button>';
+  }).join('');
+  var types = v.buildTypeOpts.map(function (t) {
+    return '<button data-action="buildType" data-t="' + t.id + '" class="hv-c" style="background:' + (t.on ? 'var(--ink)' : 'var(--panel)') + ';color:' + (t.on ? 'var(--bg)' : 'var(--ink)') + ';border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:500 12px \'Inter\',sans-serif;cursor:pointer;text-align:left;">' + (t.on ? '✓ ' : '') + esc(t.label) + ' <span style="opacity:.6;font-family:\'Inter\',sans-serif;font-size:10px;">(' + t.count + ')</span></button>';
+  }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
+    '<div style="font:300 32px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:16px;">Créer <span style="font-style:italic;">ma session</span></div>' +
+    '<div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;">Choisis tes domaines, tes formats, ton niveau et le nombre de questions. On pioche au hasard dans toute la banque.</div></div>' +
+    '<div style="margin:22px 24px 0;">' +
+    '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">NIVEAU</div>' +
+    '<div style="display:flex;gap:8px;margin-top:10px;">' + levels + '</div>' +
+    '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin-top:22px;">DOMAINES</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">' + doms + '</div>' +
+    '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin-top:22px;">FORMATS</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">' + types + '</div>' +
+    '<div style="margin-top:24px;"><div style="display:flex;justify-content:space-between;font:500 12px \'Inter\',sans-serif;color:var(--ink2);"><span>Nombre de questions</span><b id="bldNV" style="color:var(--ink);font-family:\'Inter\',sans-serif;">' + v.buildN + '</b></div>' +
+    '<input type="range" id="bldN" min="1" max="' + v.buildMaxN + '" step="1" value="' + v.buildN + '"></div>' +
+    '<div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:10px;">' + v.buildAvail + ' question' + (v.buildAvail > 1 ? 's' : '') + ' disponible' + (v.buildAvail > 1 ? 's' : '') + ' avec cette sélection' + (v.buildAvail === 0 ? ' — élargis tes critères.' : '.') + '</div>' +
+    '<button data-action="startBuilder"' + (v.buildAvail < 1 ? ' disabled style="opacity:.4;"' : '') + ' style="width:100%;margin-top:16px;border:none;border-radius:999px;padding:16px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Lancer ma session →</button>' +
+    '</div><div style="height:32px;"></div></div>';
+}
+
+function tplExamPick(v) {
+  var g = v.niveauGeneral;
+  var o = v.examOfficiel;
+  var niveauBtn = '<button data-action="examGo" data-key="' + esc(g.key) + '" data-label="' + esc(g.label) + '" class="hv-a stagger" style="background:linear-gradient(135deg,var(--panel2),var(--panel));border:1px solid var(--gold);border-radius:18px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;">' +
+    '<span style="font-size:26px;">⚡</span>' +
+    '<span style="flex:1;"><span style="display:block;font:500 14px \'Inter\',sans-serif;">' + esc(g.label) + '</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(g.sub) + '</span></span>' +
+    '<span style="font:500 10px \'Inter\',sans-serif;color:var(--gold);">' + esc(g.best) + '</span></button>';
+  var officielBtn = '<button data-action="examGo" data-key="' + esc(o.key) + '" data-label="' + esc(o.label) + '" class="hv-a stagger" style="background:linear-gradient(135deg,' + hexA('#dbb46f', 0.14) + ',var(--panel));border:1px solid var(--acc);border-radius:18px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;">' +
+    '<span style="font-size:26px;">⏱</span>' +
+    '<span style="flex:1;"><span style="display:block;font:500 14px \'Inter\',sans-serif;">' + esc(o.label) + '</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(o.sub) + '</span></span>' +
+    '<span style="font:500 10px \'Inter\',sans-serif;color:var(--acc);">' + esc(o.best) + '</span></button>';
+  var lvs = v.examLevels.map(function (e, ei) {
+    return '<button data-action="examGo" data-key="' + esc(e.key) + '" data-label="' + esc(e.label) + '" class="hv-a stagger" style="animation-delay:' + (ei * 0.06).toFixed(2) + 's;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;">' +
+      '<span style="font:300 30px/1 Fraunces,serif;color:var(--acc);">' + e.n + '</span>' +
+      '<span style="flex:1;"><span style="display:block;font:500 14px \'Inter\',sans-serif;">' + esc(e.label) + '</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(e.sub) + '</span></span>' +
+      '<span style="font:500 10px \'Inter\',sans-serif;color:var(--ink3);">' + esc(e.best) + '</span></button>';
+  }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;padding:58px 24px 0;">' +
+    '<button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
+    '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.2em;color:var(--ink3);margin-top:16px;">EXAMEN BLANC</div>' +
+    '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:14px;">Cinq <span style="font-style:italic;">formats</span></div>' +
+    '<div style="font:400 13px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;">Questions tirées au sort, sans correction avant la fin. Seuil de réussite : 60 % en entraînement, 50 % sur l\'examen officiel chronométré.</div>' +
+    '<div style="margin-top:24px;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--acc);">FORMAT OFFICIEL</div>' +
+    '<div style="margin-top:10px;">' + officielBtn + '</div>' +
+    '<div style="margin-top:22px;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--gold);">CHECK RAPIDE</div>' +
+    '<div style="margin-top:10px;">' + niveauBtn + '</div>' +
+    '<div style="margin-top:22px;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">PROGRESSION PAR NIVEAU</div>' +
+    '<div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;">' + lvs + '</div>' +
+    '<div style="height:26px;"></div></div>';
+}
+
+function tplExamResult(v) {
+  var poles = v.examByPole.map(function (p) {
+    return '<div style="display:flex;align-items:center;gap:12px;"><div style="flex:1;font:400 12.5px \'Inter\',sans-serif;">' + esc(p.label) + '</div>' +
+      '<div style="width:80px;height:5px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="width:' + p.pct + '%;height:5px;background:linear-gradient(90deg,var(--acc2),var(--acc));transform-origin:left;animation:kfFill 1s cubic-bezier(.16,1,.3,1) both;"></div></div>' +
+      '<div style="width:44px;text-align:right;font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);">' + esc(p.ratio) + '</div></div>';
+  }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;padding:58px 24px 0;">' +
+    '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.2em;color:var(--ink3);">RÉSULTAT · ' + esc(v.examLabel) + '</div>' +
+    '<div style="font:300 38px/1.08 Fraunces,serif;letter-spacing:-.03em;margin-top:14px;">' + esc(v.examVerdict) + '</div>' +
+    '<div style="margin-top:22px;display:flex;align-items:flex-end;gap:20px;">' +
+    '<div><div style="font:300 62px/0.9 Fraunces,serif;letter-spacing:-.03em;color:var(--acc);">' + v.donePct + '<span style="font-size:22px;">%</span></div><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin-top:6px;">SCORE</div></div>' +
+    '<div style="border-left:1px solid var(--line);padding-left:20px;"><div style="font:300 34px/1 Fraunces,serif;">' + esc(v.doneRatio) + '</div><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin-top:8px;">BONNES RÉPONSES</div></div></div>' +
+    '<div style="margin-top:26px;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">PAR PÔLE</div>' +
+    '<div style="margin-top:14px;display:flex;flex-direction:column;gap:12px;">' + poles + '</div>' +
+    '<div style="margin:26px 0 0;display:flex;flex-direction:column;gap:10px;">' +
+    '<button data-action="reviewExam" style="border:none;border-radius:999px;padding:16px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Revoir mes ' + v.doneKo + ' erreurs</button>' +
+    (v.doneShowParcours ? '<button data-action="goParcoursFromDone" style="background:none;border:1px solid var(--acc);border-radius:999px;padding:15px;font:600 12.5px \'Inter\',sans-serif;color:var(--acc);cursor:pointer;">Retour au parcours</button>' : '') +
+    '<button data-action="goHome" style="background:none;border:1px solid var(--line);border-radius:999px;padding:15px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Retour à l\'accueil</button></div>' +
+    '<div style="height:26px;"></div></div>';
+}
+
+function tplSrs(v) {
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.2em;color:var(--ink3);">MÉMOIRE</div>' +
+    '<div style="font:300 38px/1.08 Fraunces,serif;letter-spacing:-.025em;margin-top:14px;"><span style="font-style:italic;">' + v.dueCount + '</span> questions<br>arrivent à échéance.</div>' +
+    '<div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;">Ce chiffre suit la répétition espacée (1, 3, 7, 16, 35, 90 jours) : il compte toutes les questions déjà vues dont la date de révision tombe aujourd\'hui, indépendamment de ton % de maîtrise sur leur pôle.</div></div>' +
+    '<div style="margin:28px auto 0;position:relative;width:200px;height:200px;">' +
+    '<div style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--acc2),var(--acc),var(--gold),var(--warn),var(--acc2));animation:kfSpin 22s linear infinite;"></div>' +
+    '<div style="position:absolute;inset:11px;border-radius:50%;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;">' +
+    '<div style="font:300 58px/1 Fraunces,serif;letter-spacing:-.03em;">' + v.dueCount + '</div>' +
+    '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.16em;color:var(--ink3);margin-top:8px;">DUES AUJOURD\'HUI</div></div></div>' +
+    '<button data-action="startSrs" style="margin:30px 24px 0;width:calc(100% - 48px);border:none;border-radius:999px;padding:18px;font:600 14px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Commencer</button>' +
+    '<div style="margin:30px 24px 0;display:flex;justify-content:space-between;">' +
+    '<div><div style="font:300 30px/1 Fraunces,serif;">' + v.learnCount + '</div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">EN COURS</div></div>' +
+    '<div><div style="font:300 30px/1 Fraunces,serif;color:var(--acc);">' + v.masteredCount + '</div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">MAÎTRISÉES</div></div>' +
+    '<div><div style="font:300 30px/1 Fraunces,serif;color:var(--dim);">' + v.unseenCount + '</div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">JAMAIS VUES</div></div></div>' +
+    '<div style="margin:26px 24px 0;padding-top:18px;border-top:1px solid var(--line);font:500 10.5px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--ink3);">1 · 3 · 7 · 16 · 35 · 90 JOURS</div>' +
+    (v.flaggedTopics.length ? '<div style="margin:26px 24px 0;padding-top:20px;border-top:1px solid var(--line);"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--warn);">🚩 À RETRAVAILLER</div>' +
+      '<div style="font:400 11.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:6px;">Sujets que tu as marqués depuis un cours ou une question — reliés ici au cours et à un entraînement ciblé.</div>' +
+      '<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">' + v.flaggedTopics.map(function (t) {
+        return '<div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:13px 14px;">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
+          '<span style="font:500 12.5px \'Inter\',sans-serif;flex:1;min-width:0;">' + esc(t.label) + '</span>' +
+          '<span style="flex-shrink:0;font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);">' + t.pct + '%</span>' +
+          '<button data-action="flagTopic" data-cat="' + esc(t.catId) + '" style="flex-shrink:0;background:none;border:none;padding:2px 4px;font:400 13px \'Inter\',sans-serif;color:var(--ink3);cursor:pointer;">✕</button></div>' +
+          '<div style="display:flex;gap:8px;margin-top:10px;">' +
+          (t.theoryId ? '<button data-action="subGo" data-theory="' + esc(t.theoryId) + '" style="flex:1;background:none;border:1px solid var(--line);border-radius:999px;padding:9px;font:500 11.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Revoir le cours</button>' : '') +
+          '<button data-action="subGo" data-sub="' + esc(t.catId) + '" style="flex:1;background:var(--warn);border:none;border-radius:999px;padding:9px;font:600 11.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;">S\'entraîner</button>' +
+          '</div></div>';
+      }).join('') + '</div></div>' : '') +
+    '<div style="height:26px;"></div></div>';
+}
+
+function tplFicheCard(f, idx, accent, action) {
+  var pr = f.progress || 0;
+  var acc = accent || 'var(--acc)';
+  var ringColor = pr >= 80 ? 'var(--acc2)' : pr > 0 ? acc : 'var(--line)';
+  var badge = pr >= 80
+    ? '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--acc2);margin-top:5px;">✓ MAÎTRISÉE</span>'
+    : pr > 0
+      ? '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'Inter\',sans-serif;letter-spacing:.08em;color:' + acc + ';margin-top:5px;">' + pr + '% EN COURS</span>'
+      : '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--dim);margin-top:5px;">' + esc(f.meta) + '</span>';
+  var numTag = idx != null ? '<span style="flex-shrink:0;width:22px;font:500 11px \'Inter\',sans-serif;color:var(--dim);text-align:center;">' + (idx < 9 ? '0' : '') + (idx + 1) + '</span>' : '';
+  return '<button data-action="' + (action || 'ficheGo') + '" data-fiche="' + esc(f.key) + '" class="hv-a" style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;box-sizing:border-box;">' +
+    numTag +
+    '<span style="flex-shrink:0;position:relative;width:46px;height:46px;border-radius:50%;background:conic-gradient(' + ringColor + ' ' + (pr * 3.6) + 'deg,var(--line) ' + (pr * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
+    '<span style="width:39px;height:39px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:17px;">' + esc(f.icon) + '</span></span>' +
+    '<span style="flex:1;min-width:0;"><span style="display:block;font:500 13.5px/1.35 \'Inter\',sans-serif;">' + esc(f.title) + '</span>' + badge + '</span>' +
+    '<span style="flex-shrink:0;font:400 15px Fraunces,serif;color:' + acc + ';">&#8250;</span></button>';
+}
+
+function tplCourses(v) {
+  var cards = v.coursePoles.map(function (p, i) {
+    return '<button data-action="coursePoleGo" data-pole="' + esc(p.label) + '" class="hv-a stagger" style="animation-delay:' + (i * 0.04).toFixed(2) + 's;position:relative;overflow:hidden;width:100%;background:linear-gradient(120deg,' + hexA(p.accent, 0.16) + ',var(--panel) 60%);border:1px solid ' + hexA(p.accent, 0.35) + ';border-radius:20px;padding:19px 20px;text-align:left;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:16px;box-sizing:border-box;">' +
+      '<span style="position:absolute;right:-8px;top:-16px;font-size:68px;opacity:.13;transform:rotate(8deg);pointer-events:none;">' + p.glyph + '</span>' +
+      '<span style="flex-shrink:0;position:relative;width:56px;height:56px;border-radius:50%;background:conic-gradient(' + p.accent + ' ' + (p.pct * 3.6) + 'deg,var(--line) ' + (p.pct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
+      '<span style="width:47px;height:47px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:500 12px \'Inter\',sans-serif;color:' + p.accent + ';">' + p.pct + '%</span></span>' +
+      '<span style="flex:1;min-width:0;position:relative;"><span style="display:block;font:300 17px/1.25 Fraunces,serif;">' + esc(p.label) + '</span>' +
+      '<span style="display:block;font:500 9.5px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-top:6px;">' + p.readCount + '/' + p.count + ' LUES · MAÎTRISE ' + p.pct + '%</span></span>' +
+      '<span style="flex-shrink:0;font:400 20px Fraunces,serif;color:' + p.accent + ';position:relative;">&#8250;</span></button>';
+  }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;display:flex;justify-content:space-between;align-items:flex-start;">' +
+    '<div><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.2em;color:var(--ink3);">FICHES</div>' +
+    '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:14px;">' + v.ficheCount + ' <span style="font-style:italic;">cours</span>, ' + v.coursePoles.length + ' pôles</div></div>' +
+    '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink2);cursor:pointer;flex-shrink:0;margin-top:2px;">🔍</button></div>' +
+    '<div style="margin:22px 24px 0;display:flex;flex-direction:column;gap:12px;">' + cards +
+    '<button data-action="goCulture" class="hv-a" style="position:relative;overflow:hidden;width:100%;background:linear-gradient(120deg,' + hexA('#dbb46f', 0.16) + ',var(--panel) 60%);border:1px solid ' + hexA('#dbb46f', 0.35) + ';border-radius:20px;padding:19px 20px;text-align:left;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:16px;box-sizing:border-box;">' +
+    '<span style="position:absolute;right:-8px;top:-16px;font-size:68px;opacity:.13;transform:rotate(8deg);pointer-events:none;">🎓</span>' +
+    '<span style="flex-shrink:0;position:relative;width:56px;height:56px;border-radius:50%;background:conic-gradient(var(--gold) ' + (v.cultureOverallPct * 3.6) + 'deg,var(--line) ' + (v.cultureOverallPct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
+    '<span style="width:47px;height:47px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:500 12px \'Inter\',sans-serif;color:var(--gold);">' + v.cultureOverallPct + '%</span></span>' +
+    '<span style="flex:1;min-width:0;position:relative;"><span style="display:block;font:300 17px/1.25 Fraunces,serif;">Culture générale</span>' +
+    '<span style="display:block;font:500 9.5px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-top:6px;">' + v.cultureTestedCount + '/' + CULTURE_METIERS.length + ' MÉTIERS · MAÎTRISE ' + v.cultureOverallPct + '%</span></span>' +
+    '<span style="flex-shrink:0;font:400 20px Fraunces,serif;color:var(--gold);position:relative;">&#8250;</span></button>' +
+    '<button data-action="goFormulas" class="hv-a" style="position:relative;overflow:hidden;width:100%;background:linear-gradient(120deg,' + hexA('#4fcfa8', 0.16) + ',var(--panel) 60%);border:1px solid ' + hexA('#4fcfa8', 0.35) + ';border-radius:20px;padding:19px 20px;text-align:left;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:16px;box-sizing:border-box;">' +
+    '<span style="position:absolute;right:-8px;top:-16px;font-size:68px;opacity:.13;transform:rotate(8deg);pointer-events:none;">🧮</span>' +
+    '<span style="flex-shrink:0;position:relative;width:56px;height:56px;border-radius:50%;background:conic-gradient(#4fcfa8 ' + (Math.round(100 * v.formulesSeenCount / FORMULES.length) * 3.6) + 'deg,var(--line) ' + (Math.round(100 * v.formulesSeenCount / FORMULES.length) * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
+    '<span style="width:47px;height:47px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:500 12px \'Inter\',sans-serif;color:#4fcfa8;">' + v.formulesSeenCount + '/' + FORMULES.length + '</span></span>' +
+    '<span style="flex:1;min-width:0;position:relative;"><span style="display:block;font:300 17px/1.25 Fraunces,serif;">Boîte à formules</span>' +
+    '<span style="display:block;font:500 9.5px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-top:6px;">TOUTES LES MÉTHODOS DE CALCUL, PAS À PAS</span></span>' +
+    '<span style="flex-shrink:0;font:400 20px Fraunces,serif;color:#4fcfa8;position:relative;">&#8250;</span></button>' +
+    '</div>' +
+    '<div style="height:26px;"></div></div>';
+}
+
+function tplCoursePole(v) {
+  var acc = v.coursePoleAccent;
+  var cards = v.coursePoleFichesList.map(function (f, i) {
+    return '<div class="stagger" style="animation-delay:' + (i * 0.04).toFixed(2) + 's;">' + tplFicheCard(f, i, acc) + '</div>';
+  }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:0 0 0;position:relative;background:linear-gradient(160deg,' + hexA(acc, 0.22) + ',transparent 65%);">' +
+    '<div style="padding:58px 24px 22px;"><button data-action="goBack" class="btn-back hv-a" style="color:' + acc + ';"><span class="bkarr">&#8249;</span> Fiches</button>' +
+    '<div style="display:flex;align-items:center;gap:14px;margin-top:16px;">' +
+    '<span style="flex-shrink:0;width:50px;height:50px;border-radius:16px;background:' + hexA(acc, 0.18) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;font-size:22px;">' + v.coursePoleGlyph + '</span>' +
+    '<div><div style="font:300 28px/1.1 Fraunces,serif;letter-spacing:-.02em;">' + esc(v.coursePoleLabel) + '</div>' +
+    '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--ink3);margin-top:6px;">' + v.coursePoleReadCount + '/' + v.coursePoleFichesList.length + ' LUES · MAÎTRISE ' + v.coursePolePct + '% <span style="text-transform:none;letter-spacing:0;color:var(--dim);">(quiz)</span></div></div></div></div></div>' +
+    '<div style="margin:6px 24px 0;display:flex;flex-direction:column;gap:9px;">' + cards + '</div>' +
+    '<div style="height:26px;"></div></div>';
+}
+
+function emphasizeCaps(escapedText) {
+  return escapedText.replace(/(?:^|[^&#\w])[A-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜÇ][A-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜÇ0-9'\-]+(?:[\s-][A-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜÇ0-9'\-]{2,})*/g, function (m) {
+    var lead = /^[^A-ZÀÂÄÉÈÊËÏÎÔÖÙÛÜÇ]/.test(m) ? m[0] : '';
+    var word = lead ? m.slice(1) : m;
+    if (word.length < 2) return m;
+    return lead + '<b style="color:var(--ink);font-weight:700;">' + word + '</b>';
+  });
+}
+function formatBody(raw, accent) {
+  var text = (raw || '').trim();
+  var dotColor = accent || 'var(--acc)';
+  var parts = text.split(/\s*•\s*/);
+  if (parts.length > 2) {
+    var intro = parts.shift().trim();
+    var items = parts.map(function (s) { return s.trim().replace(/\s+/g, ' '); }).filter(Boolean);
+    var html = '';
+    if (intro) html += '<div style="font:400 14px/1.75 \'Inter\',sans-serif;color:var(--ink);">' + emphasizeCaps(esc(intro)) + '</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:10px;' + (intro ? 'margin-top:11px;' : '') + '">' + items.map(function (it) {
+      return '<div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;width:5px;height:5px;border-radius:50%;background:' + dotColor + ';margin-top:9px;"></span>' +
+        '<span style="flex:1;font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);">' + emphasizeCaps(esc(it)) + '</span></div>';
+    }).join('') + '</div>';
+    return html;
+  }
+  return '<div style="font:400 14px/1.78 \'Inter\',sans-serif;color:var(--ink2);">' + emphasizeCaps(esc(text)) + '</div>';
+}
+function tplPara(p, i, accent) {
+  var delay = ((i || 0) * 0.06).toFixed(2) + 's';
+  if (p.callout) {
+    return '<div class="stagger" style="animation-delay:' + delay + ';margin:10px 0;background:var(--panel2);border-left:3px solid var(--gold);border-radius:10px;padding:11px 13px;">' +
+      '<div style="font:600 9.5px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--gold);display:flex;align-items:center;gap:6px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--gold);animation:kfBreathe 2s ease-in-out infinite;"></span>' + esc(p.label) + '</div>' +
+      '<div style="font:400 13px/1.65 \'Inter\',sans-serif;color:var(--ink);margin-top:5px;text-wrap:pretty;">' + emphasizeCaps(esc(p.text.trim())) + '</div></div>';
+  }
+  if (!p.text.trim()) return '';
+  return '<div class="stagger" style="animation-delay:' + delay + ';margin-top:12px;text-wrap:pretty;">' + formatBody(p.text, accent) + '</div>';
+}
+
+function tplFiche(v) {
+  var acc = v.ficheAccent;
+  var toc = v.ficheTocDots.map(function (d) {
+    var col = d.warnish ? 'var(--warn)' : acc;
+    return '<button data-action="ficheJump" data-i="' + (d.n - 1) + '" style="flex-shrink:0;width:30px;height:30px;border-radius:50%;background:' + hexA(col, 0.14) + ';border:1px solid ' + hexA(col, 0.4) + ';color:' + col + ';font:500 11px \'Inter\',sans-serif;cursor:pointer;">' + d.n + '</button>';
+  }).join('');
+  var sections = v.ficheSections.map(function (s, i) {
+    var col = s.warnish ? 'var(--warn)' : acc;
+    var body = s.paras.map(function (p, pi) { return tplPara(p, pi, acc); }).join('') + (s.svg ? '<div class="stagger" style="animation-delay:' + (s.paras.length * 0.06).toFixed(2) + 's;margin-top:14px;border-radius:14px;overflow:hidden;background:#faf8f3;padding:8px;">' + s.svg + '</div>' : '');
+    return '<div id="sec-' + i + '" class="thsec' + (i === 0 ? ' open' : '') + '" style="margin-top:12px;border:1px solid var(--line);border-left:3px solid ' + hexA(col, 0.6) + ';border-radius:16px;overflow:hidden;background:var(--panel);animation:kfIn .4s cubic-bezier(.16,1,.3,1) both;animation-delay:' + (i * 0.05).toFixed(2) + 's;">' +
+      '<button data-fold-head style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:' + col + ';font:500 10px \'Inter\',sans-serif;letter-spacing:.12em;text-align:left;">' +
+      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + (s.seen ? col : hexA(col, 0.16)) + ';border:1px solid ' + hexA(col, 0.4) + ';display:flex;align-items:center;justify-content:center;font:500 10px \'Inter\',sans-serif;color:' + (s.seen ? 'var(--on)' : col) + ';">' + (s.seen ? '✓' : (s.warnish ? '!' : (i + 1))) + '</span>' +
+      '<span style="flex:1;">' + esc(s.h) + '</span><span class="fold-arr" style="flex-shrink:0;transition:transform .25s;transform:rotate(' + (i === 0 ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
+      '<div class="fold-body' + (i === 0 ? '' : ' fold-closed') + '"><div style="padding:0 16px 16px;">' + body + '</div></div></div>';
+  }).join('');
+  var completionBar = '<div style="margin:16px 26px 0;display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px;">' +
+    '<span id="ficheSecStatus" style="font:500 11.5px \'Inter\',sans-serif;color:' + (v.ficheAllSectionsSeen ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (v.ficheAllSectionsSeen ? '✓' : v.ficheSectionsSeenCount + '/' + v.ficheSections.length) + ' sections lues</span>' +
+    (v.ficheHasTest ? '<span style="width:1px;height:12px;background:var(--line);"></span>' +
+      '<span id="ficheTestStatus" style="font:500 11.5px \'Inter\',sans-serif;color:' + (v.ficheTested ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (v.ficheTested ? '✓ test fait' : 'test à faire') + '</span>' : '') +
+    '<span id="ficheValidatedBadge" style="margin-left:auto;font:600 10.5px \'Inter\',sans-serif;color:var(--acc2);display:' + (v.ficheValidated ? '' : 'none') + ';">FICHE VALIDÉE</span></div>';
+  return '<div style="flex:1;overflow:auto;min-height:0;position:relative;">' +
+    '<div style="position:sticky;top:0;left:0;right:0;height:3px;background:var(--line);z-index:5;"><div id="ficheProgressFill" style="height:3px;width:0%;background:' + acc + ';"></div></div>' +
+    '<div style="padding:32px 26px 22px;background:linear-gradient(160deg,' + hexA(acc, 0.2) + ',transparent 70%);">' +
+    '<button data-action="goBack" class="btn-back hv-a" style="color:' + acc + ';"><span class="bkarr">&#8249;</span> Retour</button>' +
+    '<div style="display:flex;align-items:center;gap:14px;margin-top:18px;">' +
+    '<span style="flex-shrink:0;width:52px;height:52px;border-radius:16px;background:' + hexA(acc, 0.18) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;font-size:23px;animation:kfCalm 3.4s ease-in-out infinite;">' + esc(v.ficheIcon) + '</span>' +
+    '<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;align-items:center;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);"><div>' + esc(v.ficheIdx) + '</div><div style="color:' + acc + ';">' + v.ficheMin + ' MIN</div></div>' +
+    '<div style="font:300 26px/1.15 Fraunces,serif;letter-spacing:-.02em;margin-top:6px;">' + esc(v.ficheTitle) + '</div></div></div>' +
+    '<div style="font:400 10px/1.6 \'Inter\',sans-serif;color:var(--dim);margin-top:16px;">' + esc(v.ficheSource) + '</div>' +
+    '<div style="margin-top:16px;display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;">' + toc + '</div></div>' +
+    completionBar +
+    '<div style="padding:6px 26px 0;">' + sections + '</div>' +
+    '<div style="padding:26px 26px 30px;display:flex;flex-direction:column;gap:10px;">' + (v.ficheHasTest
+      ? '<button data-action="startFicheQuiz" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Tester la fiche</button>'
+      : '<div style="text-align:center;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);margin-bottom:2px;">Fiche de synthèse — aucun test dédié, elle est validée une fois toutes les sections lues.</div>' +
+        '<button data-action="startFicheReview" style="width:100%;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:15px;font:600 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">↻ Réviser avec des questions d\'autres fiches</button>') +
+    (v.ficheHasReview ? '<button data-action="goFicheReview" style="width:100%;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:15px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Revoir les questions du test</button>' : '') +
+    '</div></div>';
+}
+
+function tplFicheReview(v) {
+  var acc = v.ficheAccent;
+  var items = v.ficheReviewItems.map(function (it) {
+    var col = it.ok ? 'var(--acc2)' : 'var(--warn)';
+    return '<div style="margin-top:12px;border:1px solid var(--line);border-left:3px solid ' + hexA(col, 0.6) + ';border-radius:16px;background:var(--panel);padding:16px;">' +
+      '<div style="display:flex;align-items:flex-start;gap:10px;">' +
+      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + hexA(col, 0.18) + ';border:1px solid ' + hexA(col, 0.4) + ';display:flex;align-items:center;justify-content:center;font:600 11px \'Inter\',sans-serif;color:' + col + ';">' + (it.ok ? '✓' : '✕') + '</span>' +
+      '<div style="flex:1;font:400 13.5px/1.55 \'Inter\',sans-serif;">' + (it.isReview ? '<span style="display:block;font:600 9.5px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--gold);margin-bottom:4px;">RÉVISION · FICHE PRÉCÉDENTE</span>' : '') + esc(it.text) + '</div></div>' +
+      '<div style="margin-top:10px;padding-left:32px;font:500 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);">Votre réponse : <span style="color:' + col + ';">' + esc(it.pickTxt) + '</span>' +
+      (!it.ok && it.showCorrect ? '<br>Bonne réponse : <span style="color:var(--acc2);">' + esc(it.correctTxt) + '</span>' : '') + '</div>' +
+      (it.formula ? '<div style="margin-top:8px;margin-left:32px;padding:10px 12px;background:' + hexA(it.ok ? '#4fcfa8' : '#e2895f', 0.12) + ';border:1px solid ' + hexA(it.ok ? '#4fcfa8' : '#e2895f', 0.35) + ';border-radius:10px;">' +
+        '<div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.1em;color:' + (it.ok ? 'var(--acc2)' : 'var(--warn)') + ';margin-bottom:4px;">📐 LE CALCUL</div>' +
+        '<div style="font:500 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink);white-space:pre-line;">' + esc(it.formula) + '</div>' +
+        (it.exponentNote ? '<div style="font:400 11px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:6px;padding-top:6px;border-top:1px solid ' + hexA(it.ok ? '#4fcfa8' : '#e2895f', 0.25) + ';">' + esc(it.exponentNote) + '</div>' : '') +
+        '</div>' : '') +
+      (it.explain ? '<div style="margin-top:8px;padding:10px 12px;background:var(--surface,rgba(255,255,255,.03));border-radius:10px;padding-left:32px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);white-space:pre-line;">' + esc(it.explain) + '</div>' : '') +
+      (it.catId ? '<div style="margin-top:10px;padding-left:32px;">' +
+        '<button data-action="flagTopic" data-cat="' + esc(it.catId) + '" style="background:none;border:1px solid ' + (it.flagged ? 'var(--warn)' : 'var(--line)') + ';border-radius:999px;padding:6px 11px;font:500 10.5px \'Inter\',sans-serif;color:' + (it.flagged ? 'var(--warn)' : 'var(--ink3)') + ';cursor:pointer;">' + (it.flagged ? '🚩 Sujet marqué' : '🚩 Retravailler ce sujet') + '</button></div>' : '') +
+      '</div>';
+  }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:32px 26px 8px;background:linear-gradient(160deg,' + hexA(acc, 0.2) + ',transparent 70%);">' +
+    '<button data-action="goBack" class="btn-back hv-a" style="color:' + acc + ';"><span class="bkarr">&#8249;</span> Retour</button>' +
+    '<div style="font:300 24px/1.2 Fraunces,serif;letter-spacing:-.02em;margin-top:14px;">Revoir mes réponses</div>' +
+    '<div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);margin-top:6px;">' + esc(v.ficheTitle) + '</div></div>' +
+    '<div style="padding:6px 26px 30px;">' + items + '</div></div>';
+}
+
+function tplMasteryChart(hist) {
+  if (!hist || hist.length < 2) {
+    return '<div style="margin:18px 24px 0;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:16px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);">Reviens demain pour voir ta courbe de progression réelle se dessiner ici.</div>';
+  }
+  var w = 300, h = 110, pad = 8;
+  var vals = hist.map(function (p) { return p.mastery; });
+  var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+  if (max === min) max = min + 10;
+  var n = hist.length;
+  var pts = hist.map(function (p, i) {
+    var x = pad + (n === 1 ? 0 : (i / (n - 1)) * (w - pad * 2));
+    var y = pad + (1 - (p.mastery - min) / (max - min)) * (h - pad * 2);
+    return x.toFixed(1) + ',' + y.toFixed(1);
+  });
+  var line = pts.join(' ');
+  var area = 'M' + pts[0] + ' L' + pts.join(' L') + ' L' + (w - pad) + ',' + (h - pad) + ' L' + pad + ',' + (h - pad) + ' Z';
+  var first = hist[0], last = hist[hist.length - 1];
+  var delta = last.mastery - first.mastery;
+  var deltaLabel = (delta >= 0 ? '+' : '') + delta + ' points depuis le ' + first.label;
+  return '<div style="margin:18px 24px 0;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:16px;">' +
+    '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;"><span style="font:500 10px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--ink3);">ÉVOLUTION RÉELLE</span><span style="font:500 11.5px \'Inter\',sans-serif;color:' + (delta >= 0 ? 'var(--acc2)' : 'var(--warn)') + ';flex-shrink:0;">' + esc(deltaLabel) + '</span></div>' +
+    '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%;height:auto;margin-top:10px;overflow:visible;">' +
+    '<defs><linearGradient id="mgGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" style="stop-color:var(--acc);stop-opacity:.5"></stop><stop offset="100%" style="stop-color:var(--acc);stop-opacity:0"></stop></linearGradient></defs>' +
+    '<path d="' + area + '" fill="url(#mgGrad)"></path>' +
+    '<polyline points="' + line + '" fill="none" stroke="var(--acc)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>' +
+    '</svg>' +
+    '<div style="display:flex;justify-content:space-between;margin-top:4px;"><span style="font:400 9.5px \'Inter\',sans-serif;color:var(--ink3);">' + esc(first.label) + '</span><span style="font:400 9.5px \'Inter\',sans-serif;color:var(--ink3);">' + esc(last.label) + '</span></div></div>';
+}
+function tplProgress(v) {
+  var dots = v.radarDots.map(function (d, i) {
+    return '<circle cx="' + d.x + '" cy="' + d.y + '" r="3.5" fill="var(--acc)" style="animation:kfPop .3s ease ' + (0.9 + i * 0.06).toFixed(2) + 's both;"></circle>';
+  }).join('');
+  var radarLabels = v.radarDots.map(function (d, i) {
+    return '<text x="' + d.lx + '" y="' + d.ly + '" text-anchor="' + d.anchor + '" dominant-baseline="middle" style="font:500 9px \'Inter\',sans-serif;fill:var(--ink3);">' + esc(d.label) + '</text>' +
+      '<text x="' + d.lx + '" y="' + (d.ly + 12) + '" text-anchor="' + d.anchor + '" dominant-baseline="middle" style="font:600 9.5px \'Inter\',sans-serif;fill:var(--acc);">' + d.pct + '%</text>';
+  }).join('');
+  var poles = v.poles.map(function (p, i) {
+    return '<div class="stagger" style="animation-delay:' + (i * 0.05).toFixed(2) + 's;display:flex;flex-direction:column;gap:7px;">' +
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;"><span style="font:400 12.5px \'Inter\',sans-serif;">' + esc(p.label) + '</span><span style="font:500 9.5px \'Inter\',sans-serif;color:var(--ink3);flex-shrink:0;">' + esc(p.ratio) + ' bonnes réponses</span></div>' +
+      '<div style="display:flex;align-items:center;gap:10px;"><div style="flex:1;height:5px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="width:' + p.pct + '%;height:5px;background:linear-gradient(90deg,var(--acc2),var(--acc));transform-origin:left;animation:kfFill 1.1s cubic-bezier(.16,1,.3,1) both;"></div></div>' +
+      '<div style="width:32px;text-align:right;font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);">' + p.pct + '%</div></div></div>';
+  }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.2em;color:var(--ink3);">PROGRESSION</div>' +
+    '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:14px;"><span data-countup="' + v.mastery + '">0</span> <span style="font-size:18px;">%</span> de <span style="font-style:italic;">maîtrise</span></div>' +
+    '<div style="font:400 11.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;">Moyenne du % de bonnes réponses aux questions testées, par pôle — la carte ci-dessous détaille chaque pôle.</div></div>' +
+    '<div style="padding:14px 20px 0;"><svg viewBox="0 0 400 340" style="width:100%;height:auto;">' +
+    '<polygon points="' + v.radarGridOuter + '" fill="none" stroke="var(--line)" stroke-width="1"></polygon>' +
+    '<polygon points="' + v.radarGridMid + '" fill="none" stroke="var(--line)" stroke-width="1"></polygon>' +
+    '<polygon points="' + v.radarGridInner + '" fill="none" stroke="var(--line)" stroke-width="1"></polygon>' +
+    '<polygon class="v16draw" points="' + v.radarPts + '" fill="rgba(219,180,111,.18)" stroke="var(--acc)" stroke-width="2" style="stroke-dasharray:900;stroke-dashoffset:900;animation:v16draw 1.1s cubic-bezier(.16,1,.3,1) .15s forwards,kfIn .5s ease .15s forwards;"></polygon>' + dots + radarLabels + '</svg></div>' +
+    tplMasteryChart(v.masteryHistory) +
+    '<div style="margin:16px 24px 0;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">DÉTAIL PAR PÔLE</div>' +
+    '<div style="margin:10px 24px 0;display:flex;flex-direction:column;gap:16px;">' + poles + '</div>' +
+    '<div style="margin:26px 24px 0;padding-top:18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;">' +
+    '<div><div style="font:300 28px/1 Fraunces,serif;"><span data-countup="' + v.xp + '">0</span></div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:5px;">XP TOTAL</div></div>' +
+    '<div><div style="font:300 28px/1 Fraunces,serif;"><span data-countup="' + v.answeredCount + '">0</span></div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:5px;">QUESTIONS VUES</div></div>' +
+    '<div><div style="font:300 28px/1 Fraunces,serif;"><span data-countup="' + v.streak + '">0</span></div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:5px;">JOURS DE SUITE</div></div></div>' +
+    '<div style="height:26px;"></div></div>';
+}
+
+function tplProfile(v) {
+  var notifSwitch = v.notifOn
+    ? '<span style="width:42px;height:24px;border-radius:999px;background:var(--acc);display:flex;align-items:center;justify-content:flex-end;padding:2px;box-sizing:border-box;"><span style="width:20px;height:20px;border-radius:50%;background:var(--on);"></span></span>'
+    : '<span style="width:42px;height:24px;border-radius:999px;background:var(--line);display:flex;align-items:center;padding:2px;box-sizing:border-box;"><span style="width:20px;height:20px;border-radius:50%;background:var(--dim);"></span></span>';
+  var examInstantSwitch = v.examInstantOn
+    ? '<span style="width:42px;height:24px;border-radius:999px;background:var(--acc);display:flex;align-items:center;justify-content:flex-end;padding:2px;box-sizing:border-box;flex-shrink:0;"><span style="width:20px;height:20px;border-radius:50%;background:var(--on);"></span></span>'
+    : '<span style="width:42px;height:24px;border-radius:999px;background:var(--line);display:flex;align-items:center;padding:2px;box-sizing:border-box;flex-shrink:0;"><span style="width:20px;height:20px;border-radius:50%;background:var(--dim);"></span></span>';
+  var nameVal = v.nameInput != null ? v.nameInput : v.userName;
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.2em;color:var(--ink3);">PARAMÈTRES</div>' +
+    '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:14px;">' + esc(v.userName) + '</div>' +
+    '<div style="font:400 12.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:8px;">Niveau ' + esc(v.levelLabel) + ' · ' + v.xp + ' XP</div></div>' +
+    '<div style="margin:22px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin-bottom:10px;">COMPTE</div>' +
+    '<div style="display:flex;gap:8px;">' +
+    '<input data-name-input value="' + esc(nameVal) + '" placeholder="Votre prénom" maxlength="24" style="flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 15px;font:500 14px \'Inter\',sans-serif;color:var(--ink);outline:none;box-sizing:border-box;" />' +
+    '<button data-action="renameSave" style="flex-shrink:0;border:none;border-radius:14px;padding:13px 18px;font:600 12.5px \'Inter\',sans-serif;color:var(--on);background:var(--acc);cursor:pointer;">Valider</button></div>' +
+    '<label style="display:block;font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);margin:14px 0 8px;">DATE D\'EXAMEN</label>' +
+    '<input type="date" data-exam-date-input value="' + esc(v.examDate || '') + '" style="width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 15px;font:500 14px \'Inter\',sans-serif;color:var(--ink);outline:none;" />' +
+    '</div>' +
+    '<div style="margin:24px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin-bottom:10px;">PRÉFÉRENCES</div>' +
+    '<div style="background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;">' +
+    '<button data-action="toggleNotif" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Rappel quotidien</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(v.notifSub) + '</span></span>' + notifSwitch + '</button>' +
+    '<button data-action="toggleExamInstant" style="width:100%;background:none;border:none;padding:16px;display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;min-width:0;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Correction immédiate en examen blanc</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(v.examInstantSub) + '</span></span>' + examInstantSwitch + '</button></div></div>' +
+    '<div style="margin:24px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin-bottom:10px;">PROGRESSION</div>' +
+    '<div style="background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;">' +
+    '<button data-action="startDiag" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Refaire le diagnostic</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">5 questions pour recalibrer tes révisions</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
+    '<button data-action="resetProgress" style="width:100%;background:none;border:none;padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--warn);text-align:left;"><span style="flex:1;font:500 13px \'Inter\',sans-serif;">Réinitialiser ma progression</span></button></div></div>' +
+    (v.confirmReset ? '<div class="stagger" style="margin:16px 24px 0;background:var(--panel2);border:1px solid var(--warn);border-radius:18px;padding:16px;">' +
+      '<div style="font:500 13px \'Inter\',sans-serif;color:var(--ink);">Tout effacer ?</div>' +
+      '<div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">XP, série, révisions et diagnostic seront définitivement remis à zéro sur cet appareil.</div>' +
+      '<div style="display:flex;gap:10px;margin-top:14px;"><button data-action="resetProgressCancel" style="flex:1;background:none;border:1px solid var(--line);border-radius:999px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Annuler</button>' +
+      '<button data-action="resetProgressConfirm" style="flex:1;background:var(--warn);border:none;border-radius:999px;padding:12px;font:600 12.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;">Confirmer</button></div></div>' : '') +
+    '<div style="margin:24px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin-bottom:10px;">DONNÉES</div>' +
+    '<div style="background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;">' +
+    '<button data-action="exportData" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Exporter ma progression</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">Télécharge un fichier de sauvegarde (.json)</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
+    '<button data-action="importDataPick" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Importer une sauvegarde</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">Restaure la progression depuis un fichier .json</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
+    '<button data-action="genAttestation" style="width:100%;background:none;border:none;padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Récapitulatif de temps de révision</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(v.totalTimeLabel) + ' cumulées · document personnel, non certifié</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
+    '<input type="file" id="importFileInput" data-import-file-input accept="application/json" style="display:none" />' +
+    '</div><div style="font:400 10.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;">Tout reste stocké sur cet appareil : exporte régulièrement pour ne rien perdre en cas de changement de téléphone ou de vidage du cache.</div></div>' +
+    (v.confirmImport ? '<div class="stagger" style="margin:16px 24px 0;background:var(--panel2);border:1px solid var(--acc);border-radius:18px;padding:16px;">' +
+      '<div style="font:500 13px \'Inter\',sans-serif;color:var(--ink);">Remplacer ta progression actuelle ?</div>' +
+      '<div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">Fichier importé : ' + esc(v.confirmImportSummary || '') + '. Il va remplacer toutes les données actuelles sur cet appareil.</div>' +
+      '<div style="display:flex;gap:10px;margin-top:14px;"><button data-action="importDataCancel" style="flex:1;background:none;border:1px solid var(--line);border-radius:999px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Annuler</button>' +
+      '<button data-action="importDataConfirm" style="flex:1;background:var(--acc);border:none;border-radius:999px;padding:12px;font:600 12.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;">Remplacer</button></div></div>' : '') +
+    (v.notifOn ? '<div style="margin:16px 24px 0;background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;gap:12px;align-items:flex-start;">' +
+      '<div style="width:9px;height:9px;border-radius:50%;background:var(--acc);margin-top:5px;animation:kfBreathe 2.6s ease-in-out infinite;"></div>' +
+      '<div><div style="font:500 12.5px \'Inter\',sans-serif;">Dossier CGP · 19:30</div><div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + v.dueCount + ' questions arrivent à échéance. Trois minutes suffisent.</div></div></div>' : '') +
+    '<div style="margin:28px 24px 0;text-align:center;font:italic 300 17px/1.5 Fraunces,serif;color:var(--acc);">« L\'échec c\'est l\'abandon,<br>la réussite c\'est la persévérance ! »</div>' +
+    '<div style="margin:20px 24px 0;padding-top:16px;border-top:1px solid var(--line);font:400 11px/1.7 \'Inter\',sans-serif;color:var(--dim);">Prototype · banque de ' + v.totalQ + ' questions et ' + v.ficheCount + ' fiches reprises de votre fichier source. La progression est enregistrée sur cet appareil.</div>' +
+    '<div style="height:26px;"></div></div>';
+}
+
+function tplTabs(v) {
+  var tabs = v.tabs.map(function (t) {
+    return t.on
+      ? '<button data-action="goTab" data-k="' + esc(t.k) + '" style="background:var(--ink);color:var(--bg);border:none;border-radius:999px;padding:9px 14px;font:600 11px \'Inter\',sans-serif;cursor:pointer;">' + esc(t.label) + '</button>'
+      : '<button data-action="goTab" data-k="' + esc(t.k) + '" style="background:none;color:var(--ink3);border:none;border-radius:999px;padding:9px 14px;font:500 11px \'Inter\',sans-serif;cursor:pointer;">' + esc(t.label) + '</button>';
+  }).join('');
+  return '<div style="padding:0 20px 34px;display:flex;justify-content:center;background:var(--bg);">' +
+    '<div style="background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:7px;display:flex;gap:2px;">' + tabs + '</div></div>';
+}
+
+// ---- Labo : simulateurs financiers -----------------------------------------
+function fmtNum(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+function euro(n) { return fmtNum(Math.round(n)) + ' €'; }
+function pctv(x) { return (Math.round(x * 100) / 100).toString().replace('.', ',') + ' %'; }
+function irTax(rev, parts) {
+  if (rev <= 0 || parts <= 0) return 0;
+  var br = [[11497, 0], [29315, 0.11], [83823, 0.30], [180294, 0.41], [Infinity, 0.45]];
+  var q = rev / parts, tax = 0, prev = 0;
+  for (var i = 0; i < br.length; i++) {
+    var cap = br[i][0], rate = br[i][1];
+    if (q > prev) { tax += (Math.min(q, cap) - prev) * rate; prev = cap; } else break;
+  }
+  return tax * parts;
+}
+function partsOf(couple, enf) {
+  var p = couple ? 2 : 1;
+  p += Math.min(enf, 2) * 0.5;
+  if (enf > 2) p += (enf - 2) * 1;
+  return p;
+}
+
+var laboState = {
+  ciFreq: 'mois', perCouple: false, perMode: 'libre', pxMode: 'ech',
+  pxScenarios: [
+    { label: 'Scénario de tension', perf: -70 },
+    { label: 'Scénario défavorable', perf: -25 },
+    { label: 'Scénario modéré', perf: 10 },
+    { label: 'Scénario favorable', perf: 45 }
+  ]
+};
+
+function laboField(label, id, min, max, step, value, labelId) {
+  return '<div style="margin-top:14px;"><div style="display:flex;justify-content:space-between;gap:10px;font:500 12px \'Inter\',sans-serif;color:var(--ink2);"><span' + (labelId ? ' id="' + labelId + '"' : '') + '>' + label + '</span><b id="' + id + 'V" style="color:var(--ink);font-family:\'Inter\',sans-serif;font-weight:500;font-size:11.5px;white-space:nowrap;">—</b></div>' +
+    '<input type="range" id="' + id + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + value + '"></div>';
+}
+function laboSeg(idA, labelA, idB, labelB, prefixLabel) {
+  return '<div style="margin-top:14px;">' + (prefixLabel ? '<div style="font:500 12px \'Inter\',sans-serif;color:var(--ink2);margin-bottom:6px;">' + prefixLabel + '</div>' : '') +
+    '<div style="display:flex;gap:8px;"><button type="button" id="' + idA + '" class="lab-seg on" style="flex:1;">' + labelA + '</button><button type="button" id="' + idB + '" class="lab-seg" style="flex:1;">' + labelB + '</button></div></div>';
+}
+function laboSeg3(a, la, b, lb, c, lc) {
+  return '<div style="display:flex;gap:8px;margin-top:10px;"><button type="button" id="' + a + '" class="lab-seg" style="flex:1;">' + la + '</button><button type="button" id="' + b + '" class="lab-seg on" style="flex:1;">' + lb + '</button><button type="button" id="' + c + '" class="lab-seg" style="flex:1;">' + lc + '</button></div>';
+}
+function laboKpiRow(items) {
+  var cells = items.map(function (it) {
+    return '<div style="flex:1;min-width:0;"><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);">' + it.label + '</div><div id="' + it.id + '" style="font:500 15.5px \'Inter\',sans-serif;margin-top:5px;color:' + (it.color || 'var(--ink)') + ';word-break:break-word;">—</div></div>';
+  }).join('');
+  return '<div style="display:flex;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);">' + cells + '</div>';
+}
+function laboBar(idA, idB) {
+  return '<div style="height:8px;border-radius:4px;overflow:hidden;display:flex;margin-top:14px;background:var(--line);">' +
+    '<span id="' + idA + '" style="display:block;height:8px;background:var(--acc2);"></span>' +
+    '<span id="' + idB + '" style="display:block;height:8px;background:var(--warn);"></span></div>';
+}
+function laboNote(id) {
+  return '<div id="' + id + '" style="font:400 11.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;"></div>';
+}
+function laboCard(tag, tagColor, icon, title, purpose, inner) {
+  return '<div style="background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:18px;margin-top:14px;">' +
+    '<div style="display:inline-block;font:500 9.5px \'Inter\',sans-serif;letter-spacing:.06em;color:' + tagColor + ';background:var(--panel2);padding:5px 10px;border-radius:999px;">' + tag + '</div>' +
+    '<div style="font:500 15px \'Inter\',sans-serif;margin-top:11px;display:flex;align-items:center;gap:9px;"><span style="font-size:17px;">' + icon + '</span>' + title + '</div>' +
+    '<div style="font:400 11.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:5px;">' + purpose + '</div>' +
+    inner + '</div>';
+}
+function laboLine(label, value, tot) {
+  return '<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font:400 12px \'Inter\',sans-serif;color:' + (tot ? 'var(--ink)' : 'var(--ink2)') + ';' + (tot ? 'font-weight:600;border-top:1px solid var(--line);margin-top:4px;padding-top:10px;' : '') + '"><span>' + label + '</span><b style="font-family:\'Inter\',sans-serif;font-weight:500;">' + value + '</b></div>';
+}
+
+// ---- Culture générale : métiers connexes au conseil patrimonial ------------
+function puph(section) {
+  return 'Même filière hospitalo-universitaire que les autres spécialités : 2 à 4 ans de chef de clinique-assistant (CCA) avec activité de recherche, doctorat d\'université en plus du doctorat de médecine, puis qualification par le Conseil National des Universités (CNU, section ' + section + ') et nomination Professeur des Universités-Praticien Hospitalier (PU-PH) en CHU.';
+}
+var CULTURE_METIERS = [
+  {
+    id: 'medecin', icon: '🩺', name: 'Médecin',
+    intro: 'Le médecin diagnostique, soigne et assure le suivi de ses patients. Après un tronc commun, chacun choisit sa spécialité à l\'issue d\'épreuves classantes — la médecine reconnaît en France une quarantaine de spécialités (DES), listées ci-dessous.',
+    specialites: [
+      { name: 'Médecine générale', desc: 'Premier point de contact avec le système de soins : suivi global, prévention, orientation vers les spécialistes. Environ un médecin sur deux en France est généraliste.', parcoursSpe: 'Internat de médecine générale, 3 ans après le 2e cycle, validé par un diplôme d\'études spécialisées (DES).', parcoursProf: 'La filière universitaire de médecine générale est encore jeune : devenir enseignant suppose un exercice clinique prolongé, une activité de recherche ou d\'enseignement, puis une qualification CNU, section médecine générale.' },
+      { name: 'Cardiologie et maladies vasculaires', desc: 'Diagnostic et traitement des maladies du cœur et des vaisseaux (hypertension, infarctus, troubles du rythme…).', parcoursSpe: 'Internat de cardiologie et maladies vasculaires, 5 ans, avec stages hospitaliers spécialisés.', parcoursProf: puph('cardiologie') },
+      { name: 'Pédiatrie', desc: 'Suivi médical des enfants, de la naissance à l\'adolescence : croissance, vaccination, maladies infantiles.', parcoursSpe: 'Internat de pédiatrie, 4 ans, avec possibilité de sur-spécialisation (néonatologie, pédiatrie hospitalière…).', parcoursProf: puph('pédiatrie') },
+      { name: 'Chirurgie orthopédique et traumatologique', desc: 'Traitement chirurgical des os, articulations et traumatismes (fractures, prothèses de hanche/genou…).', parcoursSpe: 'Internat de chirurgie orthopédique et traumatologique, 6 ans, avec un fort volume d\'actes pratiques au bloc.', parcoursProf: puph('chirurgie orthopédique') },
+      { name: 'Chirurgie viscérale et digestive', desc: 'Chirurgie de l\'appareil digestif (estomac, intestin, foie, pancréas) et des parois abdominales.', parcoursSpe: 'Internat de chirurgie viscérale et digestive, 6 ans.', parcoursProf: puph('chirurgie digestive') },
+      { name: 'Anesthésie-réanimation', desc: 'Anesthésie avant et pendant les opérations, prise en charge des patients en état critique en réanimation.', parcoursSpe: 'Internat d\'anesthésie-réanimation, 5 ans, avec formation intensive aux gestes d\'urgence.', parcoursProf: puph('anesthésie-réanimation') },
+      { name: 'Radiodiagnostic et imagerie médicale', desc: 'Réalisation et interprétation des examens d\'imagerie (radio, scanner, IRM, échographie) pour aider au diagnostic.', parcoursSpe: 'Internat de radiodiagnostic et imagerie médicale, 5 ans, avec formation technique aux différents appareils.', parcoursProf: puph('radiologie') },
+      { name: 'Dermatologie et vénéréologie', desc: 'Diagnostic et traitement des maladies de la peau, des muqueuses et des infections sexuellement transmissibles.', parcoursSpe: 'Internat de dermatologie et vénéréologie, 4 ans.', parcoursProf: puph('dermatologie') },
+      { name: 'Endocrinologie-diabétologie-nutrition', desc: 'Prise en charge des maladies hormonales, du diabète et des troubles nutritionnels.', parcoursSpe: 'Internat d\'endocrinologie-diabétologie-nutrition, 4 ans.', parcoursProf: puph('endocrinologie') },
+      { name: 'Gastro-entérologie et hépatologie', desc: 'Maladies du tube digestif, du foie et du pancréas (hors chirurgie).', parcoursSpe: 'Internat de gastro-entérologie et hépatologie, 5 ans.', parcoursProf: puph('gastro-entérologie') },
+      { name: 'Gériatrie', desc: 'Prise en charge médicale globale des personnes âgées, souvent polypathologiques.', parcoursSpe: 'Internat de gériatrie, 4 ans.', parcoursProf: puph('gériatrie') },
+      { name: 'Gynécologie obstétrique', desc: 'Suivi de grossesse, accouchement, chirurgie gynécologique.', parcoursSpe: 'Internat de gynécologie obstétrique, 5 ans.', parcoursProf: puph('gynécologie-obstétrique') },
+      { name: 'Gynécologie médicale', desc: 'Suivi gynécologique non chirurgical : contraception, ménopause, dépistage.', parcoursSpe: 'Internat de gynécologie médicale, 4 ans.', parcoursProf: puph('gynécologie médicale') },
+      { name: 'Hématologie', desc: 'Maladies du sang et de la moelle osseuse (anémies, leucémies, troubles de la coagulation).', parcoursSpe: 'Internat d\'hématologie, 4 à 5 ans.', parcoursProf: puph('hématologie') },
+      { name: 'Maladies infectieuses et tropicales', desc: 'Diagnostic et traitement des infections complexes, VIH, maladies tropicales et émergentes.', parcoursSpe: 'Internat de maladies infectieuses et tropicales, 4 ans.', parcoursProf: puph('maladies infectieuses') },
+      { name: 'Médecine d\'urgence', desc: 'Prise en charge des patients en situation aiguë aux urgences ou en SAMU/SMUR.', parcoursSpe: 'Internat de médecine d\'urgence, 4 ans.', parcoursProf: puph('médecine d\'urgence') },
+      { name: 'Médecine du travail', desc: 'Prévention des risques professionnels et suivi de la santé des salariés en entreprise.', parcoursSpe: 'Internat de médecine du travail, 4 ans.', parcoursProf: puph('médecine du travail') },
+      { name: 'Médecine physique et de réadaptation', desc: 'Rééducation fonctionnelle après accident, AVC ou maladie invalidante.', parcoursSpe: 'Internat de médecine physique et de réadaptation, 4 ans.', parcoursProf: puph('médecine physique et de réadaptation') },
+      { name: 'Médecine légale et expertises médicales', desc: 'Autopsies médico-légales, expertises pour la justice, constats de coups et blessures.', parcoursSpe: 'Internat de médecine légale et expertises médicales, 4 ans.', parcoursProf: puph('médecine légale') },
+      { name: 'Médecine nucléaire', desc: 'Diagnostic et traitement utilisant des radio-isotopes (scintigraphie, TEP-scan).', parcoursSpe: 'Internat de médecine nucléaire, 4 ans.', parcoursProf: puph('médecine nucléaire') },
+      { name: 'Médecine vasculaire', desc: 'Maladies des artères et des veines hors chirurgie (phlébites, artérite, varices).', parcoursSpe: 'Internat de médecine vasculaire, 4 ans.', parcoursProf: puph('médecine vasculaire') },
+      { name: 'Médecine intensive-réanimation', desc: 'Prise en charge des patients dont le pronostic vital est engagé, en service de réanimation.', parcoursSpe: 'Internat de médecine intensive-réanimation, 5 ans.', parcoursProf: puph('réanimation médicale') },
+      { name: 'Néphrologie', desc: 'Maladies des reins, dialyse, préparation et suivi de la greffe rénale.', parcoursSpe: 'Internat de néphrologie, 5 ans.', parcoursProf: puph('néphrologie') },
+      { name: 'Neurochirurgie', desc: 'Chirurgie du cerveau, de la moelle épinière et du système nerveux périphérique.', parcoursSpe: 'Internat de neurochirurgie, 6 ans.', parcoursProf: puph('neurochirurgie') },
+      { name: 'Neurologie', desc: 'Maladies du système nerveux (AVC, épilepsie, Parkinson, sclérose en plaques) hors chirurgie.', parcoursSpe: 'Internat de neurologie, 4 ans.', parcoursProf: puph('neurologie') },
+      { name: 'Oncologie', desc: 'Diagnostic et traitement des cancers, option médicale ou radiothérapie selon l\'orientation choisie.', parcoursSpe: 'Internat d\'oncologie, 5 ans.', parcoursProf: puph('oncologie') },
+      { name: 'Ophtalmologie', desc: 'Diagnostic et traitement, médical et chirurgical, des maladies de l\'œil.', parcoursSpe: 'Internat d\'ophtalmologie, 5 ans.', parcoursProf: puph('ophtalmologie') },
+      { name: 'ORL et chirurgie cervico-faciale', desc: 'Chirurgie et médecine de l\'oreille, du nez, de la gorge et de la face.', parcoursSpe: 'Internat d\'ORL et chirurgie cervico-faciale, 5 ans.', parcoursProf: puph('ORL') },
+      { name: 'Pneumologie', desc: 'Maladies respiratoires : asthme, BPCO, apnée du sommeil, cancers du poumon.', parcoursSpe: 'Internat de pneumologie, 4 ans.', parcoursProf: puph('pneumologie') },
+      { name: 'Psychiatrie', desc: 'Diagnostic et traitement des troubles psychiques, enfant/adolescent ou adulte selon l\'orientation.', parcoursSpe: 'Internat de psychiatrie, 4 ans.', parcoursProf: puph('psychiatrie') },
+      { name: 'Rhumatologie', desc: 'Maladies des os, articulations et tissus conjonctifs (arthrose, polyarthrite, ostéoporose).', parcoursSpe: 'Internat de rhumatologie, 4 ans.', parcoursProf: puph('rhumatologie') },
+      { name: 'Santé publique', desc: 'Épidémiologie, prévention à l\'échelle des populations, organisation et évaluation du système de santé.', parcoursSpe: 'Internat de santé publique, 4 ans.', parcoursProf: puph('santé publique') },
+      { name: 'Urologie', desc: 'Chirurgie et médecine de l\'appareil urinaire et de l\'appareil génital masculin.', parcoursSpe: 'Internat d\'urologie, 5 ans.', parcoursProf: puph('urologie') },
+      { name: 'Biologie médicale', desc: 'Réalisation et interprétation des analyses de laboratoire (sang, microbiologie, génétique) — spécialité ouverte aux médecins et aux pharmaciens.', parcoursSpe: 'Internat de biologie médicale, 4 ans.', parcoursProf: puph('biologie médicale') },
+      { name: 'Génétique médicale', desc: 'Diagnostic des maladies génétiques et conseil génétique aux familles.', parcoursSpe: 'Internat de génétique médicale, 4 ans.', parcoursProf: puph('génétique') },
+      { name: 'Chirurgie plastique reconstructrice et esthétique', desc: 'Reconstruction après traumatisme ou cancer, et chirurgie esthétique.', parcoursSpe: 'Internat de chirurgie plastique, reconstructrice et esthétique, 6 ans.', parcoursProf: puph('chirurgie plastique') },
+      { name: 'Chirurgie maxillo-faciale', desc: 'Chirurgie des os et tissus mous de la face et de la mâchoire.', parcoursSpe: 'Internat de chirurgie maxillo-faciale, 5 ans.', parcoursProf: puph('chirurgie maxillo-faciale') },
+      { name: 'Chirurgie vasculaire', desc: 'Chirurgie des artères et des veines (anévrismes, pontages, varices complexes).', parcoursSpe: 'Internat de chirurgie vasculaire, 6 ans.', parcoursProf: puph('chirurgie vasculaire') },
+      { name: 'Chirurgie thoracique et cardio-vasculaire', desc: 'Chirurgie du cœur, des gros vaisseaux et des poumons.', parcoursSpe: 'Internat de chirurgie thoracique et cardio-vasculaire, 6 ans.', parcoursProf: puph('chirurgie thoracique et cardiovasculaire') },
+      { name: 'Chirurgie pédiatrique', desc: 'Chirurgie adaptée aux nouveau-nés, nourrissons et enfants.', parcoursSpe: 'Internat de chirurgie pédiatrique, 6 ans.', parcoursProf: puph('chirurgie infantile') }
+    ],
+    etablissements: ['UFR de médecine Sorbonne Université (Paris)', 'UFR de médecine Université Paris Cité', 'Faculté de médecine Aix-Marseille Université', 'Faculté de médecine Université Claude Bernard Lyon 1', 'Faculté de médecine Université de Bordeaux', 'Faculté de médecine Université de Lille', 'Faculté de médecine Université de Strasbourg', 'Faculté de médecine Université Toulouse III – Paul Sabatier'],
+    parcours: 'PASS ou LAS (1 an) puis 5 ans d\'études médicales, puis internat de 3 à 6 ans selon la spécialité choisie à l\'issue des épreuves classantes nationales (ECN/EDN). Soit environ 9 à 12 ans après le bac.',
+    remuneration: 'Très variable selon le secteur (1 ou 2) et la spécialité : généraliste libéral souvent 80 000 à 110 000 €/an net ; spécialités techniques (chirurgie, anesthésie, radiologie) fréquemment 150 000 à 300 000 €+/an net en libéral. Praticien hospitalier salarié : rémunération de la fonction publique, plus stable mais généralement inférieure au libéral.',
+    statut: 'Exercice libéral en BNC (déclaration contrôlée), seul ou regroupé en société civile de moyens (SCM), SEL (SELARL/SELAS) ; ou salarié d\'un hôpital (statut de praticien hospitalier, fonction publique).',
+    investLimites: 'Quand le médecin exerce en SEL, la trésorerie logée dans la société reste cantonnée à l\'objet social : l\'exercice de la médecine. Le dirigeant ne peut pas transformer sa SELARL/SELAS en véhicule spéculatif (actions à fort risque, crypto-actifs, opérations de trading) sans risquer une requalification par l\'administration fiscale et, en cas de perte, une mise en cause pour abus de biens sociaux. La trésorerie excédentaire est généralement placée sur des supports prudents et liquides (comptes à terme, contrat de capitalisation logé dans la société) ou extraite via une holding pour être investie plus librement à titre personnel, sans fragiliser le capital de travail nécessaire au cabinet.',
+    quiz: [
+      { q: 'Combien d\'années d\'études faut-il, au minimum, après le bac, pour devenir médecin généraliste en France ?', options: ['6 ans', '9 ans', '12 ans', '15 ans'], correct: 1, explain: '1 an de PASS/LAS + 5 ans d\'études médicales + 3 ans d\'internat de médecine générale = 9 ans.' },
+      { q: 'Quel examen permet aux étudiants en médecine de choisir leur spécialité à l\'issue du 2e cycle ?', options: ['Les Épreuves Classantes Nationales (ECN/EDN)', 'Le CAPES', 'Le DEC', 'Le CRFPA'], correct: 0, explain: 'Les ECN, devenues EDN (Épreuves Dématérialisées Nationales), classent les étudiants qui choisissent alors leur spécialité et leur ville selon leur rang.' },
+      { q: 'Quel statut désigne un médecin qui est à la fois professeur des universités et praticien hospitalier ?', options: ['ECN', 'PU-PH', 'DES', 'CCA'], correct: 1, explain: 'Le PU-PH (Professeur des Universités – Praticien Hospitalier) enseigne à la faculté et exerce à l\'hôpital universitaire.' },
+      { q: 'Avant de devenir PU-PH, quel poste occupe généralement un jeune médecin pour se former à la recherche et à l\'enseignement ?', options: ['Chef de clinique-assistant (CCA)', 'Interne de première année', 'Externe', 'Médecin remplaçant'], correct: 0, explain: 'Le poste de CCA, 2 à 4 ans après l\'internat, permet de mener une activité de recherche en vue d\'une carrière hospitalo-universitaire.' },
+      { q: 'Quelle instance valide et nomme les enseignants-chercheurs en médecine au niveau national ?', options: ['Le Conseil National des Universités (CNU)', 'L\'Ordre des médecins', 'La Haute Autorité de Santé', 'Le Conseil National de l\'Ordre des Pharmaciens'], correct: 0, explain: 'Le CNU qualifie les candidats aux fonctions de maître de conférences et de professeur des universités, section par section.' },
+      { q: 'Environ combien de spécialités médicales (DES) sont reconnues en France aujourd\'hui ?', options: ['une dizaine', 'une vingtaine', 'une quarantaine', 'plus de cent'], correct: 2, explain: 'La médecine française compte une quarantaine de Diplômes d\'Études Spécialisées (DES), de la médecine générale à la chirurgie thoracique en passant par la génétique médicale.' },
+      {"q":"Le numerus clausus, qui limitait strictement le nombre d'étudiants admis en 2e année de médecine, a été remplacé en 2020 par quel dispositif ?","options":["Le numerus apertus, qui fixe des capacités d'accueil déterminées chaque année par les universités et l'ARS","La suppression totale de toute sélection en médecine","Un tirage au sort national","Un concours unique européen"],"correct":0,"explain":"Depuis la réforme de 2020, le numerus clausus national a cédé la place au numerus apertus : les capacités d'accueil en 2e année sont désormais fixées chaque année par les universités, en concertation avec les Agences Régionales de Santé (ARS), selon les besoins de santé du territoire."},
+      {"q":"Qu'est-ce que le secteur 2 en médecine libérale ?","options":["Un secteur où le médecin peut pratiquer des dépassements d'honoraires, remboursés partiellement par l'Assurance Maladie","Un secteur réservé aux médecins hospitaliers","Un secteur où les soins sont gratuits pour le patient","Un statut réservé aux médecins de moins de 5 ans d'exercice"],"correct":0,"explain":"Un médecin conventionné en secteur 2 (honoraires libres) peut pratiquer des dépassements d'honoraires 'avec tact et mesure', remboursés sur la base du tarif de convention du secteur 1 — le dépassement restant à la charge du patient ou de sa complémentaire."},
+      {"q":"Quelle caisse de retraite est spécifique aux médecins libéraux ?","options":["La CARMF (Caisse Autonome de Retraite des Médecins de France)","L'Arrco uniquement","La CNAV comme tous les salariés","Il n'existe pas de caisse spécifique"],"correct":0,"explain":"Les médecins libéraux cotisent à la CARMF, section professionnelle de la CNAVPL, distincte du régime général des salariés — un point essentiel pour le conseil retraite d'un CGP suivant ce type de clientèle."},
+      {"q":"Quel est le statut d'exercice le plus courant pour un médecin hospitalier titulaire (hors CHU universitaire) ?","options":["Praticien Hospitalier (PH), fonctionnaire de la fonction publique hospitalière","Salarié de droit privé en CDI","Travailleur indépendant facturant l'hôpital","Vacataire renouvelé chaque année"],"correct":0,"explain":"Le Praticien Hospitalier (PH) est le statut de référence des médecins titulaires exerçant à l'hôpital public hors CHU : un statut de la fonction publique hospitalière obtenu par concours national, distinct du PU-PH réservé aux hôpitaux universitaires."},
+      {"q":"Un médecin qui souhaite pratiquer la téléconsultation doit en principe respecter quelle condition ?","options":["Avoir déjà vu le patient en consultation physique dans les 12 derniers mois, sauf exceptions","Aucune condition, la téléconsultation est totalement libre","Être obligatoirement généraliste","Facturer obligatoirement moins cher qu'une consultation classique"],"correct":0,"explain":"Le cadre conventionnel impose en principe une connaissance préalable du patient par un examen clinique en présentiel dans l'année précédente, sauf situations particulières, pour éviter une téléconsultation déconnectée du suivi réel du patient."},
+      {"q":"Parmi les spécialités médicales suivantes, laquelle nécessite la durée d'internat la plus longue ?","options":["La chirurgie (certaines spécialités jusqu'à 5-6 ans d'internat)","La médecine générale (3 ans)","La médecine du travail (4 ans)","La biologie médicale (4 ans)"],"correct":0,"explain":"Les spécialités chirurgicales comptent parmi les plus longues formations, avec un internat pouvant atteindre 5 à 6 ans selon la sur-spécialisation, contre 3 ans pour la médecine générale."},
+      {"q":"Le Développement Professionnel Continu (DPC) chez un médecin correspond à quoi ?","options":["Une obligation légale de formation continue tout au long de la carrière","Un diplôme optionnel sans valeur légale","Une sanction disciplinaire de l'Ordre","Un stage réservé aux seuls internes"],"correct":0,"explain":"Le DPC est une obligation légale pour tous les professionnels de santé : il associe analyse des pratiques et acquisition de connaissances, sur un rythme triennal, contrôlé par l'Ordre et les organismes agréés."},
+      {"q":"Quel organisme veille au respect du code de déontologie médicale et peut sanctionner un médecin ?","options":["Le Conseil de l'Ordre des médecins","L'URSSAF","La CARMF","L'ARS seule"],"correct":0,"explain":"Le Conseil de l'Ordre des médecins tient le tableau des médecins autorisés à exercer et dispose d'un pouvoir disciplinaire pouvant aller jusqu'à l'interdiction d'exercer."},
+      {"q":"Qu'appelle-t-on un 'désert médical' ?","options":["Une zone géographique où l'offre de soins est insuffisante par rapport aux besoins de la population","Un hôpital fermé définitivement","Une spécialité médicale qui n'existe plus","Un médecin qui n'a pas de patientèle"],"correct":0,"explain":"Un désert médical désigne un territoire où la densité de médecins est insuffisante pour répondre aux besoins de santé, entraînant des délais d'accès aux soins importants — un enjeu majeur des politiques de santé publique."},
+      {"q":"Quelle proportion approximative des médecins en France exerce en libéral (exclusif ou mixte) ?","options":["Un peu moins de la moitié","Environ 95 %","Moins de 5 %","100 %"],"correct":0,"explain":"Un peu moins de la moitié des médecins exercent en libéral (exclusif ou mixte), le reste étant salarié, principalement à l'hôpital public — la répartition varie fortement selon les spécialités."},
+      {"q":"Dans quel cadre juridique plusieurs médecins libéraux peuvent-ils partager un cabinet sans mettre en commun leurs honoraires ?","options":["La Société Civile de Moyens (SCM)","La SARL classique obligatoirement","Ils ne peuvent pas partager de cabinet","Uniquement en EURL"],"correct":0,"explain":"La SCM permet de mutualiser les moyens matériels (locaux, secrétariat) sans partager les honoraires ni la patientèle, chacun restant indépendant — à distinguer de la SCP où l'exercice lui-même est mis en commun."},
+      {"q":"Quel est l'écart de rémunération type entre un médecin généraliste libéral et un spécialiste en chirurgie, anesthésie ou radiologie exerçant aussi en libéral ?","options":["Le généraliste gagne souvent 80 000-110 000 €/an net, les spécialités techniques souvent 150 000-300 000 €+/an net","Ils gagnent rigoureusement la même chose","Le généraliste gagne toujours plus que le chirurgien","Il n'existe aucune différence de revenu selon la spécialité"],"correct":0,"explain":"Les spécialités techniques et chirurgicales, du fait d'actes mieux valorisés et d'une activité souvent plus intense, dégagent généralement des revenus bien supérieurs à ceux de la médecine générale, un écart important à connaître pour le conseil patrimonial de cette clientèle."},
+      {"q":"La médecine du travail nécessite combien d'années d'internat après le 2e cycle ?","options":["4 ans","1 an seulement","10 ans","Aucun internat n'est requis"],"correct":0,"explain":"La médecine du travail, comme la plupart des spécialités médicales non chirurgicales, s'acquiert via un internat de 4 ans validé par un DES spécifique."},
+      {"q":"Qu'est-ce que l'ophtalmologie, en tant que spécialité médicale ?","options":["La spécialité médico-chirurgicale dédiée au diagnostic et au traitement des maladies de l'œil et de la vision","Une spécialité réservée aux seuls opticiens","Une branche de la cardiologie","Une spécialité qui n'existe plus en France"],"correct":0,"explain":"L'ophtalmologie est une spécialité médico-chirurgicale à part entière (DES dédié), à ne pas confondre avec l'opticien-lunetier qui n'est pas médecin et ne pose pas de diagnostic médical."},
+      {"q":"Un médecin généraliste qui souhaite devenir maître de stage universitaire (accueillir des internes) doit-il suivre une formation complémentaire ?","options":["Oui, une formation pédagogique spécifique est généralement requise","Non, cela se fait automatiquement après 5 ans d'exercice","Non, c'est un titre honorifique sans condition","Oui, un second DES complet est nécessaire"],"correct":0,"explain":"Devenir maître de stage universitaire suppose une formation pédagogique dédiée et un agrément, une mission supplémentaire valorisée financièrement mais qui s'ajoute à l'activité clinique classique."},
+      {"q":"La psychiatrie est-elle une spécialité médicale reconnue, distincte de la psychologie ?","options":["Oui, le psychiatre est médecin (DES de psychiatrie), le psychologue n'est pas médecin et suit un cursus universitaire différent","Non, ce sont deux noms pour le même métier","Non, la psychiatrie n'existe pas comme spécialité en France","Oui, mais le psychiatre n'a pas besoin du diplôme de médecine"],"correct":0,"explain":"Le psychiatre est un médecin spécialisé (DES de psychiatrie, habilité à prescrire des médicaments), alors que le psychologue suit un cursus universitaire de psychologie sans formation médicale — une distinction professionnelle et réglementaire importante."},
+      {"q":"Quel statut un médecin libéral qui souhaite réduire son risque fiscal et social sur une partie de son activité peut-il envisager pour structurer ses revenus annexes (expertises, formation) ?","options":["La création d'une société (ex. SELARL/SELAS) regroupant tout ou partie de son activité","Aucune structuration n'est possible pour un médecin","Il doit obligatoirement rester en nom propre à vie","Seule la SCI est envisageable"],"correct":0,"explain":"Comme d'autres professions libérales, un médecin peut structurer son activité via une société d'exercice libéral, ce qui ouvre des leviers de rémunération (salaire/dividendes) et d'optimisation à étudier avec son CGP et son expert-comptable."},
+      {"q":"La gériatrie, spécialité dédiée à la prise en charge des personnes âgées, voit-elle sa demande augmenter avec le vieillissement de la population ?","options":["Oui, le vieillissement démographique en fait une spécialité d'avenir en forte tension","Non, la demande en gériatrie diminue","La gériatrie n'est pas une spécialité médicale reconnue","Cette spécialité ne concerne que les hôpitaux militaires"],"correct":0,"explain":"Le vieillissement de la population française alimente structurellement la demande en gériatrie, une spécialité en tension qui bénéficie d'un intérêt croissant des pouvoirs publics."},
+      {"q":"Un médecin libéral paie-t-il des cotisations sociales calculées comme celles d'un salarié ?","options":["Non, il cotise comme travailleur non salarié (TNS), sur une base et des taux différents","Oui, exactement de la même façon qu'un salarié","Non, les médecins libéraux sont exonérés de toute cotisation sociale","Cela dépend uniquement de son âge"],"correct":0,"explain":"Le médecin libéral relève du régime social des travailleurs non salariés, avec des cotisations calculées sur son bénéfice professionnel, un point essentiel pour la planification retraite/prévoyance avec un CGP."},
+      {"q":"Qu'est-ce que l'anatomopathologie (ou 'anapath') ?","options":["La spécialité médicale qui analyse les tissus et cellules pour établir des diagnostics, notamment en cancérologie","Une branche de la chirurgie esthétique","Un synonyme de radiologie","Une spécialité réservée aux vétérinaires"],"correct":0,"explain":"L'anatomopathologie est une spécialité médicale clé du diagnostic, notamment en cancérologie, où l'analyse des prélèvements tissulaires détermine la nature exacte d'une maladie et oriente le traitement."},
+      {"q":"La médecine générale représente environ quelle proportion des médecins en exercice en France ?","options":["Environ la moitié des médecins en exercice","Moins de 5 %","La quasi-totalité, plus de 95 %","La médecine générale n'existe plus comme spécialité en France"],"correct":0,"explain":"Environ un médecin sur deux en France est généraliste, ce qui en fait le premier point de contact du système de soins et une spécialité reconnue à part entière depuis une réforme universitaire relativement récente."},
+      {"q":"Un médecin remplaçant (non installé) a-t-il le même statut fiscal qu'un médecin titulaire de son cabinet ?","options":["Son activité relève aussi des BNC, mais souvent avec moins de charges fixes (pas de bail, pas d'investissement en matériel propre)","Il est automatiquement salarié du médecin qu'il remplace","Il n'a droit à aucune rémunération","Il doit obligatoirement créer une société avant tout remplacement"],"correct":0,"explain":"Le médecin remplaçant exerce en libéral (BNC) comme le titulaire, mais supporte généralement moins de charges fixes puisqu'il n'investit pas dans son propre local ni son propre matériel — une période transitoire fréquente avant une installation définitive."},
+      {"q":"La médecine légale fait-elle partie des spécialités reconnues par un DES en France ?","options":["Oui, c'est une spécialité à part entière, notamment sollicitée dans le cadre judiciaire","Non, cette activité est réservée aux policiers","Non, elle n'existe pas en France","Oui, mais uniquement comme sur-spécialisation de la chirurgie"],"correct":0,"explain":"La médecine légale est une spécialité médicale reconnue, intervenant notamment dans le cadre des expertises judiciaires, des autopsies médico-légales et des expertises de dommage corporel."},
+      {"q":"Les affections de longue durée (ALD) ont-elles un impact sur le remboursement des soins par l'Assurance Maladie ?","options":["Oui, elles ouvrent droit à une prise en charge à 100 % pour les soins liés à l'affection concernée","Non, elles n'ont aucun impact sur le remboursement","Oui, mais seulement pour les patients de plus de 70 ans","Non, ce dispositif a été supprimé en 2020"],"correct":0,"explain":"Le dispositif ALD permet une prise en charge à 100 % (hors dépassements d'honoraires) des soins directement liés à une maladie grave et chronique reconnue, un mécanisme clé de la protection sociale française que le médecin traitant doit déclarer."},
+      {"q":"L'obstétrique (accouchements) relève-t-elle de la même spécialité que la gynécologie médicale ?","options":["Elles sont souvent regroupées en gynécologie-obstétrique, une spécialité médico-chirurgicale unique en France","Ce sont deux spécialités totalement indépendantes sans aucun lien","L'obstétrique est réservée exclusivement aux sages-femmes, jamais aux médecins","La gynécologie-obstétrique n'existe pas comme DES"],"correct":0,"explain":"En France, la gynécologie-obstétrique constitue une spécialité médico-chirurgicale unique, regroupant le suivi gynécologique, la grossesse et les accouchements, bien que les sages-femmes interviennent aussi largement dans le suivi de grossesses normales."},
+      {"q":"Une clinique privée peut-elle employer des médecins salariés tout en accueillant aussi des médecins libéraux qui y exercent ?","options":["Oui, les deux modèles coexistent fréquemment dans l'hospitalisation privée en France","Non, une clinique ne peut employer que des salariés","Non, une clinique ne peut accueillir que des libéraux","Les cliniques privées n'existent pas en France"],"correct":0,"explain":"Le secteur hospitalier privé combine souvent des médecins salariés de l'établissement et des praticiens libéraux qui y exercent en louant un plateau technique, un modèle économique mixte fréquent qu'un CGP doit savoir décrypter pour adapter son conseil."},
+      {"q":"Quel est le rôle du médecin-conseil de l'Assurance Maladie, par opposition au médecin traitant du patient ?","options":["Il contrôle, pour le compte de l'Assurance Maladie, la justification médicale de certaines prestations (arrêts de travail, ALD, invalidité)","Il remplace le médecin traitant pour tous les actes","Il n'a aucun rôle réel, c'est un poste honorifique","Il est uniquement chargé de la facturation des actes"],"correct":0,"explain":"Le médecin-conseil exerce une mission de contrôle médical pour le compte de l'Assurance Maladie (justification des arrêts de travail prolongés, reconnaissance d'invalidité…), un rôle distinct et parfois en tension avec celui du médecin traitant qui défend l'intérêt direct de son patient."},
+      {"q":"L'allergologie est-elle reconnue comme spécialité médicale indépendante en France ?","options":["Elle est généralement acquise comme une sur-spécialisation (via une formation spécialisée transversale) plutôt qu'un DES autonome historique","Non, l'allergologie n'existe pas du tout en médecine française","Oui, c'est obligatoirement un DES de 6 ans","Elle est réservée exclusivement aux pédiatres"],"correct":0,"explain":"L'allergologie s'acquiert le plus souvent via une Formation Spécialisée Transversale (FST) accessible à différents DES (médecine générale, pneumologie, pédiatrie…), un mode de sur-spécialisation distinct du DES classique."},
+      {"q":"Les médecins exerçant en zone sous-dense (déserts médicaux) peuvent-ils bénéficier d'aides financières à l'installation ?","options":["Oui, plusieurs dispositifs d'aide à l'installation existent (ARS, collectivités, Assurance Maladie) pour inciter à s'installer dans ces zones","Non, aucune aide n'existe pour ce type d'installation","Oui, mais uniquement sous forme de prêt à taux zéro bancaire classique","Ces aides ont été supprimées en 2015"],"correct":0,"explain":"Pour lutter contre les déserts médicaux, divers dispositifs d'aide à l'installation (contrats d'engagement de service public, aides des ARS et collectivités locales, exonérations fiscales ciblées) existent afin d'inciter les jeunes médecins à s'installer dans les zones sous-dotées."},
+      {"q":"Quelle spécialité médicale est en charge du dépistage et du traitement du cancer par des approches non chirurgicales (chimiothérapie, immunothérapie) ?","options":["L'oncologie médicale","La chirurgie uniquement","La radiologie exclusivement","La médecine générale uniquement"],"correct":0,"explain":"L'oncologie médicale est la spécialité dédiée au traitement des cancers par des approches médicamenteuses (chimiothérapie, thérapies ciblées, immunothérapie), en coordination étroite avec la chirurgie oncologique et la radiothérapie dans une prise en charge pluridisciplinaire."},
+      {"q":"Un médecin exerçant en SELARL peut-il placer librement la trésorerie de sa société dans des investissements spéculatifs (actions à fort risque, crypto-actifs) ?","options":["Non : la trésorerie doit rester cohérente avec l'objet social de la SEL (l'exercice de la médecine), et un usage spéculatif qui mettrait en péril la société expose le dirigeant à un risque d'abus de biens sociaux","Oui, sans aucune limite : la trésorerie de la société appartient entièrement au médecin dirigeant","Non, car toute trésorerie professionnelle doit obligatoirement rester bloquée sur un compte courant sans jamais être placée","Oui, à condition d'en informer seulement son expert-comptable en fin d'exercice"],"correct":0,"explain":"L'objet social d'une SEL est limité à l'exercice de la profession réglementée. La trésorerie peut être placée (comptes à terme, contrat de capitalisation) mais un usage spéculatif qui met en péril la société expose le dirigeant à une mise en cause pour abus de biens sociaux — c'est une limite d'investissement propre aux sociétés d'exercice libéral que tout CGP conseillant un médecin doit connaître."},
+      {"q":"Pour investir librement l'excédent de trésorerie d'une SELARL médicale sans le risque lié à l'objet social, quelle structuration un CGP propose-t-il le plus souvent ?","options":["Faire remonter l'excédent vers une société holding personnelle, dont l'objet social permet une liberté d'investissement bien plus large","Laisser systématiquement l'excédent sur le compte courant de la SELARL sans aucune action","Convertir la SELARL en association loi 1901","Transférer la trésorerie sur le compte bancaire personnel du médecin sans aucun formalisme"],"correct":0,"explain":"Une holding patrimoniale, dont l'objet social est la gestion de participations et de placements, permet d'investir l'excédent de trésorerie bien plus librement que dans la structure d'exercice elle-même, tout en bénéficiant le cas échéant du régime mère-fille sur les dividendes remontés."}
+    ]
+  },
+  {
+    id: 'dentiste', icon: '🦷', name: 'Chirurgien-dentiste',
+    intro: 'Le chirurgien-dentiste prévient, diagnostique et traite les pathologies bucco-dentaires. Plusieurs spécialités existent, accessibles après un internat qualifiant très sélectif.',
+    specialites: [
+      { name: 'Omnipratique', desc: 'Dentisterie générale : soins conservateurs, détartrage, extractions, prothèses simples — la majorité des chirurgiens-dentistes exercent en omnipratique.', parcoursSpe: '6 ans d\'études d\'odontologie avec stages cliniques, sans internat qualifiant supplémentaire.', parcoursProf: 'Devenir enseignant-chercheur passe par un poste d\'assistant hospitalo-universitaire (AHU), un doctorat d\'université, puis une qualification CNU section odontologie et une nomination MCU-PH (Maître de Conférences-Praticien Hospitalier), avant, éventuellement, PU-PH.' },
+      { name: 'Orthodontie (ODF)', desc: 'Correction du positionnement des dents et des mâchoires, souvent chez l\'enfant et l\'adolescent (appareils dentaires).', parcoursSpe: 'Internat qualifiant en orthopédie dento-faciale, 3 ans supplémentaires après le diplôme de base, très sélectif.', parcoursProf: 'Même filière hospitalo-universitaire : AHU puis MCU-PH/PU-PH en orthopédie dento-faciale, avec recherche et enseignement clinique.' },
+      { name: 'Chirurgie orale', desc: 'Extractions complexes, implantologie, chirurgie des kystes et tumeurs de la sphère bucco-dentaire.', parcoursSpe: 'Internat qualifiant en chirurgie orale, 3 ans, en lien étroit avec les services de chirurgie maxillo-faciale.', parcoursProf: 'Filière hospitalo-universitaire identique : AHU, doctorat, qualification CNU en chirurgie orale.' },
+      { name: 'Parodontologie', desc: 'Traitement des maladies des gencives et des tissus de soutien de la dent (parodontite, déchaussement).', parcoursSpe: 'Diplômes universitaires (DU) ou diplôme d\'études spécialisées complémentaires selon les facultés.', parcoursProf: 'Poste d\'AHU en parodontologie, puis qualification MCU-PH sur profil recherche/clinique.' },
+      { name: 'Pédodontie (dentisterie pédiatrique)', desc: 'Soins dentaires adaptés aux enfants, prévention précoce, gestion du comportement au fauteuil.', parcoursSpe: 'Formation complémentaire (DU/DESU) en odontologie pédiatrique après le diplôme d\'État.', parcoursProf: 'Même logique hospitalo-universitaire : AHU puis MCU-PH en odontologie pédiatrique.' }
+    ],
+    etablissements: ['UFR d\'Odontologie Université Paris Cité (Garancière)', 'UFR d\'Odontologie Université Claude Bernard Lyon 1', 'UFR d\'Odontologie Aix-Marseille Université', 'UFR d\'Odontologie Université Toulouse III – Paul Sabatier', 'UFR d\'Odontologie Université de Nantes', 'UFR d\'Odontologie Université de Strasbourg'],
+    parcours: 'PASS ou LAS puis 5 à 6 ans d\'études odontologiques avec une thèse d\'exercice. L\'orthodontie et certaines spécialités demandent un internat qualifiant supplémentaire de 3 ans.',
+    remuneration: 'Revenu net libéral généralement compris entre 70 000 et 130 000 €/an ; les orthodontistes atteignent souvent 100 000 à 200 000 €/an du fait d\'actes hors nomenclature mieux valorisés.',
+    statut: 'Profession libérale, exercice en nom propre (BNC) ou en société (SELARL, SELAS), souvent regroupé en cabinet via une société civile de moyens (SCM) pour mutualiser les charges.',
+    investLimites: 'Exemple concret : un orthodontiste qui exerce en SELARL ne peut pas investir librement la trésorerie de son cabinet comme il l\'entend. L\'objet social de la SEL est limité à l\'exercice de l\'art dentaire ; placer cette trésorerie sur des actifs risqués ou illiquides (actions spéculatives, crypto-actifs, immobilier de spéculation) expose le praticien à un risque de requalification fiscale et, en cas de perte, à une mise en cause pour abus de biens sociaux, sans compter le risque de priver le cabinet de la liquidité nécessaire à son activité (matériel, salaires, loyer). La pratique recommandée par un CGP : cantonner l\'excédent de trésorerie sur des supports prudents (compte à terme, contrat de capitalisation) ou le faire remonter vers une holding personnelle pour l\'investir plus librement, hors de la structure d\'exercice.',
+    quiz: [
+      { q: 'Combien d\'années d\'études faut-il pour devenir chirurgien-dentiste omnipraticien ?', options: ['4 ans', '5 à 6 ans', '9 ans', '12 ans'], correct: 1, explain: 'Le cursus de base dure 5 à 6 ans après le PASS/LAS, sanctionné par une thèse d\'exercice.' },
+      { q: 'Quelle spécialité dentaire nécessite un internat qualifiant supplémentaire de 3 ans, très sélectif ?', options: ['L\'omnipratique', 'L\'orthodontie (ODF)', 'La pédodontie', 'Aucune'], correct: 1, explain: 'L\'orthodontie (orthopédie dento-faciale) est accessible via un internat qualifiant de 3 ans, très sélectif.' },
+      { q: 'Quel statut hospitalo-universitaire est l\'équivalent, en odontologie, du PU-PH en médecine ?', options: ['MCU-PH puis PU-PH', 'ECN', 'DES', 'CRFPA'], correct: 0, explain: 'La filière odontologie suit une logique similaire : Assistant Hospitalo-Universitaire (AHU), puis MCU-PH, puis PU-PH.' },
+      { q: 'Comment les chirurgiens-dentistes mutualisent-ils souvent leurs charges de cabinet ?', options: ['Via une société civile de moyens (SCM)', 'Via une SCI uniquement', 'Ce n\'est jamais possible', 'Via un CDI collectif'], correct: 0, explain: 'La SCM permet de partager les locaux et le matériel entre praticiens qui restent chacun indépendants fiscalement.' },
+      { q: 'Quel type de soins la parodontologie traite-t-elle principalement ?', options: ['Les maladies des gencives et du support de la dent', 'Les caries uniquement', 'Le blanchiment dentaire', 'Les prothèses complètes'], correct: 0, explain: 'La parodontologie s\'occupe des tissus de soutien de la dent : gencives, os alvéolaire, ligament parodontal.' },
+      {"q":"Comme pour la médecine, l'accès aux études d'odontologie est désormais régulé par quel dispositif depuis 2020 ?","options":["Le numerus apertus (capacités d'accueil fixées chaque année par université)","Un tirage au sort","Aucune régulation","Un concours commun avec la pharmacie uniquement"],"correct":0,"explain":"La réforme de l'accès aux études de santé (PASS/LAS) a remplacé le numerus clausus par le numerus apertus pour l'odontologie comme pour la médecine."},
+      {"q":"Quelle caisse de retraite est spécifique aux chirurgiens-dentistes et sages-femmes libéraux ?","options":["La CARCDSF","La CARMF, comme les médecins","La CNAV","L'Agirc-Arrco uniquement"],"correct":0,"explain":"La CARCDSF est la section professionnelle de la CNAVPL dédiée à ces deux professions, distincte de la CARMF réservée aux médecins."},
+      {"q":"L'implantologie dentaire est-elle une spécialité officielle (DES) reconnue en France ?","options":["Non, c'est une pratique acquise par formation complémentaire, pas une spécialité officielle","Oui, c'est l'une des trois spécialités officielles","Oui, mais réservée aux professeurs d'université","Non, elle est interdite en France"],"correct":0,"explain":"Contrairement à l'orthodontie, la chirurgie orale ou la médecine bucco-dentaire, l'implantologie n'est pas une spécialité officielle : elle s'acquiert par formation complémentaire (DU, formation continue)."},
+      {"q":"Le dispositif '100 % Santé' concerne notamment quel type de soins dentaires ?","options":["Certaines prothèses dentaires intégralement remboursées sans reste à charge","Uniquement les consultations de contrôle","Les seuls soins d'orthodontie","Aucun soin dentaire"],"correct":0,"explain":"Depuis 2019, le '100 % Santé' permet un accès à certains paniers de prothèses (couronnes, bridges, dentiers) avec un reste à charge nul, grâce à l'Assurance Maladie et aux complémentaires santé responsables."},
+      {"q":"Quel organisme ordinal encadre la profession de chirurgien-dentiste en France ?","options":["L'Ordre national des chirurgiens-dentistes","Le Conseil national de l'Ordre des médecins, qui couvre aussi les dentistes","Il n'existe pas d'ordre pour cette profession","L'Agence Régionale de Santé seule"],"correct":0,"explain":"Les chirurgiens-dentistes disposent de leur propre Ordre professionnel, distinct de celui des médecins."},
+      {"q":"Quelle proportion des chirurgiens-dentistes exerce en libéral en France ?","options":["La grande majorité, plus de 90 %","Moins de 10 %","Exactement 50 %","Aucun, la profession est exclusivement salariée"],"correct":0,"explain":"La profession reste très majoritairement libérale, contrairement à la médecine où le salariat hospitalier occupe une place bien plus importante."},
+      {"q":"Quel statut juridique est le plus utilisé par un chirurgien-dentiste qui exerce seul dans son propre cabinet ?","options":["L'entreprise individuelle ou la SELARL/SELAS unipersonnelle","Obligatoirement une SA","Le statut de fonctionnaire","Le portage salarial"],"correct":0,"explain":"Un dentiste libéral exerce couramment en nom propre ou via une société d'exercice libéral unipersonnelle, pour la protection patrimoniale et l'optimisation fiscale/sociale."},
+      {"q":"Qu'est-ce qu'un 'centre dentaire' au sens de la réglementation issue de la loi de 2023 ?","options":["Une structure de soins dentaires soumise à un agrément ARS renforcé suite à des scandales sanitaires","Un simple synonyme de cabinet dentaire libéral classique","Une structure réservée aux hôpitaux publics","Un établissement sans obligation déontologique"],"correct":0,"explain":"La loi du 19 mai 2023 a renforcé l'encadrement des centres de santé dentaires (agrément ARS, responsabilité du dentiste référent) suite à des scandales de centres low-cost."},
+      {"q":"La formation continue (DPC) est-elle obligatoire pour les chirurgiens-dentistes ?","options":["Oui, comme pour tous les professionnels de santé","Non, elle est facultative","Oui, mais seulement la première année d'exercice","Non, elle a été supprimée en 2020"],"correct":0,"explain":"Comme tous les professionnels de santé, les chirurgiens-dentistes sont soumis au DPC, contrôlé sur un cycle triennal."},
+      {"q":"Quel est l'intitulé exact du diplôme permettant d'exercer la chirurgie dentaire en France ?","options":["Le Diplôme d'État de Docteur en Chirurgie Dentaire","Le Diplôme Universitaire de Dentisterie","Le Certificat d'Aptitude aux Soins Dentaires","Le Brevet de Technicien Supérieur en Odontologie"],"correct":0,"explain":"Le diplôme terminal des études d'odontologie est le Diplôme d'État de Docteur en Chirurgie Dentaire, après un 3e cycle court (généraliste) ou long (spécialités)."},
+      {"q":"Quel est l'écart de revenu type entre un chirurgien-dentiste généraliste et un orthodontiste ?","options":["L'orthodontiste atteint souvent 100 000-200 000 €/an, contre 70 000-130 000 €/an pour un dentiste généraliste","Ils gagnent exactement la même chose","L'orthodontiste gagne systématiquement moins","Le revenu ne dépend jamais de la spécialisation en dentisterie"],"correct":0,"explain":"Les actes d'orthodontie, souvent hors nomenclature de l'Assurance Maladie et donc librement tarifés, sont mieux valorisés, ce qui explique un revenu généralement supérieur à celui d'un cabinet dentaire généraliste."},
+      {"q":"Pour mutualiser les charges d'un cabinet dentaire entre plusieurs praticiens sans partager les honoraires, quelle structure est souvent utilisée ?","options":["La Société Civile de Moyens (SCM)","La SARL classique de plein droit","Le GIE agricole","Une fusion-acquisition entre cabinets"],"correct":0,"explain":"Comme pour les médecins, la SCM permet aux dentistes de mutualiser locaux, matériel et secrétariat sans mettre en commun leurs honoraires ni leur patientèle."},
+      {"q":"L'orthopédie dento-faciale (ODF) traite principalement quel type de problème ?","options":["Le mauvais alignement des dents et des mâchoires (appareils dentaires)","Les infections des gencives uniquement","La pose exclusive de prothèses complètes","Les douleurs musculaires du dos"],"correct":0,"explain":"L'ODF (orthodontie) corrige le positionnement des dents et des mâchoires, le plus souvent chez l'enfant et l'adolescent mais aussi de plus en plus chez l'adulte, via des appareils fixes ou amovibles."},
+      {"q":"La chirurgie orale, spécialité dentaire à part entière, intervient notamment pour :","options":["Les extractions complexes, la pose d'implants et la chirurgie des dents de sagesse incluses","Uniquement les soins de carie simples","Le blanchiment dentaire esthétique uniquement","La prescription de lunettes"],"correct":0,"explain":"La chirurgie orale est la spécialité dentaire dédiée aux actes chirurgicaux les plus complexes (extractions difficiles, implantologie avancée, pathologies des maxillaires), distincte de la pratique dentaire généraliste."},
+      {"q":"Un chirurgien-dentiste qui exerce en société d'exercice libéral (SELARL) est-il imposé comme une société classique à l'IS ?","options":["Oui, la SELARL relève par défaut de l'IS, avec possibilité de distribution de dividendes au praticien associé","Non, il reste imposé en BNC quelle que soit la structure choisie","Non, la SELARL est automatiquement exonérée de tout impôt","Oui, mais uniquement si le cabinet compte plus de 10 salariés"],"correct":0,"explain":"La société d'exercice libéral relève du régime de l'impôt sur les sociétés, ce qui ouvre un arbitrage rémunération/dividendes à optimiser avec l'expert-comptable et le CGP, à la différence de l'exercice individuel en BNC."},
+      {"q":"Les soins conservateurs (traitement des caries) relèvent-ils du tarif conventionnel de la Sécurité sociale ?","options":["Oui, ils sont encadrés par un tarif conventionnel, contrairement à certains actes prothétiques ou d'orthodontie adulte","Non, ils sont totalement libres et jamais remboursés","Non, ils sont interdits aux dentistes généralistes","Oui, mais uniquement pour les enfants de moins de 6 ans"],"correct":0,"explain":"Les soins conservateurs et chirurgicaux de base restent encadrés par la nomenclature conventionnelle, contrairement à certains actes prothétiques ou à l'orthodontie de l'adulte, souvent hors nomenclature et donc librement tarifés."},
+      {"q":"La pédodontie est la spécialisation dentaire dédiée à quel public ?","options":["Les enfants","Les personnes âgées exclusivement","Les sportifs de haut niveau","Les patients en soins palliatifs"],"correct":0,"explain":"La pédodontie (ou odontologie pédiatrique) s'adresse spécifiquement aux enfants, avec des approches de prévention, d'accompagnement et de soins adaptées à ce public, souvent plus anxieux face aux soins dentaires."},
+      {"q":"Les dentistes, comme les médecins, bénéficient-ils d'aides à l'installation dans les zones sous-dotées en offre de soins dentaires ?","options":["Oui, des dispositifs incitatifs existent également pour les chirurgiens-dentistes","Non, aucun dispositif n'existe pour cette profession","Oui, mais uniquement sous forme de prêt bancaire classique sans aide spécifique","Ces aides sont réservées exclusivement aux médecins"],"correct":0,"explain":"À l'image de la médecine, des dispositifs d'incitation à l'installation dans les zones sous-denses en offre dentaire existent (aides des ARS, collectivités), afin de réduire les inégalités territoriales d'accès aux soins."},
+      {"q":"Quel est le taux de remboursement de base de l'Assurance Maladie pour un acte dentaire conventionné courant ?","options":["70 % de la base de remboursement, le reste étant à la charge du patient ou de sa complémentaire","100 % systématiquement","0 %, aucun acte dentaire n'est remboursé","50 % uniquement pour les actes d'urgence"],"correct":0,"explain":"Comme pour la plupart des soins médicaux courants, le taux de remboursement de base de l'Assurance Maladie pour un acte dentaire conventionné est de 70 %, le solde étant couvert par la complémentaire santé ou laissé à la charge du patient."},
+      {"q":"Un chirurgien-dentiste propriétaire de son cabinet doit-il financer l'achat de matériel coûteux (fauteuil, radiologie, scanner 3D) ?","options":["Oui, souvent via un financement bancaire dédié (crédit-bail ou prêt professionnel), un poste d'investissement important du métier","Non, ce matériel est systématiquement fourni gratuitement par l'Ordre","Non, les dentistes n'utilisent aucun équipement coûteux","Oui, mais ce financement est toujours interdit par la réglementation"],"correct":0,"explain":"L'équipement technique (fauteuil, imagerie, outils numériques) représente un investissement initial et récurrent important, financé le plus souvent par crédit-bail ou prêt professionnel, un enjeu de structuration patrimoniale à anticiper avec le CGP dès l'installation."},
+      {"q":"La parodontologie, qui traite les tissus de soutien de la dent, intervient notamment en cas de :","options":["Déchaussement des dents et maladies des gencives","Fracture du poignet","Trouble de la vision","Perte auditive"],"correct":0,"explain":"La parodontologie prend en charge les pathologies touchant les tissus de soutien de la dent (gencives, os alvéolaire, ligament), notamment les parodontites qui peuvent conduire, non traitées, à la perte des dents."},
+      {"q":"Un chirurgien-dentiste salarié d'un centre dentaire a-t-il le même statut fiscal qu'un dentiste libéral installé ?","options":["Non, il est imposé dans la catégorie des traitements et salaires, pas en BNC","Oui, c'est exactement la même imposition","Non, il n'est jamais imposé, quel que soit son statut","Oui, car tous les dentistes sont automatiquement en société"],"correct":0,"explain":"Le dentiste salarié d'un centre de santé dentaire perçoit un salaire imposé en traitements et salaires, une situation fiscale et sociale radicalement différente de celle d'un libéral installé imposé en BNC ou via une société d'exercice."},
+      {"q":"L'endodontie, spécialité ou pratique courante en dentisterie, concerne principalement :","options":["Le traitement des canaux dentaires (dévitalisation)","La chirurgie des mâchoires","La pose de lunettes correctrices","Le traitement des allergies"],"correct":0,"explain":"L'endodontie regroupe les soins des canaux radiculaires de la dent (traitements dits de 'dévitalisation'), une pratique courante maîtrisée par tout chirurgien-dentiste généraliste, avec une expertise renforcée pour les cas complexes."},
+      {"q":"Les dentistes cotisent-ils, comme les médecins, à un régime de retraite spécifique aux professions libérales de santé ?","options":["Oui, à la CARCDSF, avec un régime de base et un régime complémentaire propres à la profession","Non, ils cotisent exactement comme les salariés classiques","Non, les dentistes n'ont pas droit à la retraite","Oui, mais uniquement s'ils exercent plus de 40 ans"],"correct":0,"explain":"Comme les autres professions libérales réglementées, les chirurgiens-dentistes cotisent à leur caisse autonome (CARCDSF), combinant un régime de base et un régime complémentaire spécifiques, distincts du régime général."},
+      {"q":"L'image de la dentisterie 'esthétique' (facettes, blanchiment) relève-t-elle d'un acte remboursé par l'Assurance Maladie ?","options":["Non, ces actes sont généralement considérés comme esthétiques et non remboursés","Oui, ils sont intégralement remboursés à 100 %","Oui, mais uniquement pour les patients de moins de 25 ans","Ces actes sont interdits en France"],"correct":0,"explain":"Les actes à visée purement esthétique (facettes, blanchiment) ne relèvent généralement pas du soin médicalement justifié et ne sont donc pas pris en charge par l'Assurance Maladie, restant à la charge intégrale du patient."},
+      {"q":"Un cabinet dentaire qui souhaite transmettre sa patientèle lors d'un départ en retraite procède généralement par :","options":["La cession de la patientèle et du droit de présentation à la clientèle, souvent valorisée en multiple du chiffre d'affaires","Un don gratuit obligatoire à l'Ordre des chirurgiens-dentistes","La fermeture pure et simple sans transmission possible","Un transfert automatique à l'État"],"correct":0,"explain":"La cession d'un cabinet dentaire (patientèle, droit de présentation, matériel, éventuellement les murs) se négocie et se valorise, un sujet de planification patrimoniale et de transmission à anticiper plusieurs années avant le départ, en lien avec le CGP et l'expert-comptable."},
+      {"q":"Un orthodontiste exerçant en SELARL peut-il investir la trésorerie de son cabinet comme il l'entend (actions à fort risque, crypto-actifs, immobilier spéculatif) ?","options":["Non : l'objet social de la SEL est limité à l'exercice de l'art dentaire, et un placement spéculatif qui mettrait en péril le cabinet expose le praticien à un risque de requalification et d'abus de biens sociaux","Oui, la trésorerie de la SELARL est sa propriété personnelle sans aucune restriction","Non, car aucune trésorerie ne peut jamais être placée, elle doit rester en liquide sur le compte courant","Oui, à condition de ne pas dépasser 10 000 € par opération"],"correct":0,"explain":"La SEL (SELARL/SELAS) a un objet social limité à l'exercice de la profession réglementée. Placer la trésorerie du cabinet sur des actifs risqués ou illiquides expose le praticien à un double risque : fiscal (requalification) et juridique (abus de biens sociaux) si cela prive le cabinet de la liquidité nécessaire à son fonctionnement (matériel, salaires, loyer)."},
+      {"q":"Quelle structuration un CGP recommande-t-il généralement à un orthodontiste pour investir librement l'excédent de trésorerie de son cabinet, sans risquer l'objet social de la SELARL ?","options":["Faire remonter l'excédent vers une holding personnelle, dont l'objet social (gestion de participations et de placements) autorise une liberté d'investissement bien plus large","Tout laisser indéfiniment sur le compte courant du cabinet sans aucune action","Transformer la SELARL en association à but non lucratif","Verser l'intégralité de la trésorerie sur un livret A au nom du cabinet"],"correct":0,"explain":"Une holding patrimoniale permet d'investir l'excédent de trésorerie (actions, SCPI, private equity…) bien plus librement que dans la structure d'exercice elle-même, tout en bénéficiant le cas échéant du régime mère-fille sur les dividendes remontés depuis la SELARL — une structuration patrimoniale classique pour les professions libérales à forte rentabilité."}
+    ]
+  },
+  {
+    id: 'opticien', icon: '👓', name: 'Opticien-lunetier',
+    intro: 'L\'opticien-lunetier conseille, mesure et équipe les patients en lunettes et lentilles. Profession accessible dès bac+2, très présente en réseau de magasins, sans filière universitaire de recherche dédiée.',
+    specialites: [
+      { name: 'Optique générale', desc: 'Vente et conseil, mesure de la correction, montage et ajustement des verres — le cœur du métier en magasin.', parcoursSpe: 'BTS Opticien-Lunetier (2 ans), diplôme de référence de la profession.', parcoursProf: 'Enseigner en BTS suppose, dans le public, de réussir un concours de l\'Éducation nationale (CAPET biotechnologies-santé, option optique) après plusieurs années d\'exercice ; dans le privé, un recrutement direct par l\'école sur profil d\'expérience.' },
+      { name: 'Contactologie (lentilles)', desc: 'Adaptation et suivi des lentilles de contact, y compris les cas complexes (astigmatismes forts, kératocône).', parcoursSpe: 'Licence professionnelle ou certificat complémentaire en contactologie après le BTS.', parcoursProf: 'Même voie que l\'optique générale pour enseigner : concours de l\'Éducation nationale ou poste de formateur en école privée.' },
+      { name: 'Basse vision', desc: 'Accompagnement des patients malvoyants avec des aides optiques spécifiques (loupes, systèmes grossissants, filtres).', parcoursSpe: 'Diplôme universitaire (DU) basse vision, proposé par certaines facultés en complément du BTS.', parcoursProf: 'Peu de filière académique dédiée ; la transmission se fait surtout par la pratique et des formations continues spécialisées.' },
+      { name: 'Optique pédiatrique', desc: 'Dépistage des troubles visuels et équipement adapté des enfants, souvent en lien avec les ophtalmologistes.', parcoursSpe: 'Formation complémentaire courte après le BTS, souvent proposée par les fabricants ou les réseaux d\'opticiens.', parcoursProf: 'Pas de statut d\'enseignant-chercheur dédié ; l\'expertise se transmet par compagnonnage et formation continue.' }
+    ],
+    etablissements: ['Lycée Fresnel (Paris) – BTS Opticien-Lunetier', 'ISO Paris (Institut Supérieur d\'Optique)', 'Lycées publics proposant le BTS Opticien-Lunetier dans chaque académie', 'Écoles privées spécialisées en optique proposant le BTS et des licences professionnelles en contactologie'],
+    parcours: 'BTS Opticien-Lunetier (2 ans post-bac), diplôme de référence de la profession ; des licences professionnelles ou certifications complémentaires en contactologie existent ensuite.',
+    remuneration: 'Salarié en magasin : environ 24 000 à 35 000 €/an brut en début et milieu de carrière. Opticien indépendant gérant son propre point de vente : souvent 40 000 à 70 000 €/an ou plus selon le chiffre d\'affaires du magasin.',
+    statut: 'Le plus souvent salarié (enseignes comme Optic 2000, Krys, Afflelou…) ; ou commerçant indépendant/franchisé exploitant son magasin en nom propre, EURL ou SARL.',
+    investLimites: 'L\'opticien salarié n\'a aucun pouvoir de décision sur une trésorerie d\'entreprise. L\'opticien indépendant en EURL/SARL, en revanche, doit respecter l\'objet social de sa société (le commerce d\'optique) : utiliser la trésorerie du magasin pour des placements spéculatifs sans rapport avec l\'activité, au détriment de l\'intérêt de la société, peut être qualifié d\'abus de biens sociaux si cela met en péril l\'entreprise. L\'excédent de trésorerie est généralement sorti sous forme de dividendes pour être investi à titre personnel, ou placé prudemment via un contrat de capitalisation détenu par la société.',
+    quiz: [
+      { q: 'Quel diplôme est la référence pour exercer comme opticien-lunetier ?', options: ['Le BTS Opticien-Lunetier', 'Un doctorat', 'Le CAPET', 'Le DEC'], correct: 0, explain: 'Le BTS Opticien-Lunetier, en 2 ans post-bac, est le diplôme de référence de la profession.' },
+      { q: 'Quelle spécialisation concerne l\'adaptation des lentilles de contact dans les cas complexes ?', options: ['La contactologie', 'La basse vision', 'L\'optique pédiatrique', 'La parodontologie'], correct: 0, explain: 'La contactologie couvre l\'adaptation et le suivi des lentilles de contact, y compris les cas difficiles.' },
+      { q: 'Pour enseigner l\'optique en lycée public, quel type de concours faut-il généralement réussir ?', options: ['Un concours de l\'Éducation nationale (ex. CAPET)', 'Le CRFPA', 'Le DEC', 'Aucun concours n\'existe'], correct: 0, explain: 'L\'enseignement public en BTS suppose la réussite d\'un concours de l\'Éducation nationale dans la discipline.' },
+      { q: 'Sous quel statut exerce le plus souvent un opticien qui possède son propre magasin ?', options: ['Commerçant indépendant (EURL, SARL…)', 'Fonctionnaire', 'Praticien hospitalier', 'Officier ministériel'], correct: 0, explain: 'L\'opticien indépendant est un commerçant, exerçant en nom propre ou en société commerciale (EURL, SARL).' },
+      { q: 'La basse vision s\'adresse à quel type de patients ?', options: ['Les patients malvoyants nécessitant des aides optiques spécifiques', 'Uniquement les enfants', 'Uniquement les porteurs de lentilles', 'Les patients sans trouble visuel'], correct: 0, explain: 'La basse vision propose des aides optiques (loupes, systèmes grossissants) aux patients dont la vision reste limitée malgré une correction classique.' },
+      {"q":"Quel diplôme de référence permet d'exercer la profession d'opticien-lunetier en France ?","options":["Le BTS Opticien-Lunetier (ou diplôme équivalent reconnu)","Le Diplôme d'État de Docteur en Optique","Une simple formation en magasin sans diplôme","Le CAP Optique uniquement"],"correct":0,"explain":"Le BTS Opticien-Lunetier (2 ans après le bac) est le diplôme de référence, complété éventuellement par une licence pro ou un titre de contactologie."},
+      {"q":"Un opticien peut-il, sous conditions, adapter ou renouveler une correction visuelle sans nouvelle ordonnance ?","options":["Oui, depuis les réformes successives, sous certaines conditions d'âge et de délai","Non, une ordonnance est systématiquement obligatoire","Oui, mais uniquement pour les enfants de moins de 10 ans","Non, cette possibilité n'existe pas en France"],"correct":0,"explain":"Depuis le décret de 2007 et ses extensions, l'opticien peut, sous conditions, adapter ou renouveler une correction visuelle sans repasser par l'ophtalmologiste."},
+      {"q":"La loi impose-t-elle à l'opticien d'informer le client sur une offre alternative moins chère ?","options":["Oui, un devoir d'information sur une offre alternative moins chère existe","Non, aucune obligation de ce type n'existe","Oui, mais uniquement pour les clients mineurs","Non, car les prix sont identiques partout"],"correct":0,"explain":"La réglementation impose une obligation de transparence sur les prix, incluant la présentation d'une offre alternative plus accessible."},
+      {"q":"Les prix des lunettes et lentilles en France sont-ils réglementés par un tarif officiel ?","options":["Non, les prix sont libres, fixés par chaque opticien","Oui, un tarif national unique s'impose à tous","Oui, mais seulement pour les montures de luxe","Non, la vente de lunettes est gratuite"],"correct":0,"explain":"Les prix des équipements optiques sont libres en France, ce qui explique les écarts entre enseignes ; le remboursement, lui, est encadré (dont le dispositif 100 % Santé)."},
+      {"q":"Quel est le statut le plus fréquent pour un opticien salarié d'un réseau national (franchise) ?","options":["Le salariat classique, en CDI, au sein de l'enseigne","Obligatoirement l'exercice libéral indépendant","Le statut de fonctionnaire","Le portage salarial uniquement"],"correct":0,"explain":"De nombreux opticiens exercent comme salariés d'enseignes nationales, sans détenir leur propre fonds de commerce — une situation patrimoniale distincte de l'opticien propriétaire."},
+      {"q":"La contactologie, spécialisation dans l'adaptation des lentilles de contact, nécessite-t-elle une formation complémentaire ?","options":["Oui, une formation ou un titre spécifique est recommandé/requis selon les cas","Non, le BTS suffit sans formation supplémentaire","Oui, un doctorat est obligatoire","Non, cette spécialisation n'existe pas"],"correct":0,"explain":"L'adaptation de lentilles, notamment pour les cas complexes, nécessite une compétence validée par un titre ou une formation complémentaire en contactologie."},
+      {"q":"Quel professionnel reste seul habilité à établir une première prescription de lunettes ou lentilles ?","options":["L'ophtalmologiste (ou l'orthoptiste dans certains cas encadrés)","L'opticien, dans tous les cas","Le médecin généraliste uniquement","Le pharmacien"],"correct":0,"explain":"La primo-prescription reste réservée à l'ophtalmologiste, ou depuis des évolutions récentes à l'orthoptiste dans certains cas ; l'opticien intervient en aval."},
+      {"q":"Quel régime de TVA s'applique à la vente de lunettes correctrices en France ?","options":["Le taux normal de TVA (20 %)","Un taux de TVA à 0 %","Le taux réduit de 5,5 % comme l'alimentaire","La vente est exonérée de TVA"],"correct":0,"explain":"Les équipements d'optique courante sont soumis au taux normal de 20 %, ce qui pèse sur le prix final malgré la prise en charge partielle par l'Assurance Maladie et les complémentaires."},
+      {"q":"Un opticien qui ouvre son propre magasin doit-il obligatoirement créer une société commerciale ?","options":["Non, il peut exercer en entreprise individuelle, mais la société est fréquente pour la protection patrimoniale","Oui, la société est une obligation légale stricte","Non, l'exercice en société est interdit pour cette profession","Oui, uniquement sous forme de SCI"],"correct":0,"explain":"Rien n'impose juridiquement la création d'une société ; en pratique beaucoup optent pour une SARL/SAS pour protéger leur patrimoine et faciliter le financement."},
+      {"q":"Le secteur de l'optique en France se caractérise par un taux d'équipement de la population de l'ordre de :","options":["Environ 70 % de la population","Moins de 10 %","Environ 100 % de la population","Ce chiffre n'est pas mesurable"],"correct":0,"explain":"On estime qu'environ 70 % de la population française porte une correction visuelle, un marché de santé de grande ampleur et structurellement récurrent."},
+      {"q":"Quel écart de revenu existe-t-il généralement entre un opticien salarié en magasin et un opticien indépendant propriétaire de son point de vente ?","options":["Le salarié touche souvent 24 000-35 000 €/an brut, l'indépendant souvent 40 000-70 000 €/an ou plus selon la rentabilité","Ils gagnent rigoureusement le même montant","L'indépendant gagne systématiquement moins que le salarié","Le statut n'a jamais d'impact sur la rémunération"],"correct":0,"explain":"La prise de risque et l'investissement de l'opticien indépendant (fonds de commerce, stock, local) se traduisent en général par un potentiel de revenu supérieur à celui du salarié, mais avec un risque entrepreneurial associé."},
+      {"q":"Parmi les grandes enseignes d'optique en France, laquelle n'est PAS un réseau d'opticiens ?","options":["Doctolib","Krys","Afflelou","Optic 2000"],"correct":0,"explain":"Doctolib est une plateforme de prise de rendez-vous médicaux, sans lien avec le secteur de l'optique ; Krys, Afflelou et Optic 2000 sont en revanche des réseaux/enseignes majeurs de l'optique en France."},
+      {"q":"Un opticien indépendant exerçant en nom propre peut-il employer des salariés dans son magasin ?","options":["Oui, rien ne l'en empêche juridiquement, qu'il soit en entreprise individuelle ou en société","Non, il doit obligatoirement travailler seul","Non, seules les sociétés peuvent embaucher, jamais une entreprise individuelle","Oui, mais seulement des apprentis"],"correct":0,"explain":"Qu'il exerce en entreprise individuelle ou en société, un opticien indépendant peut librement embaucher du personnel (autres opticiens, vendeurs, monteurs) selon les besoins de son activité."},
+      {"q":"Les lentilles de contact journalières jetables représentent quel type de produit pour un opticien ?","options":["Un produit générateur de ventes récurrentes, le client devant régulièrement en racheter","Un produit vendu une seule fois dans la vie du client","Un produit interdit à la vente en magasin d'optique classique","Un produit uniquement réservé aux enfants"],"correct":0,"explain":"Contrairement à une paire de lunettes (achat plus occasionnel), les lentilles jetables journalières génèrent un modèle économique récurrent, le client devant renouveler régulièrement ses stocks — un levier de fidélisation important pour le point de vente."},
+      {"q":"Un opticien peut-il refuser de vendre une correction visuelle à un client si l'ordonnance lui paraît manifestement trop ancienne ou incohérente ?","options":["Oui, il a un devoir de vigilance et peut orienter le client vers un nouvel examen ophtalmologique","Non, il doit vendre quoi qu'il arrive dès qu'une ordonnance existe","Non, l'opticien n'a aucune responsabilité sur la validité de l'ordonnance","Oui, mais uniquement si le client a moins de 18 ans"],"correct":0,"explain":"L'opticien exerce une responsabilité professionnelle dans l'adaptation de la correction : face à une ordonnance ancienne ou à des signes d'alerte, il doit orienter le patient vers un nouvel examen plutôt que de délivrer une correction potentiellement inadaptée."},
+      {"q":"Les montures de lunettes 'de marque' (luxe, fashion) ont-elles un impact significatif sur la marge d'un magasin d'optique ?","options":["Oui, elles génèrent souvent une marge et un panier moyen plus élevés que les montures basiques","Non, toutes les montures ont rigoureusement la même marge","Non, les montures de marque sont systématiquement vendues à perte","Les montures de marque sont interdites à la vente en France"],"correct":0,"explain":"Les montures de marque, à l'image premium et au positionnement prix plus élevé, contribuent souvent à un panier moyen et une marge supérieurs, un enjeu de merchandising important pour la rentabilité d'un point de vente d'optique."},
+      {"q":"Un opticien qui souhaite ouvrir un second magasin doit-il nécessairement créer une nouvelle société distincte ?","options":["Non, il peut développer plusieurs points de vente sous une même société (multi-établissements) ou créer des structures distinctes selon sa stratégie","Oui, c'est une obligation légale stricte","Non, c'est juridiquement impossible d'avoir plusieurs magasins","Oui, uniquement si les magasins sont dans des villes différentes"],"correct":0,"explain":"Le choix entre une société multi-établissements ou plusieurs structures juridiques distinctes relève d'une stratégie patrimoniale et fiscale à arbitrer avec son expert-comptable et son CGP, selon les objectifs de développement, de responsabilité et de transmission."},
+      {"q":"L'opticien a-t-il un rôle de prévention dans la détection de pathologies oculaires graves (ex. glaucome) ?","options":["Il peut repérer des signes d'alerte lors de l'examen de vue et orienter vers un ophtalmologiste, sans toutefois poser de diagnostic médical","Il peut diagnostiquer et traiter lui-même un glaucome","Il n'a absolument aucun rôle de prévention","Il doit traiter directement toute pathologie oculaire détectée"],"correct":0,"explain":"L'opticien n'est pas habilité à diagnostiquer ou traiter une pathologie oculaire, mais son examen de vue peut révéler des signes d'alerte (tension, anomalies) justifiant une orientation rapide vers un ophtalmologiste."},
+      {"q":"Le marché français de l'optique fait-il l'objet d'une concurrence forte entre acteurs physiques et acteurs en ligne (vente de lunettes sur internet) ?","options":["Oui, la vente en ligne de lunettes (avec ou sans essayage virtuel) s'est développée et concurrence les magasins physiques","Non, la vente de lunettes en ligne est interdite en France","Non, aucun acteur en ligne n'existe sur ce marché","La concurrence en ligne ne concerne que les lentilles, jamais les montures"],"correct":0,"explain":"Le développement d'acteurs de vente en ligne (souvent positionnés sur le low-cost ou avec des outils d'essayage virtuel) constitue une pression concurrentielle croissante sur le modèle économique des opticiens physiques traditionnels."},
+      {"q":"Quel est l'intérêt, pour un opticien franchisé, de rejoindre une enseigne nationale plutôt que de rester en enseigne indépendante ?","options":["Bénéficier de la notoriété de la marque, d'une centrale d'achat et d'un accompagnement marketing, en contrepartie de redevances","Aucun intérêt particulier, les deux modèles sont rigoureusement identiques","Cela supprime totalement les charges du magasin","Cela garantit un revenu minimum fixe à vie"],"correct":0,"explain":"La franchise permet de bénéficier de la notoriété d'une enseigne, d'achats groupés et d'un accompagnement, en contrepartie de redevances (droit d'entrée, royalties) qui réduisent la marge nette par rapport à un magasin totalement indépendant."},
+      {"q":"L'examen de vue réalisé par un opticien est-il un acte médical au sens strict ?","options":["Non, c'est un acte technique d'optométrie, distinct d'un examen médical ophtalmologique complet","Oui, c'est strictement équivalent à une consultation d'ophtalmologiste","Non, l'opticien n'a pas le droit de réaliser le moindre examen de vue","Oui, il remplace légalement toute consultation médicale"],"correct":0,"explain":"L'examen de vue réalisé par l'opticien relève de la réfraction optique (mesure de la correction nécessaire), un acte technique distinct de l'examen médical complet de l'ophtalmologiste, qui seul peut diagnostiquer une pathologie oculaire."},
+      {"q":"Comme pour d'autres commerces, un opticien indépendant doit-il gérer la fiscalité liée aux stocks (montures, verres, lentilles) de son magasin ?","options":["Oui, la gestion et la valorisation des stocks font partie intégrante de sa comptabilité et de sa fiscalité professionnelle","Non, les stocks sont hors de toute considération fiscale","Non, les opticiens ne détiennent jamais de stock physique","Oui, mais uniquement une fois tous les 10 ans"],"correct":0,"explain":"Comme tout commerçant, l'opticien indépendant doit suivre et valoriser ses stocks (montures, verres, accessoires) dans sa comptabilité, un poste de gestion important pour la rentabilité et la fiscalité de son activité."},
+      {"q":"Les 'audits de vue' gratuits proposés en magasin ont-ils pour objectif principal de générer du chiffre d'affaires ou de remplacer une consultation ophtalmologique ?","options":["De détecter un besoin de correction et d'orienter vers une vente ou, si besoin, vers un ophtalmologiste — jamais de remplacer un suivi médical complet","De remplacer totalement et légalement toute consultation médicale","Ils sont interdits par la loi française","Ils n'ont aucun objectif commercial"],"correct":0,"explain":"Ces audits gratuits visent à détecter un besoin de correction et orienter le client (vente ou renvoi vers un ophtalmologiste en cas de doute), sans jamais se substituer légalement à un suivi ophtalmologique complet."},
+      {"q":"Un opticien qui commet une erreur dans la délivrance d'une correction (verres mal adaptés) engage-t-il sa responsabilité professionnelle ?","options":["Oui, sa responsabilité civile professionnelle peut être engagée en cas de préjudice avéré","Non, l'opticien n'est jamais responsable juridiquement","Non, seul le fabricant des verres peut être tenu responsable","Oui, mais uniquement s'il s'agit d'un opticien salarié, jamais indépendant"],"correct":0,"explain":"Comme tout professionnel, l'opticien engage sa responsabilité civile professionnelle en cas de faute dans l'exercice de son activité (erreur d'adaptation, de délivrance), d'où l'importance de souscrire une assurance dédiée."},
+      {"q":"Quelle évolution récente marque le secteur de l'optique en matière de remboursement des équipements ?","options":["Le dispositif '100 % Santé' permet un reste à charge nul sur certains équipements optiques depuis 2019-2020","Les lunettes ne sont plus du tout remboursées depuis 2015","Le remboursement des lunettes a été multiplié par 10 en 2023","Aucune évolution n'a eu lieu depuis 20 ans dans ce secteur"],"correct":0,"explain":"Le '100 % Santé' en optique, déployé depuis 2019-2020, permet aux patients choisissant une offre répondant au cahier des charges (gammes de montures et verres définies) de bénéficier d'un reste à charge nul."},
+      {"q":"Un opticien indépendant exerçant en SARL peut-il investir librement la trésorerie de son magasin dans des opérations spéculatives sans rapport avec son commerce ?","options":["Non : cela peut être qualifié d'abus de biens sociaux si cela nuit à l'intérêt de la société, en plus de priver le magasin de la trésorerie nécessaire à son fonctionnement (stocks, salaires)","Oui, sans aucune limite, car le dirigeant est libre de disposer de la trésorerie comme il l'entend","Non, car la loi interdit à toute société commerciale de détenir la moindre trésorerie","Oui, à condition d'en informer l'Ordre des opticiens au préalable"],"correct":0,"explain":"Comme toute société commerciale, la SARL d'un opticien reste tenue par son objet social et par le droit commun des sociétés : un placement spéculatif de la trésorerie qui nuit à l'intérêt social expose le dirigeant à une mise en cause pour abus de biens sociaux, en plus du risque opérationnel de priver le magasin de liquidités pour ses stocks et ses charges courantes."}
+    ]
+  },
+  {
+    id: 'audio', icon: '👂', name: 'Audioprothésiste',
+    intro: 'L\'audioprothésiste évalue la perte auditive et propose, règle puis suit l\'appareillage adapté à chaque patient. Une profession en forte croissance avec le vieillissement de la population.',
+    specialites: [
+      { name: 'Appareillage de l\'adulte', desc: 'Prise en charge de la perte auditive liée à l\'âge ou au bruit : bilan, choix et réglage de l\'appareil auditif.', parcoursSpe: 'Diplôme d\'État d\'audioprothésiste, formation universitaire sélective de 3 ans post-bac.', parcoursProf: 'Certaines facultés (rattachées à la médecine ou à la pharmacie) proposent des postes de Maître de Conférences en audioprothèse, accessibles avec un master, une activité de recherche et une qualification CNU.' },
+      { name: 'Appareillage pédiatrique', desc: 'Dépistage et suivi des enfants malentendants, appareillage précoce pour ne pas retarder le développement du langage.', parcoursSpe: 'Même diplôme d\'État, avec une pratique spécialisée acquise en centre pédiatrique.', parcoursProf: 'Même filière universitaire naissante que pour l\'adulte, encore peu de postes dédiés à la pédiatrie spécifiquement.' },
+      { name: 'Accompagnement des implants auditifs', desc: 'Suivi et réglage des implants cochléaires ou à ancrage osseux, en lien étroit avec les chirurgiens ORL.', parcoursSpe: 'Diplôme d\'État puis formations complémentaires spécifiques proposées par les fabricants d\'implants.', parcoursProf: 'Peu structuré académiquement ; l\'expertise se construit surtout par la pratique en centre hospitalier.' },
+      { name: 'Acouphènes et hyperacousie', desc: 'Évaluation et prise en charge des patients souffrant d\'acouphènes ou d\'une sensibilité excessive au bruit.', parcoursSpe: 'Formations complémentaires (DU) en thérapie des acouphènes après le diplôme d\'État.', parcoursProf: 'Peu de filière universitaire dédiée ; expertise obtenue par la formation continue et l\'expérience clinique.' }
+    ],
+    etablissements: ['Faculté de Pharmacie de Paris (Université Paris Cité)', 'Université Claude Bernard Lyon 1', 'Université de Montpellier', 'Université de Lille', 'Université de Lorraine (Nancy)', 'Université de Rennes 1 (centre de Fougères)', 'Université de Bordeaux', 'Université Clermont Auvergne'],
+    parcours: 'Diplôme d\'État d\'audioprothésiste, formation universitaire sélective de 3 ans post-bac. Profession en forte croissance avec le vieillissement de la population.',
+    remuneration: 'Salarié en réseau (Audika, Amplifon…) : environ 35 000 à 45 000 €/an brut en début de carrière. En libéral, propriétaire de son centre : souvent 60 000 à 100 000 €/an ou plus selon la patientèle.',
+    statut: 'Salarié d\'un réseau spécialisé, ou exercice libéral en nom propre (BNC) ou en société (SARL, SELARL) pour un centre indépendant.',
+    investLimites: 'L\'audioprothésiste propriétaire de son centre, comme l\'opticien indépendant, doit respecter l\'objet social de sa société : la trésorerie du centre ne peut pas être détournée vers des placements spéculatifs sans lien avec l\'activité professionnelle, sous peine d\'abus de biens sociaux en cas de dommage pour l\'entreprise, et doit rester suffisante pour financer le plateau technique (cabine insonorisée, audiomètres) propre à chaque point de vente. Un CGP oriente généralement l\'excédent vers des supports prudents logés dans la société ou vers une extraction en dividendes pour un investissement personnel plus diversifié.',
+    quiz: [
+      { q: 'Combien d\'années dure la formation pour devenir audioprothésiste ?', options: ['1 an', '3 ans', '6 ans', '9 ans'], correct: 1, explain: 'Le Diplôme d\'État d\'audioprothésiste se prépare en 3 ans post-bac dans une formation universitaire sélective.' },
+      { q: 'À quelle faculté est rattachée la formation d\'audioprothésiste à Paris ?', options: ['La Faculté de Pharmacie', 'La Faculté de Droit', 'Sciences Po', 'L\'INFN'], correct: 0, explain: 'À Paris, la formation d\'audioprothésiste est rattachée à la Faculté de Pharmacie de l\'Université Paris Cité.' },
+      { q: 'Quel type de dispositif un audioprothésiste suit-il en lien avec un chirurgien ORL ?', options: ['Les implants cochléaires', 'Les prothèses dentaires', 'Les lentilles de contact', 'Les orthèses plantaires'], correct: 0, explain: 'Le suivi et le réglage des implants cochléaires ou à ancrage osseux se fait en coordination avec le chirurgien ORL qui les a posés.' },
+      { q: 'Sous quel statut un audioprothésiste propriétaire de son centre exerce-t-il le plus souvent ?', options: ['Libéral en nom propre ou en société (SARL, SELARL)', 'Fonctionnaire', 'Officier ministériel', 'Collaborateur libéral uniquement'], correct: 0, explain: 'Le professionnel indépendant exerce en BNC ou via une société commerciale/libérale adaptée à son activité.' },
+      { q: 'Pourquoi la demande en audioprothésistes est-elle en forte croissance ?', options: ['Le vieillissement de la population', 'La baisse du nombre de malentendants', 'La suppression de la profession réglementée', 'Aucune de ces réponses'], correct: 0, explain: 'Le vieillissement de la population augmente mécaniquement le nombre de patients concernés par une perte auditive.' },
+      {"q":"Quel est le niveau d'études minimal requis pour obtenir le Diplôme d'État d'audioprothésiste ?","options":["Bac+3 (3 ans après le bac)","Bac+8, comme pour la médecine","Aucun diplôme spécifique n'est exigé","Un simple CAP suffit"],"correct":0,"explain":"Le Diplôme d'État d'audioprothésiste s'obtient après 3 années de formation universitaire ou en école agréée, avec une pratique clinique encadrée."},
+      {"q":"Le dispositif '100 % Santé' pour les aides auditives permet quoi concrètement depuis 2021 ?","options":["Un remboursement intégral de certains appareils 'classe 1', sans reste à charge","Un remboursement de 10 % seulement","La gratuité de tous les modèles, y compris haut de gamme","Rien, ce dispositif ne concerne pas l'audition"],"correct":0,"explain":"Depuis 2021, le 100 % Santé audiologie permet un reste à charge nul pour les appareils 'classe 1' répondant à un cahier des charges minimal."},
+      {"q":"Avant tout achat définitif d'un appareil auditif, la réglementation impose à l'audioprothésiste de proposer :","options":["Une période d'essai gratuite d'au moins 30 jours","Un essai payant de 3 jours seulement","Aucune période d'essai n'est obligatoire","Un essai réservé aux patients de plus de 70 ans"],"correct":0,"explain":"La loi impose une période d'adaptation d'au moins 30 jours avant la vente définitive, pour vérifier le bénéfice réel de l'appareillage."},
+      {"q":"Quel acte médical préalable est en principe nécessaire avant un premier appareillage auditif ?","options":["Une prescription médicale, avec audiogramme","Aucun acte médical n'est requis","Uniquement un test en magasin","Une hospitalisation systématique"],"correct":0,"explain":"Un premier appareillage nécessite une prescription médicale (souvent d'un ORL après bilan auditif), utilisée par l'audioprothésiste pour régler précisément l'appareil."},
+      {"q":"Qu'est-ce que la presbyacousie ?","options":["La baisse progressive et naturelle de l'audition liée au vieillissement","Une maladie infectieuse de l'oreille","Une allergie aux appareils auditifs","Un trouble exclusivement pédiatrique"],"correct":0,"explain":"La presbyacousie est la cause la plus fréquente de consultation en audioprothèse chez les patients âgés, portée par le vieillissement démographique."},
+      {"q":"Les prix des appareils auditifs en France sont-ils libres ou fixés par un tarif unique ?","options":["Libres, mais avec obligation de transparence (devis normalisé)","Fixés par un tarif national unique pour tous les modèles","Interdits à la vente, uniquement en location","Gratuits dans tous les cas"],"correct":0,"explain":"Les prix sont libres (hors 'classe 1' plafonnée), mais un devis normalisé détaillant prix de l'appareil et prestations est obligatoire."},
+      {"q":"Un audioprothésiste propriétaire de son centre exerce le plus souvent sous quel statut ?","options":["En société commerciale (SARL, SAS) ou en entreprise individuelle","Obligatoirement comme fonctionnaire","Uniquement en association loi 1901","Il doit obligatoirement être salarié d'un réseau"],"correct":0,"explain":"Comme l'opticien indépendant, l'audioprothésiste choisit généralement une structure commerciale ou l'entreprise individuelle."},
+      {"q":"Le marché de l'audioprothèse en France est-il structuré par des centres indépendants ou des réseaux nationaux ?","options":["Une part croissante est occupée par des réseaux, aux côtés des centres indépendants","Exclusivement par des centres indépendants","Exclusivement par des enseignes nationales","Le marché est entièrement public"],"correct":0,"explain":"Le secteur combine centres indépendants et réseaux/enseignes nationales, ce qui influence les modèles économiques et les trajectoires patrimoniales des professionnels."},
+      {"q":"Quelle durée moyenne est généralement retenue pour le renouvellement du remboursement d'un appareil auditif ?","options":["Environ 4 ans","6 mois","15 ans","Il n'y a aucune limite de renouvellement"],"correct":0,"explain":"Le remboursement d'un nouvel appareillage est en principe encadré par une périodicité d'environ 4 ans, sauf évolution significative de la perte auditive."},
+      {"q":"L'audioprothésiste doit-il suivre une obligation de formation continue ?","options":["Oui, le DPC s'applique également à cette profession","Non, cette profession n'y est pas soumise","Oui, mais uniquement s'il est salarié","Non, la formation initiale suffit à vie"],"correct":0,"explain":"L'audioprothésiste, professionnel de santé réglementé, est soumis au DPC comme les médecins, dentistes ou opticiens."},
+      {"q":"Quel écart de revenu existe-t-il généralement entre un audioprothésiste salarié d'un réseau et un audioprothésiste libéral propriétaire de son centre ?","options":["Le salarié touche souvent 35 000-45 000 €/an brut en début de carrière, l'indépendant souvent 60 000-100 000 €/an ou plus","Ils gagnent rigoureusement le même montant","L'indépendant gagne systématiquement moins que le salarié","Le statut n'a jamais d'impact sur la rémunération"],"correct":0,"explain":"Comme pour l'opticien, la prise de risque entrepreneurial de l'audioprothésiste indépendant se traduit généralement par un potentiel de revenu supérieur à celui du salarié d'un réseau national."},
+      {"q":"Un audioprothésiste doit-il proposer un devis normalisé avant toute vente d'un appareil auditif ?","options":["Oui, un devis normalisé détaillant prix de l'appareil et prestations associées est obligatoire","Non, aucun devis n'est exigé par la réglementation","Oui, mais uniquement pour les appareils de plus de 3 000 €","Non, le prix peut rester totalement oral"],"correct":0,"explain":"La réglementation impose un devis normalisé détaillé (prix de l'appareil, de l'accompagnement, des prestations), permettant au patient de comparer les offres entre professionnels et de comprendre précisément ce qu'il paie."},
+      {"q":"La surdité professionnelle (liée au bruit au travail) peut-elle être reconnue comme maladie professionnelle ?","options":["Oui, sous certaines conditions, la surdité liée à une exposition professionnelle au bruit est reconnue comme maladie professionnelle","Non, aucune surdité ne peut être reconnue comme maladie professionnelle","Oui, mais uniquement pour les musiciens professionnels","Cette reconnaissance a été supprimée en 2010"],"correct":0,"explain":"La surdité professionnelle, liée à une exposition prolongée au bruit dans certains métiers (industrie, BTP, musique), est inscrite au tableau des maladies professionnelles, sous conditions d'exposition et de délai de prise en charge."},
+      {"q":"Un audioprothésiste exerçant en société (SARL, SELARL) peut-il arbitrer entre rémunération salariale et dividendes, comme d'autres professions libérales en société ?","options":["Oui, cet arbitrage est un levier d'optimisation fiscale et sociale classique à étudier avec son expert-comptable et son CGP","Non, cet arbitrage n'existe pas pour cette profession","Non, il doit obligatoirement tout prendre en dividendes","Oui, mais uniquement après 65 ans"],"correct":0,"explain":"Comme pour d'autres professions libérales exerçant en société, l'audioprothésiste gérant peut arbitrer entre salaire et dividendes selon sa situation personnelle, un sujet de conseil patrimonial classique partagé entre expert-comptable et CGP."},
+      {"q":"Les aides auditives 'intra-auriculaires' (invisibles dans l'oreille) sont-elles adaptées à tous les types et degrés de perte auditive ?","options":["Non, leur indication dépend du degré et du type de perte auditive, contrairement aux contours d'oreille plus polyvalents","Oui, elles conviennent systématiquement à tous les patients","Non, elles sont réservées exclusivement aux enfants","Oui, elles remplacent toujours un contour d'oreille classique"],"correct":0,"explain":"Le choix entre appareil intra-auriculaire et contour d'oreille dépend du profil auditif du patient (degré et type de perte), de la morphologie du conduit auditif et de ses préférences esthétiques et pratiques — un choix technique que seul l'audioprothésiste peut recommander."},
+      {"q":"L'acouphène (bourdonnement ou sifflement d'oreille perçu sans source sonore réelle) relève-t-il du champ de compétence de l'audioprothésiste ?","options":["Oui, il peut accompagner la prise en charge des acouphènes, en lien avec un médecin ORL","Non, l'audioprothésiste n'intervient jamais sur les acouphènes","Oui, il peut les soigner médicalement de façon autonome","Les acouphènes ne concernent que les ophtalmologistes"],"correct":0,"explain":"L'audioprothésiste peut proposer un accompagnement des acouphènes (génération de bruit, appareillage adapté) en coordination avec un médecin ORL qui assure le diagnostic et le suivi médical de la pathologie sous-jacente."},
+      {"q":"Les audioprothésistes sont-ils, comme les opticiens, soumis à une obligation de transparence tarifaire envers le patient ?","options":["Oui, le devis normalisé et l'information sur l'offre '100 % Santé' sont obligatoires","Non, cette profession échappe à toute obligation de transparence","Oui, mais uniquement pour les patients de plus de 60 ans","Non, les prix sont toujours fixés par un tarif national unique"],"correct":0,"explain":"Comme dans l'optique, la réglementation impose à l'audioprothésiste une obligation de transparence tarifaire, incluant la présentation de l'offre 100 % Santé sans reste à charge."},
+      {"q":"Un audioprothésiste qui souhaite développer plusieurs centres doit-il investir dans du matériel de test auditif pour chaque point de vente ?","options":["Oui, chaque centre doit disposer de son propre plateau technique (cabine insonorisée, audiomètre) pour réaliser les bilans","Non, un seul équipement suffit pour tout un réseau national","Non, les tests auditifs se font uniquement à l'hôpital","Oui, mais un seul centre sur dix doit être équipé"],"correct":0,"explain":"Chaque centre d'audioprothèse doit disposer de son propre plateau technique (cabine insonorisée, matériel de mesure) pour réaliser les bilans et réglages, ce qui représente un investissement significatif à chaque ouverture de point de vente."},
+      {"q":"La perte auditive non appareillée chez une personne âgée est-elle associée à un risque accru de déclin cognitif selon les études scientifiques récentes ?","options":["Oui, plusieurs études associent une perte auditive non corrigée à un risque accru de déclin cognitif et d'isolement social","Non, aucun lien n'a jamais été établi","Au contraire, la perte auditive protégerait du déclin cognitif","Ce lien ne concerne que les enfants"],"correct":0,"explain":"Des études épidémiologiques récentes associent la perte auditive non corrigée chez les seniors à un risque accru de déclin cognitif et d'isolement social, renforçant l'argumentaire de santé publique en faveur d'un appareillage précoce."},
+      {"q":"Un centre d'audioprothèse peut-il proposer, en plus des appareils auditifs, d'autres produits ou services complémentaires ?","options":["Oui, par exemple des protections auditives sur-mesure, des accessoires de confort ou des bilans de prévention","Non, la vente est strictement limitée aux seuls appareils auditifs","Non, toute diversification est interdite par la loi","Oui, mais uniquement des produits alimentaires"],"correct":0,"explain":"De nombreux centres diversifient leur offre (protections auditives sur-mesure pour musiciens ou nageurs, accessoires de confort, actions de prévention), un levier de développement du chiffre d'affaires au-delà du seul appareillage."},
+      {"q":"L'audioprothésiste doit-il réaliser un suivi régulier du patient après la délivrance de l'appareil auditif ?","options":["Oui, un suivi et des réglages réguliers font partie intégrante de la prestation d'appareillage","Non, la relation s'arrête définitivement à la vente","Non, le suivi est à la charge exclusive du médecin ORL","Oui, mais seulement une fois tous les 10 ans"],"correct":0,"explain":"L'appareillage auditif nécessite des réglages et un suivi dans la durée (adaptation progressive, entretien, évolution de la perte auditive), ce qui structure une relation de long terme entre le patient et son audioprothésiste."},
+      {"q":"Les audioprothésistes bénéficient-ils d'une forte croissance structurelle de la demande en France, indépendamment des cycles économiques ?","options":["Oui, le vieillissement démographique soutient une demande structurellement croissante","Non, la demande en audioprothèse est en déclin constant","La demande ne dépend que des modes vestimentaires","Non, cette activité est en voie de disparition"],"correct":0,"explain":"Le vieillissement de la population française, principal facteur de perte auditive (presbyacousie), soutient une croissance structurelle et durable de la demande en appareillage auditif, un argument de poids pour la valorisation d'un centre d'audioprothèse."},
+      {"q":"Un audioprothésiste propriétaire de plusieurs centres, exerçant en SARL, peut-il utiliser la trésorerie de sa société pour des placements sans rapport avec son activité, au détriment de l'intérêt de l'entreprise ?","options":["Non, cela l'exposerait à un risque d'abus de biens sociaux, en plus de priver chaque centre de la trésorerie nécessaire à son plateau technique","Oui, librement, car la trésorerie de la société lui appartient personnellement","Non, car la loi interdit toute détention de trésorerie par une société commerciale","Oui, mais uniquement s'il en informe ses salariés au préalable"],"correct":0,"explain":"Comme pour tout dirigeant de société commerciale, un usage de la trésorerie sans lien avec l'objet social et nuisible à l'intérêt de l'entreprise peut être qualifié d'abus de biens sociaux — un risque d'autant plus concret ici que chaque centre a besoin de son propre capital de travail pour financer son plateau technique."}
+    ]
+  },
+  {
+    id: 'avocat', icon: '⚖️', name: 'Avocat',
+    intro: 'L\'avocat conseille, rédige des actes et représente ses clients devant les juridictions. La profession se spécialise fortement au fil de la carrière, par la pratique puis par une mention officielle.',
+    specialites: [
+      { name: 'Droit fiscal', desc: 'Optimisation et sécurisation fiscale des particuliers et entreprises, contentieux avec l\'administration fiscale.', parcoursSpe: 'Master 2 en droit fiscal, CRFPA, puis pratique en cabinet spécialisé. La mention de spécialisation « droit fiscal » s\'obtient après plusieurs années d\'exercice et un examen dédié devant le Conseil National des Barreaux.', parcoursProf: 'Devenir professeur des universités en droit fiscal suppose un doctorat, la réussite du concours national d\'agrégation de droit (privé ou public selon la section), puis un poste de Professeur des Universités — une carrière distincte de l\'exercice en cabinet.' },
+      { name: 'Droit des affaires / des sociétés', desc: 'Conseil aux entreprises : création, fusions-acquisitions, contrats commerciaux, restructurations.', parcoursSpe: 'Master 2 en droit des affaires, CRFPA, souvent complété par un LLM ou un passage en cabinet international.', parcoursProf: 'Même voie de l\'agrégation de droit privé pour l\'enseignement universitaire ; beaucoup de praticiens enseignent aussi comme chargés de cours sans être professeurs titulaires.' },
+      { name: 'Droit de la famille', desc: 'Divorce, autorité parentale, successions litigieuses, protection des majeurs.', parcoursSpe: 'Master 2 en droit privé/droit de la famille, CRFPA.', parcoursProf: 'Agrégation de droit privé pour la voie universitaire, ou enseignement vacataire en parallèle de l\'exercice libéral.' },
+      { name: 'Droit pénal', desc: 'Défense ou représentation des victimes dans les procédures pénales (délits, crimes).', parcoursSpe: 'Master 2 en droit pénal et sciences criminelles, CRFPA, stages en cabinets pénalistes ou auprès de juridictions.', parcoursProf: 'Agrégation de droit privé (section droit pénal), poste de professeur des universités possible en parallèle d\'une activité d\'avocat réduite.' },
+      { name: 'Droit social / du travail', desc: 'Conseil et contentieux en droit du travail pour les entreprises ou les salariés (licenciements, négociation collective).', parcoursSpe: 'Master 2 en droit social, CRFPA.', parcoursProf: 'Agrégation de droit privé, section droit social, pour la carrière universitaire.' }
+    ],
+    etablissements: ['EFB – École de Formation des Barreaux (Paris/Île-de-France)', 'ERAGE – École Régionale des Avocats du Grand Est', 'ERSCA – École Régionale d\'Avocats du Sud-Est (Aix-en-Provence)', 'Université Panthéon-Assas (Paris II)', 'Université Paris 1 Panthéon-Sorbonne', 'Université Toulouse I Capitole', 'Université Jean Moulin Lyon III'],
+    parcours: 'Master 1 en droit puis examen d\'entrée au CRFPA (très sélectif), 18 mois de formation à l\'École des avocats, prestation de serment. Des mentions de spécialisation (dont fiscaliste) s\'obtiennent après plusieurs années de pratique et un examen dédié.',
+    remuneration: 'Très hétérogène : collaborateur débutant environ 30 000 à 45 000 €/an de rétrocession d\'honoraires ; associé dans un cabinet d\'affaires ou fiscaliste expérimenté souvent 150 000 à 300 000 €/an ou davantage dans les grandes structures.',
+    statut: 'Profession libérale réglementée. Exercice en nom propre (EI), en société (SELARL, SELAS, SCP), ou comme collaborateur libéral lié par un contrat de collaboration (statut distinct du salariat).',
+    investLimites: 'Deux niveaux à distinguer. Les fonds appartenant aux clients (ex. prix d\'une vente immobilière en attente de répartition) transitent obligatoirement par la CARPA (Caisse des Règlements Pécuniaires des Avocats) : l\'avocat n\'a strictement aucun droit d\'en disposer ni de les investir, sous peine de poursuites pour détournement de fonds. La trésorerie propre du cabinet (honoraires déjà perçus), elle, reste soumise à l\'objet social de la structure d\'exercice (SELARL/SELAS/SCP) : un usage spéculatif qui mettrait en péril le cabinet expose l\'associé-gérant à un risque d\'abus de biens sociaux.',
+    quiz: [
+      { q: 'Quel examen très sélectif faut-il réussir pour intégrer une école d\'avocats ?', options: ['Le CRFPA', 'Le DEC', 'Le CAPET', 'Les ECN'], correct: 0, explain: 'Le CRFPA (Centre Régional de Formation Professionnelle des Avocats) organise l\'examen d\'entrée en école d\'avocats.' },
+      { q: 'Comment un avocat obtient-il une mention de spécialisation officielle (ex. droit fiscal) ?', options: ['Après plusieurs années d\'exercice et un examen dédié', 'Automatiquement après le CRFPA', 'En passant le doctorat uniquement', 'Ce n\'est pas possible'], correct: 0, explain: 'La mention de spécialisation s\'obtient après une pratique significative dans le domaine et la réussite d\'un examen devant le Conseil National des Barreaux.' },
+      { q: 'Quel concours national permet de devenir professeur des universités en droit ?', options: ['L\'agrégation de droit', 'Le CRFPA', 'Le DEC', 'Le concours PU-PH'], correct: 0, explain: 'L\'agrégation de droit (privé ou public) est le concours national qui ouvre la carrière de professeur des universités en droit.' },
+      { q: 'Sous quel statut un jeune avocat débute-t-il le plus souvent dans un cabinet ?', options: ['Collaborateur libéral', 'Salarié en CDI classique', 'Fonctionnaire stagiaire', 'Praticien hospitalier'], correct: 0, explain: 'Le collaborateur libéral est lié au cabinet par un contrat de collaboration, un statut distinct du salariat classique.' },
+      { q: 'Quel type de structure juridique un avocat peut-il utiliser pour exercer en société ?', options: ['Une SELARL ou une SELAS', 'Une SCPI uniquement', 'Une SCI obligatoirement', 'Aucune société n\'est autorisée'], correct: 0, explain: 'Les avocats peuvent exercer en société d\'exercice libéral (SELARL, SELAS) ou en société civile professionnelle (SCP).' },
+      {"q":"Avant d'exercer, tout avocat doit prêter serment devant quelle juridiction ?","options":["La cour d'appel dont dépend son barreau","Le tribunal de commerce","Le Conseil d'État uniquement","Aucun serment n'est requis"],"correct":0,"explain":"L'avocat prête serment devant la cour d'appel dont dépend son barreau, marquant son engagement à respecter les principes essentiels de la profession."},
+      {"q":"Depuis la loi Macron de 2015, les honoraires de l'avocat doivent en principe faire l'objet de quoi avec le client ?","options":["Une convention d'honoraires écrite","Un tarif réglementé unique pour toute la profession","Un paiement exclusivement forfaitaire","Aucune formalité, un accord oral suffit toujours"],"correct":0,"explain":"Depuis 2015, la convention d'honoraires écrite est devenue le principe, renforçant la transparence — les honoraires restent libres, sauf exceptions encadrées."},
+      {"q":"Qu'est-ce que la CARPA, structure dans laquelle transitent les fonds des clients manipulés par un avocat ?","options":["La Caisse des Règlements Pécuniaires des Avocats","La caisse de retraite des avocats","Un syndicat professionnel","Une assurance responsabilité civile facultative"],"correct":0,"explain":"La CARPA est l'organisme par lequel transitent obligatoirement les fonds détenus pour le compte de clients, garantissant leur sécurité et leur traçabilité."},
+      {"q":"Quelle caisse de retraite est spécifique à la profession d'avocat ?","options":["La CNBF (Caisse Nationale des Barreaux Français)","La CARMF, comme les médecins","La CNAV, comme tous les salariés","Il n'existe pas de caisse propre aux avocats"],"correct":0,"explain":"Les avocats cotisent à la CNBF, caisse de retraite autonome dédiée à leur profession, distincte des autres caisses de professions libérales."},
+      {"q":"Le secret professionnel de l'avocat est-il opposable même à l'administration fiscale ?","options":["Oui, avec une protection particulièrement forte, sous réserve d'exceptions strictement encadrées","Non, l'avocat doit toujours communiquer tous les documents demandés","Non, le secret professionnel n'existe pas pour cette profession","Oui, mais uniquement pour les dossiers pénaux"],"correct":0,"explain":"Le secret professionnel de l'avocat est l'un des plus protégés du droit français, y compris face au fisc, sous réserve d'exceptions très encadrées."},
+      {"q":"Qu'est-ce qu'un 'acte d'avocat', formalisé depuis la loi de 2011 ?","options":["Un acte sous seing privé contresigné par un avocat, qui renforce sa force probante","Un acte authentique équivalent à un acte notarié","Un simple courrier sans valeur juridique","Un acte réservé aux seules procédures pénales"],"correct":0,"explain":"L'acte d'avocat atteste que les parties ont été informées des conséquences juridiques de l'acte, sans toutefois lui conférer l'authenticité propre à l'acte notarié."},
+      {"q":"Les Modes Amiables de Résolution des Différends (MARD, comme la médiation) occupent une place :","options":["Croissante, encouragée par les pouvoirs publics pour désengorger les tribunaux","Nulle, ces dispositifs n'existent pas en France","Réservée exclusivement aux notaires","En net recul depuis 10 ans"],"correct":0,"explain":"La médiation, la conciliation et la procédure participative connaissent un essor important, encouragé par les réformes de procédure civile successives."},
+      {"q":"Un avocat peut-il être directement salarié d'une entreprise (hors cabinet d'avocats) tout en conservant son titre d'avocat en exercice ?","options":["Non, un avocat reste indépendant ou salarié d'un cabinet d'avocats, pas d'une entreprise classique","Oui, c'est le mode d'exercice le plus répandu","Oui, mais uniquement dans les grandes banques","Cela dépend uniquement de l'âge de l'avocat"],"correct":0,"explain":"La France ne reconnaît pas le statut d'avocat salarié en entreprise classique : un juriste d'entreprise peut être titulaire du diplôme d'avocat mais renonce à l'exercice de la profession réglementée tant qu'il reste salarié d'une entreprise non-cabinet."},
+      {"q":"Qu'est-ce que la 'postulation' en procédure civile, historiquement réservée à certains avocats ?","options":["L'obligation de recourir à un avocat inscrit au barreau du tribunal saisi pour certains actes de procédure","Un concours d'entrée à l'école d'avocats","Une sanction disciplinaire","Un synonyme de plaidoirie"],"correct":0,"explain":"La postulation désignait l'obligation de faire appel à un avocat inscrit au barreau du tribunal compétent pour certains actes de procédure ; les réformes récentes en ont étendu la territorialité."},
+      {"q":"Les avocats fiscalistes et d'affaires interviennent souvent en complémentarité de quels autres professionnels du conseil patrimonial ?","options":["Le CGP, l'expert-comptable et le notaire","Uniquement le médecin traitant du client","Aucun, ils travaillent toujours seuls","Uniquement les agents immobiliers"],"correct":0,"explain":"Sur les dossiers patrimoniaux complexes, l'avocat fiscaliste intervient fréquemment aux côtés du CGP, de l'expert-comptable et du notaire, chacun sécurisant son champ de compétence."},
+      {"q":"Quel est l'écart de rémunération type entre un avocat collaborateur débutant et un associé expérimenté dans un cabinet d'affaires ou fiscaliste ?","options":["Le collaborateur débutant touche souvent 30 000-45 000 €/an de rétrocession, l'associé expérimenté souvent 150 000-300 000 €+/an","Ils gagnent rigoureusement le même montant","L'associé gagne systématiquement moins que le collaborateur débutant","Le niveau d'expérience n'a aucun impact sur la rémunération"],"correct":0,"explain":"L'écart de rémunération entre un jeune collaborateur et un associé expérimenté d'un cabinet d'affaires ou fiscaliste peut être considérable, reflétant l'apport en clientèle, l'expertise et la prise de risque associée au statut d'associé."},
+      {"q":"Qu'est-ce que la 'rétrocession d'honoraires' perçue par un avocat collaborateur libéral ?","options":["La part des honoraires facturés par le cabinet qui lui est reversée en contrepartie de son travail, un statut distinct du salariat","Un impôt spécifique prélevé sur les avocats","Une pénalité versée en cas de faute professionnelle","Un synonyme de l'aide juridictionnelle"],"correct":0,"explain":"L'avocat collaborateur libéral n'est pas salarié : il perçoit une rétrocession d'honoraires définie par son contrat de collaboration, tout en développant en parallèle sa propre clientèle personnelle, à la différence d'un salarié classique."},
+      {"q":"Un avocat peut-il, en parallèle de son activité de conseil et de contentieux, exercer une activité d'enseignement universitaire ?","options":["Oui, de nombreux avocats enseignent en parallèle de leur exercice professionnel, sous certaines conditions déontologiques","Non, c'est strictement interdit par le code de déontologie","Oui, mais uniquement s'il cesse totalement d'exercer comme avocat","Non, seuls les professeurs d'université à temps plein peuvent enseigner le droit"],"correct":0,"explain":"L'enseignement universitaire (vacations, cours en master) est une activité compatible avec l'exercice de la profession d'avocat, sous réserve du respect des règles déontologiques relatives aux activités annexes."},
+      {"q":"L'aide juridictionnelle permet-elle à un justiciable aux revenus modestes de bénéficier gratuitement ou partiellement d'un avocat ?","options":["Oui, sous conditions de ressources, l'État prend en charge tout ou partie des honoraires","Non, ce dispositif n'existe pas en France","Oui, mais uniquement pour les personnes de plus de 65 ans","Non, tous les avocats sont obligatoirement gratuits pour les particuliers"],"correct":0,"explain":"L'aide juridictionnelle, financée par l'État, permet sous conditions de ressources une prise en charge totale ou partielle des frais d'avocat, l'avocat étant alors indemnisé selon un barème spécifique nettement inférieur à ses honoraires libres habituels."},
+      {"q":"Qu'est-ce qu'un avocat 'de contentieux', par opposition à un avocat 'de conseil' ?","options":["Celui qui plaide et représente ses clients devant les tribunaux, par opposition à celui qui privilégie le conseil préventif et la rédaction d'actes","Un avocat qui travaille uniquement sur des litiges internationaux","Un synonyme d'avocat pénaliste exclusivement","Un avocat qui ne peut jamais donner de conseil juridique"],"correct":0,"explain":"L'avocat 'contentieux' intervient principalement en défense devant les juridictions (plaidoirie, procédure), tandis que l'avocat 'conseil' privilégie l'accompagnement préventif (rédaction de contrats, structuration, due diligence) — une distinction fréquente, bien que de nombreux avocats combinent les deux."},
+      {"q":"Un avocat d'affaires spécialisé en fusions-acquisitions intervient-il fréquemment en coordination avec le CGP du dirigeant cédant une entreprise ?","options":["Oui, notamment sur la structuration juridique de la cession et ses conséquences patrimoniales pour le dirigeant","Non, ces deux métiers n'interagissent jamais","Non, l'avocat d'affaires ne traite que des questions purement techniques sans lien avec le patrimoine du dirigeant","Oui, mais uniquement pour les opérations de plus de 100 millions d'euros"],"correct":0,"explain":"Sur une opération de cession d'entreprise, l'avocat d'affaires sécurise juridiquement l'opération (garanties, clauses), pendant que le CGP accompagne le dirigeant sur l'optimisation et le réemploi patrimonial du produit de cession — une coordination fréquente et recommandée."},
+      {"q":"Les avocats sont-ils soumis à une obligation de formation continue, comme les autres professions réglementées ?","options":["Oui, un volume d'heures de formation continue est exigé chaque année ou tous les deux ans selon les barreaux","Non, la formation initiale suffit à vie une fois le CAPA obtenu","Oui, mais uniquement les dix premières années d'exercice","Non, cette obligation ne concerne que les avocats fiscalistes"],"correct":0,"explain":"Comme les autres professions réglementées du droit et du chiffre, les avocats sont soumis à une obligation de formation continue, contrôlée par leur Ordre, pour maintenir leurs compétences à jour."},
+      {"q":"L'arbitrage, mode de résolution des litiges par un tiers privé plutôt que par un tribunal étatique, est-il une pratique courante en matière commerciale internationale ?","options":["Oui, l'arbitrage international est largement utilisé pour résoudre les litiges commerciaux transfrontaliers","Non, l'arbitrage n'existe pas en droit français","Oui, mais uniquement pour les litiges de moins de 1 000 €","Non, cette pratique a été totalement abandonnée depuis 20 ans"],"correct":0,"explain":"L'arbitrage commercial international, encadré par des institutions spécialisées (CCI, etc.), est une pratique très répandue pour résoudre les litiges transfrontaliers, offrant confidentialité et neutralité par rapport aux tribunaux étatiques d'un pays donné."},
+      {"q":"Qu'est-ce qu'une 'clause compromissoire' insérée dans un contrat commercial ?","options":["Une clause qui prévoit qu'en cas de litige, les parties recourront à l'arbitrage plutôt qu'aux tribunaux étatiques","Une clause qui interdit toute résolution de litige","Une clause réservée exclusivement aux contrats de travail","Un synonyme de clause de non-concurrence"],"correct":0,"explain":"La clause compromissoire organise par avance le recours à l'arbitrage en cas de litige futur entre les parties, fréquente dans les contrats commerciaux et internationaux, à distinguer du compromis d'arbitrage conclu après la naissance du litige."},
+      {"q":"Un avocat peut-il être associé dans plusieurs structures d'exercice (plusieurs cabinets) simultanément ?","options":["Cela reste possible sous certaines conditions, mais nécessite une vigilance déontologique particulière (conflits d'intérêts notamment)","Non, un avocat ne peut jamais être associé que d'une seule structure","Oui, sans aucune limite ni condition","Cette situation est automatiquement interdite dès la première association"],"correct":0,"explain":"La pluralité de structures d'exercice reste encadrée par des règles déontologiques strictes, notamment pour prévenir les conflits d'intérêts entre les différents cabinets et clients concernés."},
+      {"q":"L'avocat spécialisé en droit social intervient-il principalement pour le compte des entreprises, des salariés, ou des deux selon les dossiers ?","options":["Selon sa patientèle et sa spécialisation, il peut conseiller des entreprises (employeurs) ou des salariés, parfois les deux selon les dossiers","Uniquement pour le compte des syndicats","Uniquement pour le compte de l'État","Le droit social n'existe pas comme domaine de spécialisation en avocature"],"correct":0,"explain":"Le droit social couvre un vaste champ (licenciements, négociations collectives, restructurations) et les avocats spécialisés accompagnent selon leur patientèle soit des employeurs, soit des salariés, certains cabinets se positionnant exclusivement d'un côté par choix stratégique."},
+      {"q":"Un avocat peut-il investir ou utiliser à sa discrétion les fonds d'un client qui transitent par son cabinet (ex. prix d'une vente, indemnité à répartir) ?","options":["Non, ces fonds doivent obligatoirement transiter par la CARPA, et l'avocat n'a aucun droit d'en disposer ni de les investir, sous peine de poursuites pour détournement de fonds","Oui, à condition de les restituer dans un délai de 10 ans","Oui, librement, s'il s'agit de sommes inférieures à 5 000 €","Non, mais uniquement si le client n'a pas donné son accord écrit"],"correct":0,"explain":"La CARPA (Caisse des Règlements Pécuniaires des Avocats) garantit la stricte séparation entre les fonds des clients et la trésorerie propre du cabinet. L'avocat n'a aucun pouvoir de disposition sur ces fonds : les utiliser, même temporairement, constitue un détournement passible de sanctions disciplinaires et pénales sévères."}
+    ]
+  },
+  {
+    id: 'compta', icon: '🧮', name: 'Expert-comptable et comptable',
+    intro: 'L\'expert-comptable et le comptable tiennent, contrôlent et analysent les comptes des entreprises et conseillent leurs dirigeants. Le parcours vers l\'expertise comptable est long et très structuré.',
+    specialites: [
+      { name: 'Comptabilité générale et tenue des comptes', desc: 'Saisie, contrôle et présentation des comptes annuels d\'une entreprise ou d\'une association.', parcoursSpe: 'BTS Comptabilité-Gestion ou DCG (Diplôme de Comptabilité et de Gestion), exercice en cabinet ou en entreprise.', parcoursProf: 'Enseigner en BTS/DCG en lycée ou en classe préparatoire suppose de réussir l\'agrégation d\'économie-gestion, un concours national de l\'Éducation nationale.' },
+      { name: 'Audit et commissariat aux comptes', desc: 'Certification de la sincérité et de la régularité des comptes des entreprises pour le compte des actionnaires et des tiers.', parcoursSpe: 'DSCG puis inscription sur la liste des commissaires aux comptes, souvent en parallèle du parcours d\'expert-comptable.', parcoursProf: 'Même voie que la comptabilité générale pour l\'enseignement secondaire ; pour l\'université, un doctorat en sciences de gestion et une qualification CNU (section 06) sont nécessaires.' },
+      { name: 'Fiscalité d\'entreprise', desc: 'Optimisation fiscale, déclarations, accompagnement lors des contrôles fiscaux des entreprises.', parcoursSpe: 'DCG puis DSCG avec une spécialisation fiscale, souvent complétés par un master en droit fiscal.', parcoursProf: 'Agrégation d\'économie-gestion pour l\'enseignement secondaire, doctorat et qualification CNU pour l\'université.' },
+      { name: 'Conseil en gestion et pilotage financier', desc: 'Accompagnement des dirigeants dans leurs décisions financières : budgets, prévisionnels, tableaux de bord.', parcoursSpe: 'DSCG ou master en finance/contrôle de gestion, expérience en cabinet ou en entreprise.', parcoursProf: 'Voie universitaire identique : doctorat en sciences de gestion, qualification CNU section 06, concours de recrutement.' },
+      { name: 'Paie et droit social', desc: 'Gestion de la paie des entreprises clientes et veille sur la conformité aux évolutions du droit social.', parcoursSpe: 'BTS Comptabilité-Gestion ou licence professionnelle spécialisée en paie, souvent complétée en cabinet.', parcoursProf: 'Peu de filière universitaire dédiée à la paie seule ; l\'enseignement se fait surtout en formation continue ou en BTS/licence professionnelle.' }
+    ],
+    etablissements: ['INTEC (CNAM) – Paris, formations DCG/DSCG à distance', 'IAE (instituts d\'administration des entreprises) proposant le DCG/DSCG dans de nombreuses académies', 'Écoles de commerce avec filière expertise comptable', 'Conseils régionaux de l\'Ordre des Experts-Comptables, organisateurs du stage d\'expertise comptable'],
+    parcours: 'Expert-comptable : DCG (3 ans) puis DSCG (2 ans), puis 3 ans de stage professionnel validés par le Diplôme d\'Expertise Comptable (DEC) — environ 8 ans après le bac. Comptable non-expert : BTS Comptabilité-Gestion, DCG ou licence professionnelle, exercice sous la responsabilité d\'un expert-comptable ou en entreprise.',
+    remuneration: 'Comptable salarié : environ 28 000 à 40 000 €/an brut. Expert-comptable libéral ou associé de cabinet : généralement 60 000 à 150 000 €/an ou plus selon la taille du cabinet et le portefeuille clients.',
+    statut: 'Expert-comptable inscrit à l\'Ordre, exerçant en nom propre ou en société d\'expertise comptable (SARL, SEL) ; comptable le plus souvent salarié d\'un cabinet ou d\'une entreprise.',
+    investLimites: 'Au-delà des règles de trésorerie classiques (objet social, risque d\'abus de biens sociaux en cas de placement spéculatif mettant en péril le cabinet), l\'expert-comptable est soumis à des règles d\'indépendance strictes vis-à-vis de ses clients : il ne peut pas détenir de participation significative dans une entreprise qu\'il contrôle ou conseille de façon à créer un conflit d\'intérêts, sous le contrôle déontologique de l\'Ordre des experts-comptables. C\'est une limite d\'investissement propre à cette profession, distincte de la simple question du placement de la trésorerie du cabinet.',
+    quiz: [
+      { q: 'Quel diplôme final valide le parcours d\'expert-comptable, après le stage professionnel ?', options: ['Le DEC (Diplôme d\'Expertise Comptable)', 'Le DCG', 'Le BTS CG', 'Le DSCG'], correct: 0, explain: 'Le DEC vient après le DCG, le DSCG et 3 ans de stage professionnel : il conclut le parcours vers l\'expertise comptable.' },
+      { q: 'Combien d\'années sépare, environ, le bac de l\'obtention du titre d\'expert-comptable ?', options: ['3 ans', '5 ans', '8 ans', '12 ans'], correct: 2, explain: 'DCG (3 ans) + DSCG (2 ans) + 3 ans de stage professionnel = environ 8 ans après le bac.' },
+      { q: 'Quel concours permet d\'enseigner la comptabilité/gestion en lycée ou en classe préparatoire ?', options: ['L\'agrégation d\'économie-gestion', 'Le CRFPA', 'Le DEC', 'Les ECN'], correct: 0, explain: 'L\'agrégation d\'économie-gestion est le concours national de l\'Éducation nationale pour ces disciplines.' },
+      { q: 'Qui organise le stage professionnel obligatoire avant le DEC ?', options: ['Le Conseil régional de l\'Ordre des Experts-Comptables', 'Le CRFPA', 'L\'INFN', 'La Chambre des Notaires'], correct: 0, explain: 'Chaque Conseil régional de l\'Ordre des Experts-Comptables encadre et valide le stage professionnel de 3 ans.' },
+      { q: 'Quelle mission est spécifique au commissaire aux comptes, au-delà de la comptabilité générale ?', options: ['Certifier la sincérité des comptes pour les tiers', 'Gérer uniquement la paie', 'Rédiger des actes notariés', 'Plaider en justice'], correct: 0, explain: 'Le commissariat aux comptes consiste à certifier, de façon indépendante, la régularité et la sincérité des comptes d\'une entreprise.' },
+      {"q":"Quel ordre professionnel encadre la profession d'expert-comptable en France ?","options":["L'Ordre des experts-comptables (OEC)","Le Conseil national des barreaux","La Chambre de commerce et d'industrie","Il n'existe aucun ordre pour cette profession"],"correct":0,"explain":"L'OEC tient le tableau des experts-comptables inscrits, veille à la déontologie et organise la formation continue obligatoire."},
+      {"q":"L'expert-comptable doit-il souscrire une assurance responsabilité civile professionnelle ?","options":["Oui, c'est une obligation légale pour exercer","Non, cette assurance est facultative","Oui, mais uniquement pour les missions de commissariat aux comptes","Non, l'État garantit automatiquement sa responsabilité"],"correct":0,"explain":"L'expert-comptable doit souscrire une assurance responsabilité civile professionnelle obligatoire, qui le couvre en cas de faute dans l'exercice de ses missions."},
+      {"q":"Un même professionnel peut-il, pour la même entreprise, cumuler les missions d'expert-comptable et de commissaire aux comptes ?","options":["Non, ces missions sont incompatibles pour garantir l'indépendance du commissaire aux comptes","Oui, sans aucune restriction","Oui, mais uniquement pour les petites entreprises","Cela dépend uniquement du souhait du client"],"correct":0,"explain":"On ne peut être juge et partie : le principe d'indépendance interdit de cumuler tenue des comptes et certification de ces mêmes comptes pour un même client."},
+      {"q":"Quelle est la mission la plus courante de l'expert-comptable auprès d'une TPE/PME ?","options":["La tenue de comptabilité, l'établissement des comptes annuels et le conseil fiscal/social récurrent","Exclusivement l'audit légal des grandes entreprises cotées","La représentation en justice","La rédaction d'actes authentiques"],"correct":0,"explain":"Au quotidien, l'expert-comptable accompagne surtout les TPE/PME sur la comptabilité, les comptes annuels et un rôle de conseil de proximité."},
+      {"q":"Le secret professionnel de l'expert-comptable est-il aussi étendu que celui de l'avocat ?","options":["Non, il connaît davantage d'exceptions, notamment vis-à-vis de l'administration fiscale","Oui, exactement de la même force que le secret de l'avocat","Non, l'expert-comptable n'a aucune obligation de confidentialité","Le secret professionnel ne s'applique qu'aux grandes entreprises"],"correct":0,"explain":"L'expert-comptable est soumis au secret professionnel, mais moins absolu que celui de l'avocat, avec davantage d'exceptions notamment lors de contrôles fiscaux."},
+      {"q":"Sous quelle forme juridique plusieurs experts-comptables peuvent-ils s'associer pour exercer ensemble ?","options":["Une société d'expertise comptable, souvent SARL ou SAS inscrite à l'Ordre","Uniquement une association loi 1901","Ils ne peuvent exercer qu'individuellement","Uniquement en GIE"],"correct":0,"explain":"Les experts-comptables peuvent exercer en société d'expertise comptable, elle-même inscrite au tableau de l'Ordre, mutualisant moyens et clientèle."},
+      {"q":"La digitalisation (facturation électronique, dématérialisation) transforme fortement quel aspect du métier d'expert-comptable ?","options":["Le glissement d'une mission de saisie comptable vers davantage de conseil à forte valeur ajoutée","La suppression totale de la profession","Aucun changement, le métier reste identique","Le retour à une comptabilité exclusivement manuscrite"],"correct":0,"explain":"L'automatisation de la saisie pousse la profession vers des missions de conseil (pilotage, prévisionnel), un mouvement comparable à d'autres professions du conseil patrimonial."},
+      {"q":"Un expert-comptable intervient-il fréquemment en coordination avec un CGP sur les dossiers d'un chef d'entreprise ?","options":["Oui, notamment sur la structuration de la rémunération du dirigeant et l'optimisation fiscale/sociale","Non, ces deux métiers n'ont jamais d'interaction","Non, car l'expert-comptable ne traite jamais la fiscalité","Oui, mais uniquement pour les sociétés cotées"],"correct":0,"explain":"L'expert-comptable, par sa connaissance de l'entreprise, est un partenaire clé du CGP pour structurer la rémunération du dirigeant et préparer la transmission."},
+      {"q":"Les experts-comptables sont-ils soumis à une obligation de formation continue ?","options":["Oui, un nombre d'heures de formation est exigé chaque année par l'Ordre","Non, la formation initiale suffit à vie","Oui, mais uniquement pour les commissaires aux comptes","Non, cette obligation a été supprimée en 2015"],"correct":0,"explain":"Comme les autres professions réglementées du conseil, l'Ordre impose une formation continue annuelle pour maintenir à jour les compétences techniques."},
+      {"q":"Quel diplôme intermédiaire, souvent obtenu avant le DEC, atteste d'une qualification comptable de niveau bac+3/+5 ?","options":["Le DCG puis le DSCG","Le CAPES de comptabilité","Le BTS Comptabilité uniquement","Le DEC est le tout premier diplôme du parcours"],"correct":0,"explain":"Le parcours classique passe par le DCG (bac+3) puis le DSCG (bac+5), avant le stage de 3 ans et le mémoire validant le DEC."},
+      {"q":"Quel est l'écart de rémunération type entre un comptable salarié et un expert-comptable libéral ou associé de cabinet ?","options":["Le comptable salarié touche souvent 28 000-40 000 €/an brut, l'expert-comptable souvent 60 000-150 000 €/an ou plus","Ils gagnent rigoureusement le même montant","L'expert-comptable gagne systématiquement moins que le comptable salarié","Le diplôme n'a aucun impact sur la rémunération"],"correct":0,"explain":"L'écart entre un comptable salarié (souvent titulaire d'un BTS ou DCG) et un expert-comptable diplômé (DEC, inscrit à l'Ordre, souvent associé de cabinet) reflète le niveau de qualification, de responsabilité et la valeur ajoutée des missions exercées."},
+      {"q":"Un collaborateur comptable salarié dans un cabinet peut-il, à terme, devenir expert-comptable sans reprendre d'études longues ?","options":["Oui, s'il obtient le DEC (souvent en poursuivant sa formation en cours d'emploi via le DCG puis le DSCG et le stage)","Non, c'est impossible sans tout recommencer depuis le lycée","Oui, automatiquement après 10 ans d'ancienneté, sans diplôme supplémentaire","Non, le statut de salarié empêche définitivement l'accès au titre d'expert-comptable"],"correct":0,"explain":"De nombreux collaborateurs progressent en cabinet tout en validant progressivement le DCG puis le DSCG et le stage professionnel de 3 ans, menant au DEC et à l'inscription à l'Ordre, un parcours de promotion interne fréquent dans la profession."},
+      {"q":"Un expert-comptable peut-il accompagner un client dans la création de son entreprise, au-delà de la seule tenue de comptabilité ?","options":["Oui, l'accompagnement à la création (choix de statut, business plan, démarches) fait partie de ses missions courantes","Non, cette mission est réservée exclusivement aux avocats","Non, l'expert-comptable n'intervient qu'une fois l'entreprise déjà créée depuis 5 ans","Oui, mais uniquement pour les sociétés cotées en bourse"],"correct":0,"explain":"L'accompagnement à la création d'entreprise (choix de la forme juridique, prévisionnel financier, démarches administratives) est une mission fréquente de l'expert-comptable, souvent en coordination avec un avocat pour la rédaction des statuts."},
+      {"q":"La mission de 'présentation des comptes annuels' de l'expert-comptable a-t-elle la même portée que la certification réalisée par un commissaire aux comptes ?","options":["Non, la présentation des comptes n'a pas la valeur d'assurance (certification) apportée par l'audit légal du commissaire aux comptes","Oui, ce sont rigoureusement les mêmes missions avec la même portée juridique","Non, la présentation des comptes a une portée juridique supérieure à la certification","Ces deux missions n'ont jamais existé en France"],"correct":0,"explain":"La mission de présentation (ou d'examen limité) de l'expert-comptable n'offre pas le même niveau d'assurance que l'audit légal (certification) réalisé par un commissaire aux comptes, une nuance essentielle que les tiers (banques, investisseurs) doivent connaître."},
+      {"q":"L'expert-comptable intervient-il dans l'évaluation d'une entreprise en vue de sa cession ou de sa transmission ?","options":["Oui, c'est une mission fréquente, souvent réalisée en coordination avec un avocat d'affaires et un CGP","Non, cette mission est strictement interdite aux experts-comptables","Non, seuls les commissaires aux comptes peuvent évaluer une entreprise","Oui, mais uniquement pour les entreprises du CAC 40"],"correct":0,"explain":"L'évaluation d'entreprise (par les méthodes patrimoniale, de rentabilité ou comparative) est une mission classique de l'expert-comptable, essentielle dans les opérations de cession, de transmission familiale ou d'entrée d'un nouvel associé."},
+      {"q":"Les logiciels de comptabilité en ligne et l'intelligence artificielle menacent-ils directement l'existence de la profession d'expert-comptable ?","options":["Ils transforment surtout la nature des missions, en automatisant la saisie au profit de missions de conseil à plus forte valeur ajoutée","Oui, la profession va totalement disparaître d'ici 5 ans","Non, aucune technologie n'a d'impact sur ce métier","Ces outils sont interdits aux experts-comptables par leur Ordre"],"correct":0,"explain":"L'automatisation croissante déplace le centre de gravité du métier vers le conseil (pilotage, stratégie, accompagnement), plutôt que de faire disparaître la profession, à l'image d'évolutions similaires observées dans d'autres métiers du conseil."},
+      {"q":"Un expert-comptable peut-il exercer des missions de conseil social (paie, droit du travail) en complément de la comptabilité ?","options":["Oui, de nombreux cabinets d'expertise comptable proposent un pôle social intégré (paie, conseil RH)","Non, le conseil social est réservé exclusivement aux avocats en droit social","Non, cette activité n'existe pas dans les cabinets comptables","Oui, mais uniquement pour les entreprises de plus de 500 salariés"],"correct":0,"explain":"De nombreux cabinets d'expertise comptable ont développé un pôle social (établissement des bulletins de paie, conseil en droit du travail courant), une diversification de l'offre très répandue auprès des TPE/PME."},
+      {"q":"Le commissariat aux comptes est-il obligatoire pour toutes les sociétés commerciales en France, quelle que soit leur taille ?","options":["Non, il est obligatoire seulement au-delà de certains seuils de taille (chiffre d'affaires, bilan, effectif) ou dans certains cas spécifiques","Oui, absolument toutes les sociétés y sont soumises sans exception","Non, il a été totalement supprimé en France","Oui, mais uniquement pour les sociétés cotées"],"correct":0,"explain":"Le commissariat aux comptes n'est obligatoire qu'au-delà de certains seuils (deux des trois critères : total bilan, chiffre d'affaires, nombre de salariés) ou dans des cas spécifiques (sociétés cotées, certaines structures réglementées), les petites structures en étant dispensées."},
+      {"q":"Un expert-comptable peut-il aussi accompagner un client particulier (hors entreprise) sur sa déclaration de revenus personnelle ?","options":["Oui, certains cabinets proposent un accompagnement fiscal aux particuliers, notamment aux dirigeants et professions libérales clientes de l'entreprise","Non, l'expert-comptable ne peut intervenir que pour des personnes morales","Non, cette mission est réservée exclusivement à l'administration fiscale","Oui, mais uniquement une fois tous les 5 ans"],"correct":0,"explain":"Si le cœur de métier reste l'entreprise, de nombreux experts-comptables accompagnent aussi leurs clients dirigeants sur leur fiscalité personnelle, en lien étroit avec le CGP pour une approche patrimoniale globale cohérente."},
+      {"q":"Les honoraires d'un expert-comptable sont-ils libres ou encadrés par un tarif réglementé, comme ceux du notaire ?","options":["Ils sont libres, négociés avec le client, à la différence du tarif réglementé du notaire sur ses actes monopolistiques","Ils sont fixés par un tarif national unique identique pour tous les cabinets","Ils sont toujours gratuits pour les petites entreprises","Ils sont interdits par la loi française"],"correct":0,"explain":"Contrairement au notaire sur ses actes relevant du monopole, l'expert-comptable fixe librement ses honoraires avec son client, généralement sur la base d'un forfait annuel ou d'un taux horaire selon la nature des missions."},
+      {"q":"Pourquoi un expert-comptable ne peut-il pas, en principe, détenir une participation significative dans une société qu'il audite ou conseille étroitement ?","options":["Pour préserver son indépendance et éviter un conflit d'intérêts, sous le contrôle déontologique de l'Ordre des experts-comptables","Parce que la loi lui interdit toute détention d'actions, quelle que soit la société","Parce que cela l'obligerait à payer une taxe spécifique","Il n'existe en réalité aucune restriction de ce type"],"correct":0,"explain":"Au-delà des règles classiques de placement de la trésorerie de son propre cabinet, l'expert-comptable est tenu à une obligation d'indépendance renforcée vis-à-vis de ses clients : une participation significative dans une entreprise qu'il contrôle ou conseille créerait un conflit d'intérêts incompatible avec l'objectivité attendue de sa mission."}
+    ]
+  },
+  {
+    id: 'notaire', icon: '📜', name: 'Notaire',
+    intro: 'Le notaire authentifie les actes juridiques (ventes immobilières, successions, contrats de mariage) et sécurise les opérations les plus engageantes de la vie des particuliers et des entreprises.',
+    specialites: [
+      { name: 'Droit de la famille et des successions', desc: 'Contrats de mariage, donations, règlement des successions — le cœur historique du métier de notaire.', parcoursSpe: 'Master 2 en droit notarial, stage de 2 ans comme notaire assistant/salarié.', parcoursProf: 'Un notaire expérimenté peut devenir maître de conférences associé en droit notarial dans une université partenaire de l\'INFN, en parallèle de son exercice.' },
+      { name: 'Droit immobilier', desc: 'Ventes immobilières, copropriété, urbanisme, garanties liées aux transactions.', parcoursSpe: 'Master 2 en droit notarial ou droit immobilier, stage professionnel de 2 ans.', parcoursProf: 'Même voie d\'enseignant associé via l\'INFN, réservée aux praticiens expérimentés souhaitant transmettre leur expertise.' },
+      { name: 'Droit des affaires et des sociétés', desc: 'Transmission d\'entreprise, montages sociétaires, pactes d\'associés dans un cadre notarié.', parcoursSpe: 'Master 2 en droit notarial avec spécialisation en droit des affaires, stage professionnel.', parcoursProf: 'Enseignement associé possible en parallèle de l\'exercice, via les universités partenaires de l\'INFN.' },
+      { name: 'Droit rural', desc: 'Exploitations agricoles, baux ruraux, transmission du foncier agricole.', parcoursSpe: 'Master 2 en droit notarial avec une pratique développée en zone rurale.', parcoursProf: 'Transmission surtout par la pratique et la formation continue, peu de filière académique dédiée spécifiquement au droit rural notarial.' }
+    ],
+    etablissements: ['INFN – Institut National des Formations Notariales (centres régionaux)', 'Université Paris II Panthéon-Assas – Master 2 Droit notarial', 'Université Jean Moulin Lyon III – Master 2 Droit notarial', 'Université de Poitiers – Master 2 Droit notarial', 'Université de Rouen Normandie – Master 2 Droit notarial', 'Université de Strasbourg – Master 2 Droit notarial'],
+    parcours: 'Master 2 en droit notarial puis Diplôme Supérieur du Notariat (voie universitaire) ou voie professionnelle via l\'Institut National des Formations Notariales, suivi d\'un stage de 2 ans comme notaire assistant/salarié, puis nomination par le Garde des Sceaux.',
+    remuneration: 'Notaire salarié : environ 50 000 à 70 000 €/an. Notaire titulaire ou associé d\'un office : rémunéré par une quote-part des émoluments réglementés et d\'honoraires libres, souvent 100 000 à 300 000 €/an ou plus dans les études importantes — très variable selon la taille et la localisation de l\'office.',
+    statut: 'Officier public et ministériel. Exercice en société civile professionnelle (SCP), société d\'exercice libéral (SELARL/SELAS), ou en tant que salarié d\'une étude.',
+    investLimites: 'Règle la plus stricte de toutes les professions de ce dossier : les fonds appartenant aux clients (prix de vente d\'un bien, droits de succession en attente de règlement…) doivent obligatoirement être déposés auprès de la Caisse des Dépôts et Consignations (CDC) — le notaire n\'a aucun droit de les placer, ni même de les conserver sur un compte bancaire classique de l\'étude. Cette séparation stricte entre fonds clients et trésorerie de l\'étude est garantie par un fonds de garantie professionnel ; tout manquement constitue une infraction pénale grave (détournement de fonds). La trésorerie propre de l\'étude, elle, reste soumise aux règles habituelles de l\'objet social et au risque d\'abus de biens sociaux.',
+    quiz: [
+      { q: 'Qui nomme officiellement un notaire titulaire d\'office en France ?', options: ['Le Garde des Sceaux', 'Le Conseil National des Universités', 'Le maire de la commune', 'L\'Ordre des Experts-Comptables'], correct: 0, explain: 'La nomination d\'un notaire relève du ministère de la Justice, par le Garde des Sceaux.' },
+      { q: 'Quel institut encadre la formation professionnelle des futurs notaires ?', options: ['L\'INFN', 'Le CRFPA', 'L\'INTEC', 'Le CNU'], correct: 0, explain: 'L\'Institut National des Formations Notariales (INFN) organise la voie professionnelle vers le notariat.' },
+      { q: 'Comment est rémunéré un notaire titulaire d\'un office pour la plupart de ses actes réglementés ?', options: ['Par des émoluments tarifés réglementés', 'Uniquement par des honoraires libres', 'Par un salaire fixe de l\'État', 'Il n\'est pas rémunéré pour ces actes'], correct: 0, explain: 'Les émoluments notariés sont fixés par la réglementation pour la majorité des actes courants (vente, succession…).' },
+      { q: 'Quel type de droit concerne les baux ruraux et le foncier agricole chez le notaire ?', options: ['Le droit rural', 'Le droit pénal', 'Le droit fiscal international', 'Le droit du travail'], correct: 0, explain: 'Le droit rural couvre notamment les baux ruraux et la transmission des exploitations agricoles.' },
+      { q: 'Sous quelle forme juridique plusieurs notaires peuvent-ils s\'associer pour exercer ensemble ?', options: ['Une société civile professionnelle (SCP) ou une SEL', 'Une SCPI', 'Une association loi 1901', 'Un GIE uniquement'], correct: 0, explain: 'Les notaires associés exercent souvent en SCP ou en société d\'exercice libéral (SELARL/SELAS).' },
+      {"q":"Quel est le statut juridique particulier du notaire, qui le distingue d'une profession libérale classique ?","options":["Officier public et ministériel, nommé par le Garde des Sceaux","Un simple salarié de l'État","Un fonctionnaire territorial","Un agent commercial assermenté"],"correct":0,"explain":"Le notaire exerce une profession libérale mais est titulaire d'une délégation de puissance publique qui lui permet de conférer l'authenticité aux actes qu'il reçoit."},
+      {"q":"Qu'est-ce que la force exécutoire d'un acte authentique notarié ?","options":["Elle permet, en cas de non-paiement, une saisie directe sans jugement préalable","Elle signifie que l'acte ne peut jamais être contesté en justice","Elle n'a aucune utilité pratique","Elle concerne uniquement les ventes immobilières"],"correct":0,"explain":"La force exécutoire permet au bénéficiaire de recourir directement à une procédure d'exécution forcée en cas de défaillance, sans devoir d'abord obtenir un jugement."},
+      {"q":"Les émoluments du notaire pour certains actes réglementés sont-ils fixés librement ou par un tarif national ?","options":["Ils sont encadrés par un tarif national réglementé, fixé par décret","Ils sont totalement libres, comme pour un avocat","Ils sont fixés par chaque notaire sans aucun cadre","Ils sont gratuits pour le client"],"correct":0,"explain":"Pour ses actes relevant du monopole, le notaire applique un tarif réglementé par décret — une différence fondamentale avec les honoraires libres de l'avocat ou du CGP."},
+      {"q":"Depuis la loi Macron de 2015, l'installation de nouveaux notaires en France a été :","options":["Partiellement libéralisée, avec création d'offices dans les zones où le besoin était avéré","Totalement interdite depuis 2015","Totalement libre, sans aucun encadrement","Réservée exclusivement aux enfants de notaires en exercice"],"correct":0,"explain":"La loi Macron a partiellement libéralisé l'installation, mettant fin à un système historiquement très fermé et facilitant l'accès à la profession pour de jeunes diplômés."},
+      {"q":"Quels actes relèvent du monopole exclusif du notaire ?","options":["Notamment les ventes immobilières, les donations et les actes de notoriété successorale","La rédaction de tous les contrats commerciaux","La tenue de la comptabilité des entreprises","La plaidoirie devant les tribunaux"],"correct":0,"explain":"Le notaire dispose d'un monopole légal sur des actes essentiels à la vie patrimoniale, d'où la collaboration fréquente avec l'avocat et le CGP sur les dossiers patrimoniaux."},
+      {"q":"Un notaire salarié a-t-il la même compétence pour authentifier des actes qu'un notaire titulaire ?","options":["Oui, le notaire salarié a la même qualité notariale et peut authentifier des actes","Non, un notaire salarié ne peut jamais signer d'acte authentique","Non, il doit faire valider chaque acte par un titulaire","Le notariat salarié n'existe pas en France"],"correct":0,"explain":"Le notaire salarié dispose de la même qualité notariale qu'un titulaire, bien qu'employé par l'office — une voie d'entrée fréquente dans la profession."},
+      {"q":"Qu'est-ce que la CRPCEN, caisse spécifique au notariat ?","options":["La caisse de retraite et de prévoyance des clercs et employés de notaires","Une caisse réservée uniquement aux avocats","Un syndicat de défense des intérêts du notariat","Une banque spécialisée dans le financement des offices"],"correct":0,"explain":"La CRPCEN couvre historiquement le personnel salarié des offices notariaux, avec des règles spécifiques de retraite et de prévoyance."},
+      {"q":"En matière de succession internationale, le rôle du notaire français est-il pertinent ?","options":["Oui, il intervient fréquemment pour coordonner les règles de droit international privé applicables","Non, les successions internationales ne concernent jamais les notaires français","Non, seul un avocat peut intervenir dans ce cas","Oui, mais uniquement si tous les biens sont en France"],"correct":0,"explain":"Les successions internationales font partie des dossiers complexes régulièrement traités par les notaires, en lien avec des confrères étrangers si nécessaire."},
+      {"q":"La responsabilité professionnelle du notaire est-elle couverte par un système de garantie collective propre à la profession ?","options":["Oui, via une assurance collective et un fonds de garantie de la profession","Non, chaque notaire assume seul tous les risques","Non, l'État indemnise systématiquement les clients lésés","Cette garantie n'existe que pour les plus grands offices parisiens"],"correct":0,"explain":"La profession dispose d'un système de garantie collective permettant d'indemniser les clients en cas de faute avérée d'un notaire."},
+      {"q":"Peut-on consulter un notaire pour un simple conseil patrimonial, sans acte authentique à signer immédiatement ?","options":["Oui, le notaire peut être consulté pour du conseil en amont de tout acte","Non, un notaire ne peut être consulté qu'une fois l'acte déjà rédigé","Non, le conseil est réservé exclusivement aux avocats","Oui, mais uniquement moyennant un acte authentique obligatoire"],"correct":0,"explain":"Au-delà de la rédaction d'actes, le notaire exerce une mission de conseil patrimonial en amont, ce qui en fait un interlocuteur naturel du CGP."},
+      {"q":"Quel est l'écart de rémunération type entre un notaire salarié et un notaire titulaire ou associé d'un office ?","options":["Le notaire salarié touche souvent 50 000-70 000 €/an, le titulaire ou associé souvent bien davantage via une quote-part des émoluments et honoraires","Ils gagnent rigoureusement le même montant","Le titulaire gagne systématiquement moins que le salarié","Le statut n'a aucun impact sur la rémunération dans cette profession"],"correct":0,"explain":"Le notaire associé ou titulaire perçoit une quote-part des émoluments réglementés et honoraires libres générés par l'office, un modèle économique très différent du salaire fixe perçu par un notaire salarié, avec un potentiel de revenu nettement supérieur en contrepartie de la prise de risque entrepreneuriale."},
+      {"q":"Un notaire salarié peut-il, après plusieurs années d'exercice, devenir associé d'un office notarial ?","options":["Oui, c'est une trajectoire de carrière fréquente, moyennant un apport en capital et l'accord des autres associés","Non, le statut de notaire salarié est définitif et ne peut jamais évoluer","Oui, automatiquement après 3 ans, sans condition particulière","Non, seuls les héritiers de notaires peuvent devenir associés"],"correct":0,"explain":"Le passage du statut de salarié à celui d'associé (avec un apport en capital dans la société notariale) est une trajectoire de carrière classique, offrant au praticien une part des bénéfices de l'office en contrepartie de son investissement et de sa prise de risque."},
+      {"q":"Le droit rural traité par certains notaires concerne notamment :","options":["Les baux ruraux, le statut du fermage et les transmissions d'exploitations agricoles","Exclusivement les successions internationales","Les contrats de travail des salariés agricoles","Le droit pénal rural"],"correct":0,"explain":"Le droit rural couvre notamment les baux ruraux (fermage, métayage) et les problématiques spécifiques de transmission des exploitations agricoles, un domaine de spécialisation notariale important dans les territoires ruraux."},
+      {"q":"Un office notarial peut-il employer, en plus des notaires, du personnel non-notaire (clercs, assistants) ?","options":["Oui, les clercs de notaire et assistants représentent la majorité des effectifs d'un office","Non, un office ne peut employer que des notaires diplômés","Non, les notaires travaillent toujours seuls sans aucun collaborateur","Oui, mais uniquement des stagiaires non rémunérés"],"correct":0,"explain":"Un office notarial emploie typiquement une majorité de clercs de notaire et d'assistants (formalistes, négociateurs), qui préparent les dossiers sous la responsabilité du ou des notaires, lesquels restent seuls habilités à authentifier les actes."},
+      {"q":"Le notaire a-t-il un rôle dans la négociation immobilière, au-delà de la seule signature de l'acte authentique ?","options":["Oui, de nombreux offices proposent un service de négociation immobilière, en plus ou en complément des agences immobilières","Non, le notaire n'intervient jamais avant la signature finale","Non, cette activité est strictement interdite aux notaires","Oui, mais uniquement pour les biens de plus de 5 millions d'euros"],"correct":0,"explain":"De nombreux offices notariaux disposent d'un service de négociation immobilière (annonces, visites, mise en relation acheteur-vendeur), en complément du rôle classique d'authentification des actes, une diversification de leur activité."},
+      {"q":"Les notaires interviennent-ils dans la rédaction de contrats de mariage et de PACS ?","options":["Oui, c'est l'un de leurs actes courants, notamment pour choisir ou adapter un régime matrimonial","Non, seuls les avocats peuvent rédiger ces contrats","Non, les contrats de mariage n'existent plus en droit français","Oui, mais uniquement pour les couples sans enfant"],"correct":0,"explain":"Le contrat de mariage (choix du régime matrimonial) et la convention de PACS avec indivision relèvent des actes courants du notaire, un domaine de conseil patrimonial essentiel en amont de l'union ou en cours de vie commune."},
+      {"q":"La vente d'un bien immobilier peut-elle être définitivement conclue sans l'intervention d'un notaire en France ?","options":["Non, l'acte authentique de vente immobilière, dressé par un notaire, est obligatoire pour la publicité foncière et l'opposabilité aux tiers","Oui, un simple accord écrit entre particuliers suffit toujours","Non, mais un avocat peut remplacer le notaire pour cet acte","Oui, à condition que le prix soit inférieur à 50 000 €"],"correct":0,"explain":"Contrairement au compromis de vente (acte sous seing privé possible), la vente définitive d'un bien immobilier doit obligatoirement être formalisée par un acte authentique notarié pour être publiée et opposable aux tiers."},
+      {"q":"Le notaire joue-t-il un rôle dans le calcul et la perception des droits de mutation (droits de succession, de donation) pour le compte de l'État ?","options":["Oui, le notaire calcule les droits dus et en assure généralement le paiement pour le compte de ses clients lors de l'enregistrement de l'acte","Non, seule l'administration fiscale calcule et perçoit ces droits sans intervention du notaire","Non, les droits de mutation ont été supprimés en France","Oui, mais uniquement pour les montants inférieurs à 10 000 €"],"correct":0,"explain":"Le notaire liquide les droits de mutation (succession, donation) dus à l'administration fiscale et en assure généralement le règlement pour le compte de son client lors de l'enregistrement de l'acte, une mission centrale de son activité patrimoniale."},
+      {"q":"Les notaires jouent-ils un rôle de conseil en matière de création ou transmission d'entreprises familiales ?","options":["Oui, notamment via la rédaction des statuts de SCI, des pactes d'associés et des actes de donation de titres d'entreprise","Non, cette mission est réservée exclusivement aux experts-comptables","Non, les notaires n'interviennent jamais sur les sujets d'entreprise","Oui, mais uniquement pour les entreprises cotées en bourse"],"correct":0,"explain":"Le notaire intervient fréquemment sur la structuration patrimoniale liée à l'entreprise familiale (SCI de détention, pactes d'associés, donations de titres dans le cadre d'un pacte Dutreil), en lien avec l'avocat et l'expert-comptable."},
+      {"q":"Un client peut-il choisir librement son notaire, ou est-il contraint de s'adresser à celui qui a rédigé un acte antérieur concernant le même bien ?","options":["Le client est libre de choisir son notaire ; en cas de vente, chaque partie peut avoir son propre notaire, les émoluments étant alors partagés sans coût supplémentaire pour le client","Le client doit obligatoirement revenir vers le même notaire pour tout acte ultérieur","Le choix du notaire est imposé par la commune de résidence","Un seul notaire par ville est autorisé à exercer"],"correct":0,"explain":"Le client choisit librement son notaire, et en matière de vente immobilière, chaque partie peut faire appel à son propre notaire sans surcoût pour l'acquéreur : les émoluments sont alors partagés entre les deux offices intervenants."},
+      {"q":"Un notaire peut-il placer ou investir les fonds appartenant à ses clients (ex. prix de vente en attente de répartition) sur un compte bancaire classique de son étude ?","options":["Non, ces fonds doivent obligatoirement être déposés auprès de la Caisse des Dépôts et Consignations (CDC), le notaire n'ayant aucun droit de les conserver ni de les placer lui-même","Oui, à condition de verser un intérêt au client","Oui, librement, s'il s'agit de sommes inférieures à 20 000 €","Non, mais uniquement le week-end"],"correct":0,"explain":"La séparation entre fonds clients et trésorerie de l'étude est l'une des règles les plus strictes de la profession notariale : les fonds clients transitent obligatoirement par la CDC, garantis par un fonds professionnel de garantie. Tout manquement constitue une infraction pénale grave (détournement de fonds), bien plus sévère que la simple question du placement de la trésorerie propre de l'étude."}
+    ]
+  },
+  {
+    id: 'marchand', icon: '🏗️', name: 'Marchand de biens',
+    intro: 'Le marchand de biens achète des biens immobiliers pour les revendre, souvent après rénovation ou division, en réalisant une marge sur l\'opération. C\'est une activité commerciale non réglementée, sans ordre professionnel.',
+    specialites: [
+      { name: 'Achat-rénovation-revente résidentiel', desc: 'Acquisition d\'un logement à rénover, travaux, puis revente avec une marge sur la plus-value créée.', parcoursSpe: 'Aucun diplôme obligatoire ; connaissances en immobilier, travaux et financement souvent acquises par l\'expérience ou une formation courte.', parcoursProf: 'Il n\'existe pas de statut de professeur ou de filière universitaire dédiée ; la transmission passe par le compagnonnage ou des formations en école de commerce/immobilier.' },
+      { name: 'Division parcellaire', desc: 'Découper un terrain ou un immeuble en plusieurs lots (parcelles, logements) pour les revendre séparément.', parcoursSpe: 'Connaissances pointues en urbanisme et en règles de copropriété, souvent acquises via une formation immobilière ou juridique.', parcoursProf: 'Même constat : pas de filière académique dédiée, enseignement possible en module spécialisé dans une école d\'immobilier.' },
+      { name: 'Transformation de locaux', desc: 'Convertir des bureaux ou des commerces vacants en logements, ou inversement, selon la demande du marché.', parcoursSpe: 'Expertise en réglementation du changement de destination et en montage d\'opérations, souvent développée en école d\'immobilier ou en reconversion professionnelle.', parcoursProf: 'Pas de statut académique dédié ; transmission par la pratique et les réseaux professionnels du secteur.' },
+      { name: 'Marchand de biens en location meublée', desc: 'Achat-revente combiné à une activité locative meublée transitoire pour optimiser la rentabilité avant la revente.', parcoursSpe: 'Connaissances en fiscalité de la location meublée (LMNP/LMP), souvent acquises via des formations spécialisées ou un accompagnement par un expert-comptable.', parcoursProf: 'Aucune filière universitaire propre ; expertise transmise par la pratique et des formations professionnelles courtes.' }
+    ],
+    etablissements: ['ESPI – École Supérieure des Professions Immobilières', 'ICH – Institut de Certification des Hommes (CNAM)', 'Écoles de commerce proposant des mastères spécialisés en immobilier', 'Formations continues proposées par les Chambres de Commerce et d\'Industrie (CCI)'],
+    parcours: 'Aucun diplôme réglementé n\'est exigé : activité commerciale libre, souvent exercée après une formation en immobilier, commerce, droit ou gestion, ou en reconversion. À la différence de l\'agent immobilier, aucune carte professionnelle (carte T) n\'est requise puisqu\'il achète et revend pour son propre compte.',
+    remuneration: 'Aucun salaire fixe : le revenu correspond à la marge dégagée sur chaque opération d\'achat-revente, très variable et irrégulier selon le nombre et la réussite des opérations menées.',
+    statut: 'Activité commerciale relevant des BIC. Exercice en nom propre ou, le plus souvent, en société (SAS, SASU, SARL) pour limiter la responsabilité et optimiser la fiscalité des opérations.',
+    investLimites: 'Sans Ordre professionnel pour l\'encadrer, le commerçant reste néanmoins tenu par l\'objet social de sa société et par le droit commun des sociétés : utiliser la trésorerie de l\'entreprise pour des placements purement spéculatifs et sans rapport avec l\'activité, au détriment de l\'intérêt social, expose le dirigeant à une mise en cause pour abus de biens sociaux (article L242-6 du Code de commerce) — en particulier si l\'opération tourne mal et prive l\'entreprise de liquidités nécessaires à son exploitation. Les excédents de trésorerie durables sont le plus souvent extraits en dividendes ou logés dans une holding pour être investis en toute liberté, hors de la société d\'exploitation.',
+    quiz: [
+      { q: 'Le marchand de biens a-t-il besoin d\'une carte professionnelle (carte T) pour exercer ?', options: ['Non, car il achète et revend pour son propre compte', 'Oui, comme l\'agent immobilier', 'Oui, mais seulement à Paris', 'Non, mais un diplôme d\'État est obligatoire'], correct: 0, explain: 'Contrairement à l\'agent immobilier qui agit pour le compte de tiers, le marchand de biens achète et revend pour lui-même : la carte T ne s\'applique pas.' },
+      { q: 'De quoi dépend principalement le revenu d\'un marchand de biens ?', options: ['La marge réalisée sur chaque opération d\'achat-revente', 'Un salaire fixe mensuel', 'Des honoraires réglementés', 'Une quote-part d\'émoluments'], correct: 0, explain: 'Il n\'y a pas de salaire fixe : le revenu correspond à la marge dégagée sur les opérations menées, donc très irrégulier.' },
+      { q: 'Sous quel régime fiscal l\'activité de marchand de biens est-elle imposée ?', options: ['Les BIC (Bénéfices Industriels et Commerciaux)', 'Les BNC uniquement', 'Les traitements et salaires', 'Elle n\'est pas imposable'], correct: 0, explain: 'L\'achat-revente immobilier à titre habituel est un acte de commerce, imposé dans la catégorie des BIC.' },
+      { q: 'Qu\'est-ce que la "division parcellaire" pratiquée par certains marchands de biens ?', options: ['Découper un bien en plusieurs lots à revendre séparément', 'Louer un bien meublé', 'Créer une SCPI', 'Devenir agent immobilier'], correct: 0, explain: 'La division parcellaire consiste à fractionner un terrain ou un immeuble en plusieurs lots distincts, revendus séparément.' },
+      { q: 'Pourquoi un marchand de biens exerce-t-il le plus souvent en société (SAS, SARL…) plutôt qu\'en nom propre ?', options: ['Pour limiter sa responsabilité et optimiser la fiscalité', 'Parce que la loi l\'impose', 'Pour obtenir la carte T', 'Pour bénéficier d\'un statut de fonctionnaire'], correct: 0, explain: 'La société permet de limiter la responsabilité personnelle et d\'optimiser le traitement fiscal des opérations successives.' },
+      {"q":"Quelle est la différence essentielle entre un marchand de biens et un promoteur immobilier ?","options":["Le marchand de biens achète et revend des biens existants, le promoteur construit des biens neufs","Il n'existe aucune différence, ce sont des synonymes","Le marchand de biens construit toujours des immeubles neufs","Le promoteur ne peut jamais revendre un bien construit"],"correct":0,"explain":"Le marchand de biens achète des biens existants, souvent à rénover, pour les revendre avec plus-value ; le promoteur construit des programmes neufs : deux activités aux logiques fiscales et aux risques distincts."},
+      {"q":"Sous quel régime fiscal les bénéfices d'une activité de marchand de biens sont-ils en principe imposés ?","options":["Les Bénéfices Industriels et Commerciaux (BIC)","Les revenus fonciers classiques, comme un investisseur locatif","Le régime des plus-values immobilières des particuliers","Aucune imposition, cette activité est exonérée"],"correct":0,"explain":"Contrairement à un investisseur locatif, le marchand de biens exerce une activité commerciale par nature, imposée en BIC — une distinction fiscale fondamentale."},
+      {"q":"Un marchand de biens qui s'engage à revendre dans un délai déterminé peut bénéficier de quel avantage fiscal à l'achat ?","options":["Des droits d'enregistrement réduits, sous condition d'engagement de revente dans le délai légal","Une exonération totale et définitive de tout impôt","Un crédit d'impôt immédiat de 100 % du prix d'achat","Un abattement automatique de 50 % sur le prix de vente final"],"correct":0,"explain":"Le marchand de biens peut bénéficier de droits d'enregistrement réduits en contrepartie d'un engagement de revente dans un délai fixé (généralement 5 ans), sous peine de droits normaux et pénalités."},
+      {"q":"La TVA applicable à la revente d'un bien par un marchand de biens peut s'appliquer sur quelle base ?","options":["Sur la marge réalisée ou sur le prix total selon le régime de TVA à l'achat","Toujours sur le prix de vente total sans exception","Jamais, cette activité est hors du champ de la TVA","Uniquement sur le prix d'achat initial"],"correct":0,"explain":"La TVA sur marge s'applique si l'achat n'a pas ouvert droit à déduction (cas fréquent d'un bien acheté auprès d'un particulier), la TVA sur prix total dans d'autres configurations."},
+      {"q":"Quel est le risque économique principal auquel s'expose un marchand de biens ?","options":["Le retournement du marché immobilier pendant la durée de détention","L'absence totale de risque, cette activité étant garantie par l'État","Le risque de change sur devises étrangères","Le risque de taux sur son épargne retraite"],"correct":0,"explain":"Une baisse des prix, un allongement des délais de vente ou une hausse des coûts de travaux peuvent fortement réduire, voire annuler, la marge anticipée."},
+      {"q":"Pour financer ses opérations, un marchand de biens a fréquemment recours à :","options":["Des financements bancaires courts (prêts relais, crédits de trésorerie)","Exclusivement à ses fonds propres, sans jamais emprunter","Des financements participatifs réservés aux particuliers non professionnels","Un financement unique sur 25 ans comme un crédit immobilier classique"],"correct":0,"explain":"Le modèle repose souvent sur un effet de levier via des financements bancaires courts, adaptés à la durée généralement brève des opérations achat-travaux-revente."},
+      {"q":"Un particulier qui revend occasionnellement un bien risque-t-il d'être requalifié en marchand de biens ?","options":["Oui, en cas d'opérations répétées et habituelles dans une intention spéculative","Non, cette requalification n'existe pas en droit fiscal français","Non, seule une société peut être qualifiée de marchand de biens","Oui, mais uniquement si le bien est situé à l'étranger"],"correct":0,"explain":"L'administration peut requalifier en marchand de biens les opérations répétées et habituelles réalisées dans une intention spéculative, même sans société dédiée."},
+      {"q":"Pourquoi un CGP accompagnant un client marchand de biens doit-il être vigilant sur sa structuration juridique ?","options":["Car le choix de la société et son articulation avec le patrimoine personnel ont un impact majeur sur fiscalité, responsabilité et financement","Car cette activité n'a aucun impact patrimonial pour le client","Car un marchand de biens ne peut légalement pas être accompagné par un CGP","Car il s'agit d'une activité interdite en France"],"correct":0,"explain":"Le choix de structure, le financement, la fiscalité BIC et l'articulation avec les autres investissements soulèvent des enjeux patrimoniaux complexes à sécuriser avec l'expert-comptable et le notaire."},
+      {"q":"Le marchand de biens doit-il détenir un diplôme spécifique pour exercer, comme l'agent immobilier ?","options":["Non, contrairement à l'agent immobilier (carte T), aucun diplôme spécifique n'est légalement exigé","Oui, un diplôme d'État spécifique est obligatoire","Oui, une licence professionnelle en immobilier est systématiquement requise","Non, mais un casier judiciaire vierge n'est pas nécessaire non plus"],"correct":0,"explain":"L'activité est ouverte à toute personne ou société réalisant de manière habituelle des opérations d'achat-revente dans une intention spéculative, sans diplôme obligatoire."},
+      {"q":"Les plus-values d'une société de marchand de biens soumise à l'IS sont-elles taxées selon le régime des particuliers ?","options":["Non, elles sont intégrées au résultat imposable de la société à l'IS, selon les règles classiques des BIC","Oui, exactement le même régime s'applique","Non, elles sont totalement exonérées d'impôt","Oui, mais avec un abattement de 100 % après 5 ans"],"correct":0,"explain":"Une société de marchand de biens à l'IS intègre ses plus-values dans son résultat imposable classique (taux de l'IS 15 % puis 25 %), sans application du régime des particuliers."},
+      {"q":"Un marchand de biens dégage-t-il un revenu fixe mensuel, comme un salarié classique ?","options":["Non, son revenu correspond à la marge réalisée sur chaque opération, très variable et irrégulière dans le temps","Oui, il perçoit un salaire fixe garanti par l'État","Oui, exactement comme un fonctionnaire","Non, cette activité est toujours exercée bénévolement"],"correct":0,"explain":"L'absence de revenu fixe, propre à cette activité entrepreneuriale par nature, implique une gestion de trésorerie personnelle rigoureuse et une épargne de précaution, un point d'attention central pour le conseil patrimonial de ce type de client."},
+      {"q":"Le marchand de biens qui réalise des travaux de rénovation avant revente doit-il respecter les mêmes règles qu'un particulier qui rénove sa résidence principale ?","options":["Non, il doit souvent se conformer à des règles professionnelles et assurantielles spécifiques (garantie décennale des intervenants notamment)","Oui, strictement les mêmes règles s'appliquent sans aucune différence","Non, aucune réglementation ne s'applique à ses travaux","Oui, mais uniquement s'il effectue lui-même les travaux"],"correct":0,"explain":"Les travaux réalisés en vue de la revente engagent la responsabilité du marchand de biens et des artisans intervenants (garantie décennale notamment), un enjeu juridique et assurantiel à sécuriser avant toute opération de rénovation-revente."},
+      {"q":"Un marchand de biens division un immeuble en plusieurs lots pour les revendre séparément réalise une opération appelée :","options":["La division parcellaire ou division en lots, fréquente en marchand de biens","Une fusion-acquisition","Un démembrement de propriété au sens fiscal du terme","Une opération interdite par le droit de l'urbanisme"],"correct":0,"explain":"La division d'un immeuble (ex. un ancien immeuble de bureaux ou une grande maison) en plusieurs lots revendus séparément est une stratégie fréquente du marchand de biens pour créer de la valeur, sous réserve du respect des règles d'urbanisme et de copropriété applicables."},
+      {"q":"Les opérations de marchand de biens sont-elles concentrées sur des zones géographiques particulières, ou réparties uniformément sur tout le territoire ?","options":["Elles sont souvent concentrées dans les zones à forte tension immobilière et à fort potentiel de valorisation (grandes métropoles, zones littorales attractives)","Elles sont réparties de façon rigoureusement uniforme sur tout le territoire national","Elles ne concernent que les DOM-TOM","Elles sont interdites dans les grandes villes"],"correct":0,"explain":"Le marchand de biens cible généralement les zones où le potentiel de plus-value est le plus élevé (tension immobilière, attractivité, perspective de requalification urbaine), une logique économique différente de l'investissement locatif diffus sur tout le territoire."},
+      {"q":"Un marchand de biens personne physique agissant à titre habituel peut-il être affilié à la Sécurité Sociale des Indépendants (SSI, ex-RSI) ?","options":["Oui, dès lors que son activité est qualifiée de commerciale et habituelle, il relève du régime social des indépendants","Non, cette activité échappe à tout régime social","Non, il relève obligatoirement du régime général des salariés","Oui, mais uniquement s'il réalise plus de 10 opérations par an"],"correct":0,"explain":"L'activité de marchand de biens, qualifiée commerciale (BIC), entraîne en principe une affiliation au régime social des indépendants lorsqu'elle est exercée en nom propre à titre habituel, avec les cotisations sociales afférentes à calculer sur le bénéfice réalisé."},
+      {"q":"Le marchand de biens peut-il revendre un bien avant même d'avoir finalisé les travaux prévus, par exemple en l'état futur de rénovation ?","options":["Oui, une vente avant achèvement complet des travaux est juridiquement envisageable selon le montage choisi, bien que plus rare que la revente après travaux terminés","Non, la loi impose systématiquement d'achever tous les travaux avant toute revente","Non, cette pratique est totalement interdite en France","Oui, mais uniquement si l'acheteur est une collectivité publique"],"correct":0,"explain":"Si la revente après achèvement complet des travaux reste le schéma le plus courant (meilleure valorisation), des montages de cession en cours ou avant travaux existent, selon la stratégie et le profil de l'acheteur potentiel."},
+      {"q":"Les opérations de marchand de biens sont-elles, en général, plus courtes ou plus longues que celles d'un investisseur locatif classique ?","options":["Plus courtes : l'horizon est généralement de quelques mois à 2-3 ans, contre un horizon long terme pour l'investissement locatif","Rigoureusement identiques dans les deux cas","Toujours supérieures à 15 ans","Cela ne dépend jamais de la nature de l'activité"],"correct":0,"explain":"L'activité de marchand de biens vise une rotation rapide du capital (achat-travaux-revente en quelques mois à quelques années), à l'opposé de la logique de détention longue d'un investisseur locatif qui vise des revenus récurrents sur la durée."},
+      {"q":"Un marchand de biens peut-il recourir au crowdfunding immobilier pour financer une partie de ses opérations ?","options":["Oui, le financement participatif immobilier est une source de financement complémentaire de plus en plus utilisée par les professionnels du secteur","Non, le crowdfunding est réservé exclusivement aux particuliers investisseurs","Non, cette pratique est interdite en France","Oui, mais uniquement pour des montants supérieurs à 10 millions d'euros"],"correct":0,"explain":"De nombreuses opérations de marchand de biens sont aujourd'hui cofinancées via des plateformes de crowdfunding immobilier, qui apportent des fonds propres ou quasi-fonds propres complémentaires au financement bancaire classique."},
+      {"q":"L'activité de marchand de biens expose-t-elle à un risque de contentieux avec l'administration fiscale sur la qualification de l'opération ?","options":["Oui, la qualification de l'activité (habituelle/occasionnelle, intention spéculative) est fréquemment source de contrôles et de contentieux fiscaux","Non, aucun contentieux fiscal n'existe jamais sur ce type d'activité","Non, l'administration fiscale ne contrôle jamais les opérations immobilières","Oui, mais uniquement si l'opérateur est une personne morale étrangère"],"correct":0,"explain":"La frontière entre simple gestion patrimoniale privée et activité habituelle de marchand de biens est régulièrement source de contrôles fiscaux, notamment pour requalifier une plus-value privée en bénéfice commercial BIC, taxé différemment et plus lourdement."},
+      {"q":"Un particulier fortuné qui investit ponctuellement dans une opération de marchand de biens via une société dédiée partage-t-il nécessairement le même profil de risque qu'un marchand de biens professionnel à plein temps ?","options":["Non, un investisseur ponctuel associé minoritaire mutualise le risque différemment d'un professionnel qui en vit à plein temps et multiplie les opérations","Oui, le profil de risque est rigoureusement identique dans tous les cas","Non, il n'existe aucun risque pour un investisseur minoritaire","Oui, car toute participation financière implique automatiquement le même niveau de risque"],"correct":0,"explain":"Un investisseur qui participe ponctuellement, souvent en minoritaire, à une opération de marchand de biens structurée par un professionnel ne porte pas le même niveau de risque opérationnel qu'un marchand de biens qui en fait son activité principale et répète les opérations — une nuance essentielle pour le CGP qui propose ce type de diversification à ses clients."},
+      {"q":"Un dirigeant de société de marchand de biens peut-il utiliser la trésorerie de sa société pour des placements personnels sans rapport avec l'activité, au détriment de l'intérêt de l'entreprise ?","options":["Non, cela peut être qualifié d'abus de biens sociaux (article L242-6 du Code de commerce), en particulier si cela prive la société de la trésorerie nécessaire à ses opérations en cours","Oui, sans aucune limite, la trésorerie de la société lui appartient personnellement","Non, car la loi interdit à toute société de ce secteur de détenir la moindre trésorerie","Oui, à condition que le montant reste inférieur à 50 000 €"],"correct":0,"explain":"L'abus de biens sociaux sanctionne l'usage des biens ou du crédit d'une société contraire à son intérêt, à des fins personnelles. Dans une activité de marchand de biens, où la trésorerie finance des opérations d'achat-travaux-revente à fort effet de levier, un tel détournement est d'autant plus risqué qu'il peut compromettre des opérations déjà engagées."}
+    ]
+  },
+  {
+    id: 'ingenierie_patrimoniale', icon: '🧭', name: 'Ingénierie patrimoniale',
+    intro: 'Le conseiller en ingénierie patrimoniale structure, protège et développe le patrimoine de ses clients en croisant droit, fiscalité et finance. C\'est souvent lui qui répond à la question « puis-je investir la trésorerie de mon cabinet comme je veux ? » : chaque statut professionnel (SEL, SCP, société commerciale…) a ses propres règles, et ce métier consiste précisément à les connaître pour proposer la structuration adaptée (holding, contrat de capitalisation, pacte Dutreil…).',
+    specialites: [
+      { name: 'Conseiller en Gestion de Patrimoine (CGP) indépendant', desc: 'Accompagne des particuliers et des professionnels indépendants sur l\'ensemble de leur patrimoine : épargne, assurance-vie, immobilier, retraite, fiscalité. Statut d\'intermédiaire financier (CIF, IOBSP, IAS) inscrit à l\'ORIAS, rémunéré par honoraires et/ou rétrocessions de commissions.', parcoursSpe: 'Bac+5 en gestion de patrimoine, banque, finance ou droit (Master 225 Dauphine, AUREP, DU Gestion de patrimoine…), puis obtention des certifications professionnelles obligatoires (CIF, IOBSP, IAS) et inscription à l\'ORIAS avant toute installation.', parcoursProf: 'Devenir formateur ou intervenant dans un master de gestion de patrimoine suppose généralement une expérience significative de terrain, complétée parfois par un doctorat pour une carrière académique à temps plein.' },
+      { name: 'Gestion de fortune / Banque privée', desc: 'Conseille une clientèle fortunée au sein d\'une banque privée ou d\'une société de gestion : allocation d\'actifs, ingénierie fiscale et successorale, financement, art et philanthropie.', parcoursSpe: 'Master en finance/banque privée, souvent complété par la certification AMF et une formation interne poussée chez l\'employeur ; évolution progressive de chargé d\'affaires junior à banquier privé senior.', parcoursProf: 'L\'enseignement en banque privée se fait surtout via des interventions ponctuelles dans des masters spécialisés, rarement comme carrière académique à temps plein.' },
+      { name: 'Ingénierie patrimoniale pour dirigeants et professions libérales', desc: 'Spécialité au cœur du métier : structurer la rémunération, la trésorerie professionnelle et la transmission des dirigeants de société et des professions libérales (médecins, dentistes, avocats…), en tenant compte des limites propres à chaque statut d\'exercice (SEL, SCP, société commerciale).', parcoursSpe: 'Formation initiale CGP complétée par une expertise approfondie en droit des sociétés, fiscalité professionnelle et retraite des indépendants, souvent acquise en cabinet spécialisé ou en banque privée dédiée aux professions libérales.', parcoursProf: 'Transmettre cette expertise passe le plus souvent par des formations continues (AUREP, ESBanque) dispensées en parallèle de l\'activité de conseil, plus que par un poste universitaire classique.' },
+      { name: 'Family Office', desc: 'Structure dédiée à la gestion globale du patrimoine d\'une ou plusieurs familles fortunées : investissements, gouvernance familiale, transmission sur plusieurs générations, reporting consolidé.', parcoursSpe: 'Profil senior (10 ans et plus d\'expérience en gestion de patrimoine, banque privée ou private equity), souvent titulaire d\'un Master 225 ou équivalent, avec une forte dimension relationnelle et de confidentialité.', parcoursProf: 'Peu de passerelles académiques directes ; la transmission du savoir se fait surtout par le compagnonnage au sein des family offices eux-mêmes ou via des associations professionnelles dédiées.' },
+      { name: 'Conseil en transmission et cession d\'entreprise', desc: 'Accompagne les dirigeants dans la préparation, la structuration fiscale (pacte Dutreil, apport-cession 150-0 B ter) et la négociation de la cession ou de la transmission de leur entreprise.', parcoursSpe: 'Formation CGP ou juridique (Master droit des affaires) complétée par une spécialisation en ingénierie de haut de bilan, souvent au sein de cabinets de fusions-acquisitions ou de banques d\'affaires dédiées aux PME/ETI.', parcoursProf: 'S\'oriente surtout vers l\'intervention dans des formations professionnelles continues (AUREP, CFPB) plutôt que vers un poste universitaire à temps plein.' }
+    ],
+    etablissements: ['Université Paris-Dauphine — Master 225 Banque, Finance, Assurance, parcours Gestion de patrimoine', 'AUREP — Université Clermont Auvergne (référence historique en ingénierie patrimoniale)', 'ESBanque (École Supérieure de la Banque)', 'CFPB — Centre de Formation de la Profession Bancaire', 'ICP — Institut Catholique de Paris, Master Droit du patrimoine', 'CNAM — Conservatoire National des Arts et Métiers, parcours Banque-Finance-Assurance'],
+    parcours: 'Généralement un Bac+5 (banque, finance, droit ou gestion de patrimoine), suivi de l\'obtention des certifications professionnelles obligatoires pour exercer (CIF pour le conseil en investissement financier, IOBSP pour le courtage en crédit, IAS pour l\'assurance), puis inscription au registre unique des intermédiaires (ORIAS). Le CGP indépendant doit en outre souscrire une assurance de responsabilité civile professionnelle et adhérer à une association agréée par l\'AMF (CNCGP, ANACOFI-CIF…).',
+    remuneration: 'Très variable selon le statut : salarié débutant en banque privée souvent 35 000 à 50 000 €/an brut ; CGP indépendant ou banquier privé senior établi, avec un portefeuille de clients développé, fréquemment 60 000 à 150 000 €/an ou davantage selon le mode de rémunération (honoraires, commissions, ou les deux).',
+    statut: 'Salarié d\'une banque, d\'une banque privée ou d\'un cabinet de conseil ; ou CGP indépendant exerçant en nom propre ou en société (le plus souvent SASU/EURL), inscrit à l\'ORIAS comme Conseiller en Investissements Financiers (CIF), courtier en opérations de banque (IOBSP) et/ou intermédiaire en assurance (IAS), sous le contrôle de l\'AMF et de l\'ACPR.',
+    investLimites: 'C\'est justement ce métier qui identifie et explique à ses clients les limites qui s\'appliquent à eux (par exemple pourquoi un orthodontiste en SELARL ne peut pas investir librement la trésorerie de son cabinet). Le CGP lui-même est soumis à des obligations miroirs très strictes : devoir de conseil et d\'information (réglementation MIF2/DDA), interdiction de gérer les fonds de ses clients sans mandat exprès et encadré, obligation de transparence totale sur ses rémunérations (honoraires et rétrocessions de commissions), et encadrement des conflits d\'intérêts — notamment s\'il recommande un produit qui le rémunère davantage qu\'une autre solution pourtant plus adaptée au client.',
+    quiz: [
+      {"q":"Qu'est-ce qu'un CGP (Conseiller en Gestion de Patrimoine) ?","options":["Un professionnel qui conseille ses clients sur l'ensemble de leur patrimoine (épargne, immobilier, fiscalité, retraite), inscrit à l'ORIAS sous un ou plusieurs statuts réglementés","Un fonctionnaire de l'administration fiscale chargé de contrôler les déclarations de patrimoine des particuliers","Un salarié réservé exclusivement aux clients détenant plus de 10 millions d'euros de patrimoine","Un notaire spécialisé uniquement dans la rédaction des contrats de mariage"],"correct":0,"explain":"Le CGP a une approche globale du patrimoine de ses clients (épargne, immobilier, retraite, transmission, fiscalité), à la différence d'un spécialiste mono-produit. Il exerce sous un ou plusieurs statuts réglementés inscrits à l'ORIAS."},
+      {"q":"Quel registre un CGP indépendant doit-il obligatoirement intégrer avant d'exercer en France ?","options":["Le registre unique des intermédiaires tenu par l'ORIAS","Le registre du commerce et des sociétés, et uniquement celui-ci","Le fichier national des incidents de remboursement (FICP)","Aucun registre n'est exigé pour exercer cette activité"],"correct":0,"explain":"L'ORIAS (Organisme pour le Registre des Intermédiaires en Assurance, banque et finance) tient le registre unique où tout CGP doit être inscrit selon les statuts qu'il exerce (CIF, IOBSP, IAS), sous peine d'exercice illégal."},
+      {"q":"Que signifie le statut 'CIF' qu'un CGP peut détenir ?","options":["Conseiller en Investissements Financiers, statut qui encadre le conseil sur les produits financiers","Certificat d'Imposition Forfaitaire, un document fiscal réservé aux entreprises","Contrat d'Investissement Familial, un support d'épargne dédié aux transmissions","Code d'Identification Fiscale, un numéro attribué par l'administration fiscale"],"correct":0,"explain":"Le statut de CIF, sous le contrôle de l'AMF, encadre l'activité de conseil sur les instruments financiers (actions, obligations, parts de fonds…) et impose l'adhésion à une association professionnelle agréée."},
+      {"q":"Que signifie le statut 'IOBSP' ?","options":["Intermédiaire en Opérations de Banque et en Services de Paiement, statut qui encadre le courtage en crédit","Institut d'Observation des Bourses et Spéculations Privées, un organisme de régulation","Indice des Obligations Bancaires à Spread Prioritaire, un indicateur de marché","Impôt sur les Opérations Bancaires et Spéculatives Professionnelles, une taxe spécifique"],"correct":0,"explain":"L'IOBSP encadre l'activité d'intermédiation en crédit (immobilier, consommation) exercée par un CGP, courtier ou tout professionnel mettant en relation un client et un établissement prêteur."},
+      {"q":"Sous le contrôle de quelles autorités un CGP exerce-t-il principalement en France ?","options":["L'Autorité des Marchés Financiers (AMF) pour le conseil en investissement, et l'Autorité de Contrôle Prudentiel et de Résolution (ACPR) pour les activités d'assurance et de crédit","Uniquement le ministère de l'Intérieur, au même titre qu'un agent immobilier","Uniquement l'Ordre des experts-comptables, par délégation","Aucune autorité ne contrôle cette profession en France"],"correct":0,"explain":"L'AMF supervise le conseil en investissement financier (statut CIF) tandis que l'ACPR supervise les activités d'assurance et de courtage en crédit, un double contrôle propre à la diversité des statuts qu'un CGP peut cumuler."},
+      {"q":"Quel master universitaire est historiquement une référence pour se former à la gestion de patrimoine en France ?","options":["Le Master 225 de l'Université Paris-Dauphine","Le Master de médecine générale de Sorbonne Université","Le CRFPA, réservé aux futurs avocats","Le DES de cardiologie"],"correct":0,"explain":"Le Master 225 « Banque, Finance, Assurance » de Paris-Dauphine, avec son parcours Gestion de patrimoine, est l'une des formations les plus reconnues de la profession en France."},
+      {"q":"Qu'est-ce que l'AUREP, souvent cité comme référence en ingénierie patrimoniale ?","options":["Une structure universitaire (Université Clermont Auvergne) historiquement reconnue pour sa formation en gestion et ingénierie de patrimoine","Un syndicat national des notaires de France","Une caisse de retraite réservée aux CGP indépendants","Un label marketing sans lien avec une formation réelle"],"correct":0,"explain":"L'AUREP (Université Clermont Auvergne) est l'un des centres de formation historiques en ingénierie patrimoniale en France, référence citée par de nombreux professionnels du secteur."},
+      {"q":"Comment un CGP peut-il être rémunéré pour son activité de conseil ?","options":["Par des honoraires facturés au client, par des rétrocessions de commissions versées par les producteurs de produits financiers, ou par une combinaison des deux","Uniquement par une subvention versée chaque année par l'État","Il n'a droit à aucune rémunération, l'activité étant bénévole par nature","Uniquement par un salaire fixe identique pour tous les CGP de France"],"correct":0,"explain":"Les deux grands modèles économiques du CGP indépendant sont les honoraires (facturés directement) et les rétrocessions de commissions (versées par les sociétés de gestion ou assureurs) ; beaucoup de cabinets combinent les deux."},
+      {"q":"Qu'est-ce que le « devoir de conseil », obligation centrale qui pèse sur un CGP ?","options":["L'obligation de recommander des solutions réellement adaptées à la situation, aux objectifs et au profil de risque du client, et non celles qui le rémunèrent le plus","L'obligation de proposer systématiquement le produit le plus récent du marché","L'obligation de ne jamais recommander de produit d'assurance-vie à un client","Une simple formule de politesse sans conséquence juridique"],"correct":0,"explain":"Le devoir de conseil impose au CGP de faire primer l'intérêt du client sur le sien propre, en recommandant des solutions cohérentes avec son profil, ses objectifs et sa situation réelle — un manquement expose à une responsabilité civile professionnelle."},
+      {"q":"Pourquoi un conseiller qui recommande un produit plus rémunérateur pour lui, mais moins adapté au client, enfreint-il une règle déontologique majeure ?","options":["Parce qu'il place son propre intérêt avant celui du client, en violation du devoir de conseil et des règles de gestion des conflits d'intérêts","Parce que la loi interdit à un CGP de percevoir la moindre rémunération","Parce que seul un notaire a le droit de percevoir une commission sur un produit financier","Cette situation n'est en réalité jamais problématique en pratique"],"correct":0,"explain":"La réglementation (MIF2, DDA) impose au CGP d'identifier et de gérer ses conflits d'intérêts, et de toujours faire primer l'intérêt du client sur sa propre rémunération dans le choix des solutions recommandées."},
+      {"q":"Pourquoi un orthodontiste exerçant en SELARL ne peut-il pas investir librement la trésorerie de son cabinet dans des actifs risqués ?","options":["Parce que l'objet social de la SEL est limité à l'exercice de la profession réglementée, et qu'un placement spéculatif risqué expose le dirigeant à un risque d'abus de biens sociaux","Parce que la loi interdit à toute société commerciale de détenir la moindre trésorerie, quel que soit son secteur","Parce que seules les sociétés cotées en Bourse ont le droit de placer leur trésorerie","Parce que l'Ordre des chirurgiens-dentistes gère lui-même directement la trésorerie de chaque cabinet"],"correct":0,"explain":"L'objet social d'une SEL (SELARL/SELAS) est circonscrit à l'exercice de la profession réglementée. Un placement spéculatif qui met en péril la société, au-delà de ce cadre, expose le dirigeant au risque d'abus de biens sociaux — c'est exactement le type de situation qu'un ingénieur patrimonial doit savoir identifier."},
+      {"q":"Quelle solution un CGP propose-t-il le plus souvent pour qu'un professionnel libéral puisse investir librement l'excédent de trésorerie de sa société d'exercice ?","options":["Faire remonter cet excédent vers une société holding personnelle, dont l'objet social autorise une liberté d'investissement bien plus large","Transformer systématiquement la société d'exercice en association loi 1901","Verser l'intégralité de la trésorerie sur le compte bancaire personnel du dirigeant sans aucun formalisme","Attendre la fermeture définitive du cabinet avant toute action"],"correct":0,"explain":"Une holding patrimoniale, dont l'objet social est la gestion de participations et de placements, permet d'investir l'excédent de trésorerie bien plus librement que dans la structure d'exercice elle-même — une structuration classique proposée par l'ingénierie patrimoniale."},
+      {"q":"Qu'est-ce qu'un contrat de capitalisation, souvent recommandé pour placer la trésorerie excédentaire d'une société (SEL, holding) ?","options":["Un support d'épargne proche de l'assurance-vie mais souscriptible par une personne morale, qui permet de placer une trésorerie d'entreprise sur des supports variés","Un prêt bancaire réservé exclusivement aux particuliers","Un compte courant d'associé obligatoirement rémunéré à 10 % par an","Un produit réservé aux seules sociétés cotées en Bourse"],"correct":0,"explain":"Le contrat de capitalisation reprend le fonctionnement de l'assurance-vie (fonds euros, unités de compte) mais peut être souscrit par une personne morale, ce qui en fait un support fréquent pour placer la trésorerie excédentaire d'une SEL ou d'une holding."},
+      {"q":"Qu'est-ce que le pacte Dutreil, dispositif que le CGP spécialisé en transmission d'entreprise doit maîtriser ?","options":["Un dispositif fiscal qui permet, sous conditions d'engagement de conservation et de poursuite d'activité, de réduire fortement les droits de mutation lors de la transmission d'une entreprise","Un contrat d'assurance-vie réservé aux dirigeants de holding","Une convention collective applicable uniquement aux professions médicales","Un livret d'épargne réglementé par l'État"],"correct":0,"explain":"Le pacte Dutreil réduit fortement l'assiette des droits de mutation à titre gratuit sur les titres d'entreprise transmis, en contrepartie d'engagements de conservation et de poursuite de l'activité — un outil central du conseil en transmission."},
+      {"q":"Qu'est-ce que l'apport-cession (mécanisme de l'article 150-0 B ter), autre outil clé du conseil en transmission d'entreprise ?","options":["Un mécanisme qui permet, sous conditions, de reporter l'imposition de la plus-value lors de l'apport de titres à une holding, avant leur cession ultérieure par celle-ci","Une obligation de céder immédiatement toute entreprise avant 60 ans","Un crédit d'impôt automatique pour toute création d'entreprise","Une taxe spécifique sur les cessions de titres non cotés"],"correct":0,"explain":"L'apport-cession permet, sous conditions (notamment de réinvestissement si la holding revend rapidement), de reporter l'imposition de la plus-value réalisée lors de l'apport des titres à une holding — un montage très utilisé en ingénierie de cession d'entreprise."},
+      {"q":"Quelle différence majeure distingue un Family Office d'un CGP indépendant classique ?","options":["Le Family Office se consacre à la gestion globale et consolidée du patrimoine d'une ou plusieurs familles très fortunées, avec une dimension de gouvernance sur plusieurs générations","Le Family Office n'a aucune obligation réglementaire, contrairement au CGP","Le CGP gère toujours des montants supérieurs à ceux d'un Family Office","Il n'existe en réalité aucune différence entre les deux"],"correct":0,"explain":"Le Family Office sert une clientèle très restreinte et très fortunée avec une approche consolidée (investissements, gouvernance familiale, transmission sur plusieurs générations), tandis que le CGP sert une clientèle plus large et diversifiée."},
+      {"q":"L'obligation de transparence sur les rétrocessions de commissions perçues par un CGP vise principalement à :","options":["Permettre au client de connaître l'intérêt économique du conseiller, afin qu'il puisse apprécier l'objectivité du conseil reçu","Augmenter artificiellement les frais payés par le client","Réserver cette information exclusivement à l'administration fiscale","N'a aucune utilité réelle pour le client"],"correct":0,"explain":"La transparence sur les rétrocessions permet au client de comprendre comment son conseiller est rémunéré et d'apprécier d'éventuels conflits d'intérêts dans les recommandations qui lui sont faites."},
+      {"q":"Quelle association professionnelle agréée par l'AMF un CGP exerçant une activité de CIF doit-il obligatoirement intégrer ?","options":["Une association telle que la CNCGP ou l'ANACOFI-CIF, chargée notamment de contrôler le respect des obligations professionnelles de ses adhérents","L'Ordre national des médecins, par analogie avec les professions de santé","Aucune association n'est exigée pour exercer en tant que CIF","Uniquement un syndicat de salariés classique"],"correct":0,"explain":"Tout CIF doit adhérer à une association professionnelle agréée par l'AMF (comme la CNCGP ou l'ANACOFI-CIF), qui contrôle le respect de ses obligations et sert d'interlocuteur avec le régulateur."},
+      {"q":"Pourquoi un CGP doit-il souscrire une assurance de responsabilité civile professionnelle ?","options":["Pour garantir l'indemnisation de ses clients en cas de faute ou de préjudice lié à un conseil inadapté, une obligation réglementaire pour exercer","Parce que cette assurance est purement facultative et rarement souscrite en pratique","Parce qu'elle remplace entièrement l'obligation de devoir de conseil","Parce qu'elle est réservée aux seuls CGP salariés, jamais aux indépendants"],"correct":0,"explain":"La RC professionnelle est une obligation réglementaire pour tout CGP indépendant, garantissant une indemnisation des clients en cas de faute avérée dans le conseil délivré."},
+      {"q":"Dans quel cadre un CGP collabore-t-il le plus souvent avec l'expert-comptable d'un client professionnel libéral ?","options":["Pour articuler la structuration de la rémunération (salaire/dividendes), la gestion de la trésorerie professionnelle et la stratégie patrimoniale globale du dirigeant","Uniquement pour la déclaration de TVA trimestrielle du cabinet","Jamais, les deux professions n'ont aucune interaction en pratique","Uniquement lors de la fermeture définitive de l'activité"],"correct":0,"explain":"Le CGP et l'expert-comptable travaillent fréquemment ensemble sur l'arbitrage rémunération/dividendes, la gestion de la trésorerie professionnelle et la cohérence globale de la stratégie patrimoniale du dirigeant."},
+      {"q":"Un CGP qui conseille un dirigeant sur l'arbitrage entre rémunération salariale et dividendes au sein de sa société doit-il tenir compte à la fois de la fiscalité et des cotisations sociales ?","options":["Oui, cet arbitrage combine fiscalité personnelle, cotisations sociales et besoins de trésorerie du dirigeant, à étudier avec l'expert-comptable","Non, seule la fiscalité personnelle compte, les cotisations sociales n'ayant aucune incidence","Non, cet arbitrage est strictement interdit par la loi","Oui, mais uniquement une fois tous les 10 ans"],"correct":0,"explain":"L'arbitrage rémunération/dividendes a des conséquences fiscales ET sociales différentes (cotisations TNS, prélèvements sociaux sur dividendes…), ce qui en fait un sujet transversal classique du conseil patrimonial aux dirigeants."},
+      {"q":"Quelle notion juridique transversale, applicable à de nombreuses professions réglementées en société (SEL, SARL, SAS…), sanctionne un dirigeant qui utilise la trésorerie de son entreprise contrairement à l'intérêt de celle-ci ?","options":["L'abus de biens sociaux (article L242-6 du Code de commerce)","Le délit de blanchiment de capitaux, qui seul couvre ce type de situation","La prescription acquisitive, propre au droit des biens immobiliers","Le droit de rétractation, réservé aux contrats de consommation"],"correct":0,"explain":"L'abus de biens sociaux sanctionne l'usage des biens ou du crédit d'une société contraire à l'intérêt de celle-ci, à des fins personnelles — une notion transversale que l'ingénierie patrimoniale doit intégrer dès qu'elle conseille un dirigeant, quel que soit son secteur."}
+    ]
+  }
+];
+var FORMULES = [
+  { id: 'per_entree', icon: '🧮', pole: 'Les enveloppes', title: 'PER — gain fiscal à l\'entrée',
+    formula: 'Économie d\'impôt = Versement déductible × TMI',
+    steps: [
+      'Vérifier le plafond de déduction disponible (10 % des revenus professionnels, plafonné à 8 PASS, ou 10 % du PASS pour un salarié si plus favorable).',
+      'Retenir le versement dans la limite de ce plafond.',
+      'Multiplier le versement déductible par le Taux Marginal d\'Imposition (TMI) du client.'
+    ],
+    example: { q: 'Un client au TMI de 30 % verse 8 000 € sur son PER, dans la limite de son plafond.', calc: '8 000 € × 30 %', result: '2 400 € d\'économie d\'impôt immédiate' },
+    piege: 'Ce n\'est pas un gain définitif : à la sortie, le capital correspondant aux versements déduits est réintégré au barème de l\'IR. Le PER déplace l\'imposition dans le temps, il ne l\'efface pas.',
+    theory: 'th_per' },
+  { id: 'per_sortie', icon: '📤', pole: 'Les enveloppes', title: 'PER — fiscalité de sortie en capital',
+    formula: 'Versements déduits → barème de l\'IR  ·  Plus-value → PFU 30 % (ou barème sur option)',
+    steps: [
+      'Distinguer, dans le capital sorti, la part issue de versements déduits à l\'entrée et la part de plus-value générée.',
+      'La part des versements déduits est imposée au barème progressif de l\'IR, sans abattement.',
+      'La part de plus-value est soumise au Prélèvement Forfaitaire Unique de 30 % (12,8 % IR + 17,2 % PS), ou au barème + PS sur option globale.'
+    ],
+    example: { q: 'Un client sort en capital 50 000 € de PER (40 000 € de versements déduits, 10 000 € de plus-value), TMI 30 %.', calc: '(40 000 × 30 %) + (10 000 × 30 %)', result: '12 000 € + 3 000 € = 15 000 € d\'impôt total' },
+    piege: 'Si les versements n\'ont PAS été déduits à l\'entrée (option du client), le capital correspondant sort sans impôt — seule la plus-value reste taxée. Vérifier toujours quelle option a été choisie à l\'entrée.',
+    theory: 'th_per' },
+  { id: 'av_avant8', icon: '📅', pole: 'Les enveloppes', title: 'Assurance-vie — rachat avant 8 ans',
+    formula: 'Impôt sur les gains rachetés = Gains × 30 % (PFU) — ou option barème + PS 17,2 %',
+    steps: [
+      'Isoler la quote-part de gains dans le rachat : Gains rachetés = Montant racheté × (gains totaux du contrat ÷ valeur totale du contrat).',
+      'Aucun abattement n\'est applicable avant 8 ans.',
+      'Appliquer le PFU de 30 % (12,8 % IR + 17,2 % PS), sauf option pour le barème progressif si plus avantageux (TMI faible).'
+    ],
+    example: { q: 'Un contrat de 6 ans a une valeur de rachat de 45 000 € pour 35 000 € de versements. Rachat total.', calc: '(45 000 − 35 000) × 30 %', result: '10 000 € de gains × 30 % = 3 000 € d\'impôt' },
+    piege: 'Erreur fréquente : appliquer l\'abattement de 4 600 €/9 200 € réservé aux contrats de plus de 8 ans. Avant 8 ans, cet abattement ne joue jamais.',
+    theory: 'th_av' },
+  { id: 'av_apres8', icon: '🎉', pole: 'Les enveloppes', title: 'Assurance-vie — rachat après 8 ans',
+    formula: 'IR = (Gains − Abattement) × 7,5 % (ou 12,8 % au-delà de 150 000 € de versements nets)  ·  PS = Gains × 17,2 % (sans abattement)',
+    steps: [
+      'Appliquer l\'abattement annuel : 4 600 € pour une personne seule, 9 200 € pour un couple marié/pacsé.',
+      'Sur la base après abattement, le taux réduit de 7,5 % s\'applique jusqu\'à 150 000 € de versements nets tous contrats cumulés ; au-delà, 12,8 %.',
+      'Les prélèvements sociaux de 17,2 % s\'appliquent sur la TOTALITÉ des gains, sans aucun abattement.'
+    ],
+    example: { q: 'Contrat de plus de 8 ans racheté : 22 000 € de gains, personne seule.', calc: 'IR : (22 000 − 4 600) × 7,5 %  ·  PS : 22 000 × 17,2 %', result: '1 305 € d\'IR + 3 784 € de PS = 5 089 € au total' },
+    piege: 'L\'abattement de 4 600 €/9 200 € ne joue QUE sur l\'assiette de l\'impôt sur le revenu, jamais sur celle des prélèvements sociaux — une confusion très fréquente.',
+    theory: 'th_av' },
+  { id: 'doubler_capital', icon: '📈', pole: 'Culture financière', title: 'Doubler son capital (intérêts composés)',
+    formula: 'Capital final = Capital initial × (1 + taux)^durée  —  Raccourci : Durée pour doubler ≈ 72 ÷ taux (en %)',
+    steps: [
+      'Pour un calcul exact : élever (1 + taux) à la puissance du nombre d\'années, puis multiplier par le capital initial.',
+      'Pour estimer rapidement le nombre d\'années nécessaires pour DOUBLER un capital, diviser 72 par le taux de rendement annuel exprimé en %.',
+      'Plus le taux est élevé, plus la durée nécessaire pour doubler le capital est courte.'
+    ],
+    example: { q: 'Un capital placé à 6 % par an : en combien de temps double-t-il environ ?', calc: '72 ÷ 6', result: '≈ 12 ans (le calcul exact donne 11,9 ans — la règle de 72 est une excellente approximation)' },
+    piege: 'La règle de 72 est une approximation, d\'autant plus fiable que le taux est compris entre 4 % et 10 % environ. Pour un taux très élevé ou très faible, préférer le calcul exact avec l\'exposant.',
+    theory: 'th_mc_interets' },
+  { id: 'pvimmo_duree', icon: '🏠', pole: 'Supports & actifs', title: 'Plus-value immobilière — abattement pour durée',
+    formula: 'Abattement IR : 6 %/an de la 6e à la 21e année puis 4 % la 22e (exonération à 22 ans)  ·  Abattement PS : 1,65 %/an de la 6e à la 21e, 1,60 % la 22e, puis 9 %/an jusqu\'à la 30e (exonération à 30 ans)',
+    steps: [
+      'Calculer la plus-value brute : prix de vente − prix d\'acquisition (corrigé des frais et travaux justifiés).',
+      'Appliquer l\'abattement pour durée de détention — deux barèmes distincts, un pour l\'IR, un pour les prélèvements sociaux.',
+      'Exonération totale d\'IR après 22 ans de détention, et des prélèvements sociaux après 30 ans.'
+    ],
+    example: { q: 'Un bien détenu 20 ans dégage une plus-value brute de 100 000 €. Quel abattement d\'IR ?', calc: '(20 − 5) × 6 %', result: '90 % d\'abattement d\'IR, soit 10 000 € de plus-value imposable à l\'IR (19 %)' },
+    piege: 'Les deux abattements (IR et PS) ne suivent pas le même rythme ni la même durée totale : un bien exonéré d\'IR à 22 ans reste partiellement soumis aux prélèvements sociaux jusqu\'à 30 ans.',
+    theory: 'th_pvimmo_duree' },
+  { id: 'succession_usufruit', icon: '👪', pole: 'Fiscalité & transmission', title: 'Succession/donation — abattements et usufruit',
+    formula: 'Droits = (Part nette taxable − Abattement) × Barème progressif (art. 777/779 CGI)  ·  Valeur usufruit/nue-propriété = Valeur pleine propriété × barème de l\'âge (art. 669 CGI)',
+    steps: [
+      'Déterminer la part nette taxable de chaque héritier ou donataire.',
+      'Déduire l\'abattement applicable selon le lien de parenté (100 000 € parent-enfant, 15 932 € entre frères et sœurs…).',
+      'Appliquer le barème progressif PAR TRANCHES sur le solde — jamais un taux unique sur la totalité.',
+      'En cas de démembrement, répartir d\'abord la valeur du bien selon le barème de l\'âge de l\'usufruitier (art. 669 CGI) avant d\'appliquer les droits.'
+    ],
+    example: { q: 'Un enfant reçoit une donation de 150 000 € de son parent, sans abattement utilisé auparavant.', calc: '150 000 − 100 000 = 50 000 € taxable, puis barème par tranches', result: 'Abattement de 100 000 € ; seuls les 50 000 € restants sont soumis au barème progressif des droits de donation' },
+    piege: 'Le barème des droits de succession/donation est progressif PAR TRANCHES, comme l\'IR : une erreur fréquente est d\'appliquer le taux de la tranche la plus haute à la totalité de la part taxable.',
+    theory: 'th_succession' },
+  { id: 'duration_oblig', icon: '📉', pole: 'Culture financière', title: 'Duration obligataire — sensibilité prix/taux',
+    formula: 'Variation de prix (%) ≈ − Duration × Variation de taux (en points)',
+    steps: [
+      'Identifier la duration de l\'obligation ou du fonds obligataire.',
+      'Identifier la variation de taux anticipée, en points de pourcentage.',
+      'Multiplier la duration par la variation de taux, puis inverser le signe (relation inverse prix/taux).'
+    ],
+    example: { q: 'Une obligation de duration 7 subit une hausse de taux de 1 point.', calc: '−7 × 1', result: '≈ −7 % de variation de prix' },
+    piege: 'La duration mesure une sensibilité approximative, surtout fiable pour de petites variations de taux ; pour un choc de taux important, l\'effet de convexité rend l\'approximation moins précise.',
+    theory: 'th_mc_oblig' },
+  { id: 'ltv_lombard', icon: '⚖️', pole: 'Financement & levier', title: 'Crédit Lombard/hypothécaire — LTV et appel de marge',
+    formula: 'Montant empruntable = Valeur de l\'actif nanti × Quotité (LTV)  ·  Nouveau LTV = Encours du crédit ÷ Nouvelle valeur de l\'actif',
+    steps: [
+      'Déterminer la quotité de financement (LTV) accordée selon la nature de l\'actif nanti (plus il est volatil, plus la quotité est prudente).',
+      'Multiplier la valeur de l\'actif par cette quotité pour obtenir le montant maximum empruntable.',
+      'En cas de baisse de l\'actif nanti, recalculer le nouveau LTV (encours ÷ nouvelle valeur) pour vérifier s\'il dépasse le seuil d\'appel de marge.'
+    ],
+    example: { q: 'Portefeuille de 1 000 000 €, LTV initial 50 % (500 000 € emprunté). Le portefeuille chute à 700 000 €.', calc: '500 000 ÷ 700 000', result: '≈ 71,4 % de nouveau LTV — appel de marge probable si le seuil contractuel est, par exemple, de 70 %' },
+    piege: 'Ne jamais emprunter au maximum du LTV autorisé : cela réduit d\'autant la marge de sécurité avant un appel de marge en cas de baisse du marché.',
+    theory: 'th_lombard' },
+  { id: 'ir_escalier', icon: '🪜', pole: 'Fiscalité & transmission', title: 'Barème progressif de l\'IR — calcul par tranches',
+    formula: 'Impôt = Σ (Revenu de chaque tranche × Taux de la tranche) — jamais Revenu total × Taux marginal',
+    steps: [
+      'Répartir le revenu imposable entre les tranches du barème en vigueur (0 %, 11 %, 30 %, 41 %, 45 %).',
+      'Calculer l\'impôt dû sur CHAQUE tranche séparément, au taux qui lui est propre.',
+      'Additionner l\'impôt de chaque tranche — c\'est pourquoi le taux moyen réel est toujours inférieur au TMI.'
+    ],
+    example: { q: 'Revenu imposable de 35 000 € pour une part (barème : 0 % jusqu\'à 11 294 €, 11 % jusqu\'à 28 797 €, puis 30 %).', calc: '(28 797 − 11 294) × 11 % + (35 000 − 28 797) × 30 %', result: '≈ 1 925 € + 1 861 € ≈ 3 786 € d\'impôt (TMI 30 %, mais taux moyen réel ≈ 10,8 %)' },
+    piege: 'Confondre le Taux Marginal d\'Imposition (TMI, qui ne s\'applique qu\'à la dernière tranche) avec le taux moyen réellement supporté sur l\'ensemble du revenu — une confusion extrêmement fréquente.',
+    theory: 'th_ir_escalier' },
+  { id: 'pea_5ans', icon: '📊', pole: 'Les enveloppes', title: 'PEA — fiscalité avant/après 5 ans',
+    formula: 'Avant 5 ans : retrait = clôture, gains taxés au PFU 30 %  ·  Après 5 ans : gains exonérés d\'IR, seuls les 17,2 % de PS restent dus',
+    steps: [
+      'Vérifier l\'ancienneté du plan depuis son OUVERTURE (premier versement), pas depuis chaque versement.',
+      'Avant 5 ans, tout retrait entraîne en principe la clôture du plan et l\'imposition des gains au PFU de 30 %.',
+      'Après 5 ans, les gains sont exonérés d\'impôt sur le revenu ; seuls les 17,2 % de PS restent dus, et des retraits partiels sont possibles sans clôturer le plan.'
+    ],
+    example: { q: 'Un PEA ouvert il y a 7 ans affiche 20 000 € de gains. Retrait partiel.', calc: '20 000 × 17,2 %', result: '3 440 € de prélèvements sociaux dus, aucun impôt sur le revenu' },
+    piege: 'L\'ancienneté se compte depuis la date d\'OUVERTURE du plan, pas depuis chaque versement complémentaire — une règle identique à celle de l\'assurance-vie.',
+    theory: 'th_bourse' },
+  { id: 'is_bareme', icon: '🏢', pole: 'Entreprise & ingénierie', title: 'IS — barème à taux réduit',
+    formula: 'IS = (Bénéfice jusqu\'à 42 500 € × 15 %) + (Bénéfice au-delà × 25 %)',
+    steps: [
+      'Vérifier l\'éligibilité au taux réduit de 15 % (PME répondant à des conditions de chiffre d\'affaires et de détention du capital).',
+      'Appliquer 15 % sur la tranche de bénéfice jusqu\'à 42 500 €.',
+      'Appliquer le taux normal de 25 % sur la fraction du bénéfice au-delà de ce seuil.'
+    ],
+    example: { q: 'Une PME éligible réalise un bénéfice de 80 000 €.', calc: '(42 500 × 15 %) + (37 500 × 25 %)', result: '6 375 € + 9 375 € = 15 750 € d\'IS total' },
+    piege: 'Comme pour l\'IR, c\'est un calcul par tranches : appliquer 25 % à la totalité du bénéfice est une erreur fréquente lorsque la PME est éligible au taux réduit.',
+    theory: 'th_soc' }
+];
+function formuleById(id) { return FORMULES.find(function (f) { return f.id === id; }) || null; }
+function cultureMetier(id) { return CULTURE_METIERS.find(function (m) { return m.id === id; }) || null; }
+function pickCultureTestSet(m, n) {
+  var pool = (m && m.quiz || []).slice();
+  pool.sort(function () { return Math.random() - 0.5; });
+  return pool.slice(0, Math.min(n || 6, pool.length));
+}
+function tplCulture(v) {
+  var acc = 'var(--gold)';
+  var cards = CULTURE_METIERS.map(function (m, i) {
+    var best = v.cultureBestAll[m.id];
+    var tested = best != null;
+    var pct = tested ? Math.round(100 * best / m.quiz.length) : 0;
+    var f = { key: m.id, title: m.name, icon: m.icon, meta: m.specialites.length + ' spécialités', progress: pct };
+    return '<div class="stagger" style="animation-delay:' + (i * 0.04).toFixed(2) + 's;">' + tplFicheCard(f, i, acc, 'cultureGo') + '</div>';
+  }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:0 0 0;position:relative;background:linear-gradient(160deg,' + hexA('#dbb46f', 0.22) + ',transparent 65%);">' +
+    '<div style="padding:58px 24px 22px;"><button data-action="goBack" class="btn-back hv-a" style="color:' + acc + ';"><span class="bkarr">&#8249;</span> Fiches</button>' +
+    '<div style="display:flex;align-items:center;gap:14px;margin-top:16px;">' +
+    '<span style="flex-shrink:0;width:50px;height:50px;border-radius:16px;background:' + hexA('#dbb46f', 0.18) + ';border:1px solid ' + hexA('#dbb46f', 0.4) + ';display:flex;align-items:center;justify-content:center;font-size:22px;">🎓</span>' +
+    '<div><div style="font:300 28px/1.1 Fraunces,serif;letter-spacing:-.02em;">Culture générale</div>' +
+    '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--ink3);margin-top:6px;">' + v.cultureTestedCount + '/' + CULTURE_METIERS.length + ' TESTÉS · MAÎTRISE ' + v.cultureOverallPct + '%</div></div></div>' +
+    '<div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">Les professions que tout CGP croise chez ses clients — utile pour comprendre leur situation patrimoniale. Chiffres indicatifs, très variables selon l\'expérience, la zone et la structure d\'exercice.</div></div></div>' +
+    '<div style="margin:6px 24px 0;display:flex;flex-direction:column;gap:9px;">' + cards + '</div>' +
+    '<div style="height:26px;"></div></div>';
+}
+function tplCultureDetail(v) {
+  var m = cultureMetier(v.cultureSel);
+  if (!m) return tplCulture(v);
+  var acc = 'var(--gold)';
+  var specSeenCount = 0;
+  var toc = m.specialites.map(function (s, i) {
+    var seen = !!v.cultureSpecSeenAll[m.id + '#' + i];
+    var col = seen ? acc : acc;
+    return '<button data-action="cultureJump" data-i="' + i + '" style="flex-shrink:0;width:30px;height:30px;border-radius:50%;background:' + hexA(col, seen ? 0.28 : 0.14) + ';border:1px solid ' + hexA(col, 0.4) + ';color:' + col + ';font:500 11px \'Inter\',sans-serif;cursor:pointer;">' + (seen ? '✓' : (i + 1)) + '</button>';
+  }).join('');
+  var secs = m.specialites.map(function (s, i) {
+    var open = v.cultureSecOpen === i;
+    var seen = !!v.cultureSpecSeenAll[m.id + '#' + i];
+    if (seen) specSeenCount++;
+    return '<div id="csec-' + i + '" style="margin-top:12px;border:1px solid var(--line);border-left:3px solid ' + hexA(acc, 0.6) + ';border-radius:16px;overflow:hidden;background:var(--panel);">' +
+      '<button data-action="cultureSecToggle" data-i="' + i + '" style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:' + acc + ';font:500 10px \'Inter\',sans-serif;letter-spacing:.12em;text-align:left;">' +
+      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + (seen ? acc : hexA(acc, 0.16)) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;font:500 10px \'Inter\',sans-serif;color:' + (seen ? 'var(--on)' : acc) + ';">' + (seen ? '✓' : (i + 1)) + '</span>' +
+      '<span style="flex:1;text-transform:none;letter-spacing:0;font:500 13px \'Inter\',sans-serif;color:var(--ink);">' + esc(s.name) + '</span>' +
+      '<span style="flex-shrink:0;transition:transform .25s;transform:rotate(' + (open ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
+      (open ? '<div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:10px;">' +
+        '<div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:' + acc + ';">EN QUOI ÇA CONSISTE</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(s.desc) + '</div></div>' +
+        '<div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:' + acc + ';">PARCOURS POUR SE SPÉCIALISER</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(s.parcoursSpe) + '</div></div>' +
+        '<div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:' + acc + ';">DEVENIR ENSEIGNANT / PROFESSEUR</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(s.parcoursProf) + '</div></div>' +
+        '</div>' : '') + '</div>';
+  }).join('');
+  var etabs = m.etablissements.map(function (e) { return '<li style="margin-top:5px;">' + esc(e) + '</li>'; }).join('');
+  var best = v.cultureBestAll[m.id];
+  var tested = best != null;
+  var allSpecSeen = specSeenCount >= m.specialites.length;
+  var testBtnLabel = tested ? 'Retester ce métier · meilleur score ' + best + '/' + m.quiz.length : 'Tester ce métier · ' + m.quiz.length + ' questions';
+  var completionBar = '<div style="margin:16px 24px 0;display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px;flex-wrap:wrap;">' +
+    '<span style="font:500 11.5px \'Inter\',sans-serif;color:' + (allSpecSeen ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (allSpecSeen ? '✓' : specSeenCount + '/' + m.specialites.length) + ' spécialités consultées</span>' +
+    '<span style="width:1px;height:12px;background:var(--line);"></span>' +
+    '<span style="font:500 11.5px \'Inter\',sans-serif;color:' + (tested ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (tested ? '✓ testé · ' + best + '/' + m.quiz.length : 'test à faire') + '</span>' +
+    (allSpecSeen && tested ? '<span style="margin-left:auto;font:600 10.5px \'Inter\',sans-serif;color:var(--acc2);">MÉTIER EXPLORÉ</span>' : '') + '</div>';
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:32px 26px 22px;background:linear-gradient(160deg,' + hexA(acc, 0.2) + ',transparent 70%);">' +
+    '<button data-action="goBack" class="btn-back hv-a" style="color:' + acc + ';"><span class="bkarr">&#8249;</span> Métiers</button>' +
+    '<div style="display:flex;align-items:center;gap:14px;margin-top:18px;">' +
+    '<span style="flex-shrink:0;width:52px;height:52px;border-radius:16px;background:' + hexA(acc, 0.18) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;font-size:23px;">' + m.icon + '</span>' +
+    '<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;align-items:center;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);"><div>CULTURE GÉNÉRALE</div><div style="color:' + acc + ';">' + m.specialites.length + ' SPÉ.</div></div>' +
+    '<div style="font:300 26px/1.15 Fraunces,serif;letter-spacing:-.02em;margin-top:6px;">' + esc(m.name) + '</div></div></div>' +
+    '<div style="font:400 12.5px/1.65 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">' + esc(m.intro) + '</div>' +
+    '<div style="margin-top:16px;display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;">' + toc + '</div></div>' +
+    completionBar +
+    '<div style="padding:6px 24px 0;"><div style="margin-top:16px;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">SPÉCIALITÉS DÉTAILLÉES</div>' + secs + '</div>' +
+    '<div style="margin:20px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">ÉTABLISSEMENTS (EXEMPLES CONNUS)</div>' +
+    '<ul style="margin:8px 0 0;padding-left:20px;font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);">' + etabs + '</ul></div>' +
+    '<div style="margin:20px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">RÉMUNÉRATION INDICATIVE</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + esc(m.remuneration) + '</div></div>' +
+    '<div style="margin:20px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">STATUT JURIDIQUE USUEL</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + esc(m.statut) + '</div></div>' +
+    (m.investLimites ? '<div style="margin:20px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">LIMITES D\'INVESTISSEMENT PROFESSIONNEL</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + esc(m.investLimites) + '</div></div>' : '') +
+    '<div style="padding:26px 24px 30px;"><button data-action="startCultureTest" data-id="' + esc(m.id) + '" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + testBtnLabel + '</button></div>' +
+    '<div style="height:10px;"></div></div>';
+}
+function tplCultureTest(v) {
+  var m = cultureMetier(v.cultureSel);
+  if (!m) return tplCulture(v);
+  var idx = v.cultureTestIdx, total = v.cultureTestSet.length;
+  if (idx >= total) {
+    var pct = Math.round(v.cultureTestScore / total * 100);
+    return '<div style="flex:1;overflow:auto;min-height:0;display:flex;flex-direction:column;padding:58px 24px 0;">' +
+      '<button data-action="goBack" class="btn-back hv-a" style="align-self:flex-start;"><span class="bkarr">&#8249;</span> ' + esc(m.name) + '</button>' +
+      '<div style="background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:24px;text-align:center;margin-top:24px;">' +
+      '<div style="font:400 12px \'Inter\',sans-serif;color:var(--ink2);">Terminé !</div>' +
+      '<div style="font:300 46px Fraunces,serif;margin-top:8px;">' + v.cultureTestScore + ' / ' + total + '</div>' +
+      '<div style="font:400 12.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + (pct >= 80 ? 'Excellent — culture générale solide.' : pct >= 50 ? 'Bien, quelques révisions possibles.' : 'À revoir — relis la fiche du métier.') + '</div>' +
+      '<button data-action="goBack" style="margin-top:18px;border:none;border-radius:999px;padding:14px 22px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Retour au métier →</button></div></div>';
+  }
+  var q = v.cultureTestSet[idx];
+  var answered = v.cultureTestAnswered;
+  var opts = q.options.map(function (o, i) {
+    var isCorrect = i === q.correct, isPick = i === v.cultureTestPick;
+    var bg = 'var(--panel)', bd = 'var(--line)', col = 'var(--ink)';
+    if (answered) {
+      if (isCorrect) { bg = hexA('#4fcfa8', 0.16); bd = '#4fcfa8'; col = '#4fcfa8'; }
+      else if (isPick) { bg = hexA('#e2895f', 0.16); bd = '#e2895f'; col = '#e2895f'; }
+    }
+    return '<button ' + (answered ? '' : 'data-action="cultureTestPick" data-i="' + i + '"') + ' style="width:100%;text-align:left;background:' + bg + ';border:1px solid ' + bd + ';border-radius:14px;padding:13px 14px;font:400 13px/1.5 \'Inter\',sans-serif;color:' + col + ';cursor:' + (answered ? 'default' : 'pointer') + ';margin-top:8px;">' + esc(o) + '</button>';
+  }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> ' + esc(m.name) + '</button>' +
+    '<div style="font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:16px;">Question ' + (idx + 1) + ' / ' + total + ' · Score ' + v.cultureTestScore + '</div>' +
+    '<div style="font:300 21px/1.4 Fraunces,serif;margin-top:10px;">' + esc(q.q) + '</div></div>' +
+    '<div style="margin:18px 24px 0;">' + opts + '</div>' +
+    (answered ? '<div style="margin:16px 24px 0;padding:13px 14px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);">💡 ' + esc(q.explain) + '</div>' +
+      '<div style="padding:20px 24px 30px;"><button data-action="cultureTestNext" style="width:100%;border:none;border-radius:999px;padding:15px;font:600 13px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + (idx + 1 >= total ? 'Voir le résultat →' : 'Question suivante →') + '</button></div>' : '<div style="height:20px;"></div>') +
+    '</div>';
+}
+
+function tplFormulas(v) {
+  var toc = v.formulas.map(function (f, i) {
+    var col = poleAccent(f.pole);
+    return '<button data-action="formulaJump" data-i="' + i + '" style="flex-shrink:0;width:30px;height:30px;border-radius:50%;background:' + hexA(col, f.seen ? 0.28 : 0.14) + ';border:1px solid ' + hexA(col, 0.4) + ';color:' + col + ';font:500 11px \'Inter\',sans-serif;cursor:pointer;">' + (f.seen ? '✓' : (i + 1)) + '</button>';
+  }).join('');
+  var cards = v.formulas.map(function (f, i) {
+    var acc = poleAccent(f.pole);
+    var open = v.formulaOpen === f.id;
+    return '<div id="fsec-' + i + '" style="margin-top:12px;border:1px solid var(--line);border-left:3px solid ' + hexA(acc, 0.6) + ';border-radius:16px;overflow:hidden;background:var(--panel);">' +
+      '<button data-action="formulaToggle" data-id="' + esc(f.id) + '" style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;">' +
+      '<span style="flex-shrink:0;width:34px;height:34px;border-radius:50%;background:' + hexA(acc, f.seen ? 0.22 : 0.12) + ';display:flex;align-items:center;justify-content:center;font-size:16px;">' + f.icon + '</span>' +
+      '<span style="flex:1;min-width:0;"><span style="display:block;font:500 9px \'Inter\',sans-serif;letter-spacing:.1em;color:' + acc + ';">' + esc((f.pole || '').toUpperCase()) + '</span>' +
+      '<span style="display:block;font:500 14px \'Inter\',sans-serif;margin-top:2px;">' + esc(f.title) + '</span></span>' +
+      (f.seen ? '<span style="flex-shrink:0;font-size:12px;color:' + acc + ';">✓</span>' : '') +
+      '<span style="flex-shrink:0;transition:transform .25s;transform:rotate(' + (open ? '90deg' : '0deg') + ');color:var(--ink3);">&rsaquo;</span></button>' +
+      (open ? '<div style="padding:0 16px 18px;display:flex;flex-direction:column;gap:12px;">' +
+        '<div style="background:' + hexA(acc, 0.1) + ';border:1px solid ' + hexA(acc, 0.3) + ';border-radius:12px;padding:13px 14px;">' +
+        '<div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:' + acc + ';">LA FORMULE</div>' +
+        '<div style="font:500 14.5px/1.5 Fraunces,serif;color:var(--ink);margin-top:5px;">' + esc(f.formula) + '</div></div>' +
+        '<div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);">LES ÉTAPES</div>' +
+        '<ol style="margin:6px 0 0;padding-left:18px;font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);">' + f.steps.map(function (s) { return '<li style="margin-top:4px;">' + esc(s) + '</li>'; }).join('') + '</ol></div>' +
+        '<div style="background:var(--panel2);border-radius:12px;padding:13px 14px;">' +
+        '<div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);">EXEMPLE CHIFFRÉ</div>' +
+        '<div style="font:400 12px/1.55 \'Inter\',sans-serif;color:var(--ink2);margin-top:5px;">' + esc(f.example.q) + '</div>' +
+        '<div style="font:500 13px \'Inter\',sans-serif;color:var(--ink);margin-top:7px;">' + esc(f.example.calc) + ' = <span style="color:' + acc + ';">' + esc(f.example.result) + '</span></div></div>' +
+        '<div style="display:flex;gap:9px;align-items:flex-start;background:' + hexA('#e2895f', 0.1) + ';border:1px solid ' + hexA('#e2895f', 0.3) + ';border-radius:12px;padding:12px 13px;">' +
+        '<span style="flex-shrink:0;font-size:14px;">⚠️</span><div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--warn);">LE PIÈGE CLASSIQUE</div>' +
+        '<div style="font:400 12px/1.55 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(f.piege) + '</div></div></div>' +
+        (f.theory ? '<button data-action="ficheGo" data-fiche="' + esc(f.theory) + '" class="hv-a" style="width:100%;text-align:left;background:none;border:1px solid var(--line);border-radius:12px;padding:11px 13px;font:500 11.5px \'Inter\',sans-serif;color:' + acc + ';cursor:pointer;">📘 Revoir la fiche de cours liée →</button>' : '') +
+        '</div>' : '') + '</div>';
+  }).join('');
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:32px 26px 22px;background:linear-gradient(160deg,' + hexA('#4fcfa8', 0.18) + ',transparent 70%);">' +
+    '<button data-action="goBack" class="btn-back hv-a" style="color:#4fcfa8;"><span class="bkarr">&#8249;</span> Retour</button>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);"><div>MÉTHODO</div><div style="color:#4fcfa8;">' + v.formulesSeenCount + '/' + v.formulas.length + ' VUES</div></div>' +
+    '<div style="font:300 30px/1.15 Fraunces,serif;letter-spacing:-.02em;margin-top:10px;">Boîte à <span style="font-style:italic;color:#4fcfa8;">formules</span></div>' +
+    '<div style="font:400 12.5px/1.65 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;">Toutes les méthodologies de calcul de l\'app, en un seul endroit : la formule, les étapes, un exemple chiffré, et le piège classique à éviter.</div>' +
+    '<div style="margin-top:16px;display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;">' + toc + '</div></div>' +
+    '<div style="padding:6px 24px 30px;">' + cards + '</div>' +
+    '<div style="height:10px;"></div></div>';
+}
+
+function tplLabo() {
+  var card1 =
+    laboField('Capital de départ', 'ciCap', 0, 1000000, 5000, 50000) +
+    laboField('Versement mensuel', 'ciPmt', 0, 5000, 50, 300, 'ciPmtLbl') +
+    laboSeg('ciFreqMois', 'Mensuel', 'ciFreqAn', 'Annuel', 'Fréquence des versements') +
+    laboField('Frais sur versements', 'ciFeeIn', 0, 5, 0.25, 0) +
+    laboField('Rendement annuel brut', 'ciRate', 0, 15, 0.5, 6) +
+    laboField('Frais de gestion annuels', 'ciFeeMgmt', 0, 4, 0.1, 0) +
+    laboField('Durée', 'ciYr', 1, 40, 1, 20) +
+    laboKpiRow([{ id: 'ciFinal', label: 'CAPITAL FINAL' }, { id: 'ciInt', label: 'PLUS-VALUE NETTE', color: 'var(--acc)' }]) +
+    laboBar('ciBarCap', 'ciBarInt') + laboNote('ciNote');
+  var card2 =
+    laboSeg('perSolo', 'Célibataire', 'perCouple', 'Couple', 'Foyer') +
+    laboField('Revenu net imposable — déclarant 1', 'perR1', 0, 250000, 1000, 45000) +
+    '<div id="perR2Row" style="display:none;">' + laboField('Revenu net imposable — déclarant 2', 'perR2', 0, 250000, 1000, 35000) + '</div>' +
+    laboField('Nombre d’enfants à charge', 'perEnf', 0, 6, 1, 0) +
+    laboSeg('perLibre', 'Libre', 'perObj', 'Objectif en N mois', 'Versement') +
+    '<div id="perLibreRow">' + laboField('Versement PER (sur l’année)', 'perVers', 0, 60000, 500, 8000) + '</div>' +
+    '<div id="perObjRow" style="display:none;">' + laboField('Montant à atteindre', 'perTgt', 1000, 60000, 500, 10000) + laboField('En combien de mois', 'perMo', 1, 24, 1, 6) + '</div>' +
+    laboKpiRow([{ id: 'perGain', label: 'GAIN FISCAL RÉEL', color: 'var(--acc)' }, { id: 'perNet', label: 'EFFORT NET' }, { id: 'perTx', label: 'TAUX DU GAIN' }]) +
+    '<div id="perBreak" style="margin-top:6px;"></div>' + laboNote('perNote');
+  var card3 =
+    laboField('Montant emprunté', 'crCap', 20000, 1500000, 10000, 300000) +
+    laboField('Taux annuel', 'crRate', 0.5, 7, 0.1, 3.5) +
+    laboField('Durée', 'crYr', 5, 30, 1, 20) +
+    laboKpiRow([{ id: 'crMens', label: 'MENSUALITÉ' }, { id: 'crInt', label: 'COÛT DES INTÉRÊTS', color: 'var(--warn)' }]) +
+    laboBar('crBarCap', 'crBarInt') + laboNote('crNote');
+  var card4 =
+    laboField('Capital investi', 'frCap', 1000, 1000000, 5000, 100000) +
+    laboField('Rendement brut annuel', 'frBrut', 0, 12, 0.5, 6) +
+    laboField('Frais annuels', 'frFrais', 0, 5, 0.1, 1.5) +
+    laboField('Durée', 'frYr', 1, 40, 1, 25) +
+    laboKpiRow([{ id: 'frNet', label: 'CE QUE TU AS (NET)', color: 'var(--acc)' }, { id: 'frCost', label: 'COÛT TOTAL DES FRAIS', color: 'var(--warn)' }]) +
+    laboBar('frBarCap', 'frBarInt') + laboNote('frNote');
+  var guide = '<button type="button" id="pxGuideBtn" style="width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:11px 13px;font:500 12px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;margin-top:14px;">📄 Comment remplir depuis un DIC ? (exemples)</button>' +
+    '<div id="pxGuide" style="display:none;margin-top:10px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px;font:400 11.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);">' +
+    '<div>Reporte chaque valeur du DIC dans les bonnes cases :</div>' +
+    '<div style="margin-top:8px;"><b style="color:var(--ink);">Montant investi</b> — « Scénarios de performance » → « Exemple d’investissement » <i>(ex. 10 000 €)</i></div>' +
+    '<div style="margin-top:6px;"><b style="color:var(--ink);">Coupon /an (brut)</b> — Section 1 → « Intérêts » <i>(ex. 8 %)</i></div>' +
+    '<div style="margin-top:6px;"><b style="color:var(--ink);">Décrément (pts/an)</b> — Section 1 → indice « Decrement », 0 si absent <i>(ex. 4,7)</i></div>' +
+    '<div style="margin-top:6px;"><b style="color:var(--ink);">Barrière capital</b> — Section 1 → « Niveau de barrière », 100 % si capital garanti <i>(ex. 40 %)</i></div>' +
+    '<div style="margin-top:6px;"><b style="color:var(--ink);">Coûts d’entrée (produit)</b> — Section 4 → « Composition des coûts » <i>(ex. 8,91 %)</i></div>' +
+    '<div style="margin-top:6px;"><b style="color:var(--ink);">Frais de gestion /an</b> — Section 4 → « Coûts récurrents » <i>(ex. 0,80 %)</i></div>' +
+    '<div style="margin-top:6px;"><b style="color:var(--ink);">Coûts de sortie</b> — Section 4 → « Coûts de sortie », dus seulement si vente avant terme <i>(ex. 1,00 %)</i></div>' +
+    '<div style="margin-top:10px;color:var(--gold);">💡 Les frais du DIC sont ceux du PRODUIT. Ajoute à part les frais d’entrée du CGP / de l’enveloppe, absents du DIC.</div>' +
+    '<div style="margin-top:8px;">✅ Contrôle : « l’incidence des coûts annuels » du DIC (à l’échéance) doit être proche de ce qu’affiche le simulateur.</div>' +
+    '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;"><button type="button" id="pxFillCiti" style="flex:1;background:var(--acc);color:var(--on);border:none;border-radius:999px;padding:9px 12px;font:600 11px \'Inter\',sans-serif;cursor:pointer;">Exemple Citi (décrément)</button><button type="button" id="pxFillMS" style="flex:1;background:none;border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:9px 12px;font:500 11px \'Inter\',sans-serif;cursor:pointer;">Exemple Morgan Stanley</button></div>' +
+    '</div>';
+  var card5 = guide +
+    laboField('Montant investi', 'pxCap', 5000, 500000, 1000, 10000) +
+    laboField('Coupon conditionnel /an (brut)', 'pxCoup', 0, 12, 0.25, 8) +
+    laboField('Décrément de l’indice (pts/an)', 'pxDec', 0, 6, 0.1, 4.7) +
+    laboField('Barrière de protection du capital (%)', 'pxBar', 0, 100, 5, 40) +
+    laboField('Durée totale', 'pxN', 1, 12, 1, 12) +
+    '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--ink3);margin-top:18px;">FRAIS DU PRODUIT (DIC)</div>' +
+    laboField('Coûts d’entrée produit', 'pxEnt', 0, 12, 0.1, 8.9) +
+    laboField('Frais de gestion /an produit', 'pxGes', 0, 3, 0.1, 0.8) +
+    '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--ink3);margin-top:18px;">FRAIS CÔTÉ CGP / ENVELOPPE (HORS DIC)</div>' +
+    laboField('Frais d’entrée CGP / enveloppe', 'pxCgp', 0, 5, 0.1, 0) +
+    laboField('Valeur liquidative initiale de la part', 'pxPart', 10, 1000, 10, 100) +
+    '<div style="margin-top:10px;background:var(--panel2);border-left:3px solid var(--warn);border-radius:10px;padding:10px 12px;font:400 11px/1.55 \'Inter\',sans-serif;color:var(--ink2);">Ces frais sont prélevés avant l’achat des parts : ils réduisent le nominal qui travaille réellement dans le produit, pas seulement le résultat final.</div>' +
+    '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--ink3);margin-top:18px;">👇 SCÉNARIO DE SORTIE</div>' +
+    laboSeg3('scAuto', 'Remb. anticipé', 'scEch', 'À l’échéance', 'scVol', 'Sortie volontaire') +
+    '<div id="pxScenHint" style="font:400 11px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;"></div>' +
+    '<div id="pxYrRow" style="display:none;">' + laboField('Année de sortie / de rappel', 'pxYr', 1, 12, 1, 3) + '</div>' +
+    '<div id="pxPerfRow" style="display:none;">' + laboField('Performance du sous-jacent (avant décrément)', 'pxPerf', -70, 40, 1, -30) + '</div>' +
+    '<div id="pxSorRow" style="display:none;">' + laboField('Coûts de sortie (si tu retires)', 'pxSor', 0, 5, 0.1, 1) + '</div>' +
+    laboKpiRow([{ id: 'pxCost', label: 'FRAIS DÉDUITS', color: 'var(--warn)' }, { id: 'pxRes', label: 'TU RÉCUPÈRES' }, { id: 'pxNet', label: 'RÉSULTAT /AN', color: 'var(--acc)' }]) +
+    '<div id="pxBreak" style="margin-top:6px;"></div>' + laboNote('pxNote') +
+    '<div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--line);">' +
+    '<div style="font:500 13px \'Inter\',sans-serif;">🎯 Scénarios du DIC (PRIIPS)</div>' +
+    '<div style="font:400 11px/1.6 \'Inter\',sans-serif;color:var(--ink3);margin-top:5px;">Reporte les hypothèses de performance du sous-jacent des 4 scénarios réglementaires — ou ajoute les tiens — pour voir le montant net réellement perçu une fois les frais cabinet + produit déduits.</div>' +
+    '<div id="pxScenTable" style="margin-top:10px;"></div>' +
+    '<button type="button" id="pxScenAdd" style="width:100%;margin-top:10px;background:none;border:1px dashed var(--line);color:var(--ink2);border-radius:10px;padding:9px;font:500 11.5px \'Inter\',sans-serif;cursor:pointer;">+ Ajouter un scénario</button>' +
+    '</div>';
+
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
+    '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:16px;">Labo <span style="font-style:italic;">interactif</span></div>' +
+    '<div style="font:400 13px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;">5 simulateurs, 5 usages distincts. Chiffres élevés supportés — adapte-les à tes clients.</div></div>' +
+    '<div style="margin:0 24px;">' +
+    laboCard('UTILITÉ', 'var(--gold)', '🌱', 'Intérêts composés + versements', 'La puissance du temps + de l’épargne régulière.', card1) +
+    laboCard('UTILITÉ', 'var(--acc)', '💸', 'Levier fiscal du PER', 'Ton vrai gain fiscal PER selon tes revenus (gère les effets de tranche).', card2) +
+    laboCard('UTILITÉ', 'var(--ink2)', '🏦', 'Crédit : mensualité & coût total', 'Le vrai coût d’un emprunt.', card3) +
+    laboCard('UTILITÉ', 'var(--warn)', '🔍', 'Frais : combien ça coûte vraiment', 'Un seul capital investi, sans versements réguliers — pour isoler visuellement l\'effet des frais dans le temps (différent du simulateur d\'épargne ci-dessus, qui gère versements + frais ensemble).', card4) +
+    laboCard('UTILITÉ', 'var(--gold)', '🧾', 'Produit structuré : coûts, coupon & scénarios', 'Décortiquer un structuré depuis son DIC.', card5) +
+    '</div><div style="height:32px;"></div></div>';
+}
+
+function wireLabo() {
+  function $(id) { return document.getElementById(id); }
+  function ci() {
+    var cap = +$('ciCap').value, pmt = +$('ciPmt').value, r = +$('ciRate').value, y = +$('ciYr').value, feeIn = +$('ciFeeIn').value, feeM = +$('ciFeeMgmt').value, freq = laboState.ciFreq;
+    $('ciCapV').textContent = euro(cap); $('ciPmtV').textContent = euro(pmt); $('ciRateV').textContent = pctv(r);
+    $('ciYrV').textContent = y + ' ans'; $('ciFeeInV').textContent = pctv(feeIn); $('ciFeeMgmtV').textContent = pctv(feeM);
+    var m = y * 12, pmtMois = (freq === 'an') ? pmt / 12 : pmt;
+    var netAnnual = (1 + r / 100) * (1 - feeM / 100), rm = Math.pow(netAnnual, 1 / 12) - 1, rmBrut = Math.pow(1 + r / 100, 1 / 12) - 1;
+    var k = 1 - feeIn / 100, capNet = cap * k, pmtNet = pmtMois * k;
+    function fv(rate, c, pm) { return rate > 0 ? c * Math.pow(1 + rate, m) + pm * ((Math.pow(1 + rate, m) - 1) / rate) : c + pm * m; }
+    var fin = fv(rm, capNet, pmtNet), finBrut = fv(rmBrut, cap, pmtMois), verse = cap + pmtMois * m, gain = fin - verse, fraisTot = finBrut - fin;
+    $('ciFinal').textContent = euro(fin); $('ciInt').textContent = euro(gain);
+    var p = fin > 0 ? Math.round(Math.max(0, gain) / fin * 100) : 0;
+    $('ciBarCap').style.width = (100 - p) + '%'; $('ciBarInt').style.width = p + '%';
+    var note = 'Tu verses ' + euro(verse) + ' de ta poche ; capital final ' + euro(fin) + ' (plus-value nette ' + euro(gain) + ').';
+    if (feeIn > 0 || feeM > 0) note += ' Frais prélevés ≈ ' + euro(fraisTot) + ' sur la période (sans frais : ' + euro(finBrut) + ').';
+    $('ciNote').textContent = note;
+  }
+  function per() {
+    var couple = laboState.perCouple, mode = laboState.perMode;
+    var r1 = +$('perR1').value, r2 = couple ? +$('perR2').value : 0, enf = +$('perEnf').value;
+    $('perR1V').textContent = euro(r1); $('perR2V').textContent = euro(r2); $('perEnfV').textContent = enf;
+    var vers, moTxt = '';
+    if (mode === 'obj') {
+      var tgt = +$('perTgt').value, mo = +$('perMo').value;
+      vers = tgt; $('perTgtV').textContent = euro(tgt); $('perMoV').textContent = mo + ' mois';
+      moTxt = 'Pour atteindre ' + euro(tgt) + ' en ' + mo + ' mois : verse ' + euro(Math.round(tgt / mo)) + ' /mois. ';
+    } else { vers = +$('perVers').value; $('perVersV').textContent = euro(vers); }
+    var parts = partsOf(couple, enf), rev = r1 + r2;
+    var irA = irTax(rev, parts), irB = irTax(Math.max(0, rev - vers), parts);
+    var gain = irA - irB, net = vers - gain, tx = vers > 0 ? gain / vers * 100 : 0;
+    $('perGain').textContent = euro(gain); $('perNet').textContent = euro(net); $('perTx').textContent = pctv(tx);
+    $('perBreak').innerHTML = laboLine('Parts fiscales', parts, false) + laboLine('Impôt avant versement PER', euro(irA), false) + laboLine('Impôt après versement PER', euro(irB), false) + laboLine('Économie d’impôt', euro(gain), true);
+    $('perNote').textContent = moTxt + 'Verser ' + euro(vers) + ' te fait économiser ' + euro(gain) + ' d’impôt : ça ne coûte réellement que ' + euro(net) + ' (taux du gain ' + pctv(tx) + '). Le gain suit ta tranche : plus tu es haut, plus il est fort, et il baisse si le versement te fait changer de tranche.';
+  }
+  function cr() {
+    var P = +$('crCap').value, ra = +$('crRate').value, y = +$('crYr').value;
+    $('crCapV').textContent = euro(P); $('crRateV').textContent = pctv(ra); $('crYrV').textContent = y + ' ans';
+    var n = y * 12, r = ra / 100 / 12, M = r > 0 ? P * r / (1 - Math.pow(1 + r, -n)) : P / n, tot = M * n, intr = tot - P;
+    $('crMens').textContent = euro(M); $('crInt').textContent = euro(intr);
+    var p = tot > 0 ? Math.round(intr / tot * 100) : 0;
+    $('crBarCap').style.width = (100 - p) + '%'; $('crBarInt').style.width = p + '%';
+    $('crNote').textContent = 'Sur ' + y + ' ans tu rembourses ' + euro(tot) + ', dont ' + euro(intr) + ' d’intérêts (' + p + '% du total).';
+  }
+  function fr() {
+    var P = +$('frCap').value, brut = +$('frBrut').value, fee = +$('frFrais').value, y = +$('frYr').value;
+    $('frCapV').textContent = euro(P); $('frBrutV').textContent = pctv(brut); $('frFraisV').textContent = pctv(fee); $('frYrV').textContent = y + ' ans';
+    var net = P * Math.pow((1 + brut / 100) * (1 - fee / 100), y), gross = P * Math.pow(1 + brut / 100, y), cost = gross - net;
+    $('frNet').textContent = euro(net); $('frCost').textContent = euro(cost);
+    var p = gross > 0 ? Math.round(cost / gross * 100) : 0;
+    $('frBarCap').style.width = (100 - p) + '%'; $('frBarInt').style.width = p + '%';
+    $('frNote').textContent = 'Sans frais tu aurais ' + euro(gross) + ' ; avec ' + pctv(fee) + ' de frais, il te reste ' + euro(net) + '. Coût : ' + euro(cost) + ' sur ' + y + ' ans.';
+  }
+  function st() {
+    var M = +$('pxCap').value, coup = +$('pxCoup').value, dec = +$('pxDec').value, N = +$('pxN').value, bar = +$('pxBar').value, ent = +$('pxEnt').value, ges = +$('pxGes').value, cgp = +$('pxCgp').value, sor = +$('pxSor').value, partVal = Math.max(1, +$('pxPart').value);
+    var mode = laboState.pxMode;
+    if (+$('pxYr').max !== N) { $('pxYr').max = N; if (+$('pxYr').value > N) $('pxYr').value = N; }
+    var yr = Math.min(+$('pxYr').value, N), perf = +$('pxPerf').value;
+    $('pxCapV').textContent = euro(M); $('pxCoupV').textContent = pctv(coup); $('pxDecV').textContent = (Math.round(dec * 10) / 10).toString().replace('.', ',') + ' pts';
+    $('pxNV').textContent = N + ' ans'; $('pxBarV').textContent = bar + ' %'; $('pxEntV').textContent = pctv(ent); $('pxGesV').textContent = pctv(ges);
+    $('pxCgpV').textContent = pctv(cgp); $('pxSorV').textContent = pctv(sor); $('pxYrV').textContent = yr + ' ans'; $('pxPerfV').textContent = (perf > 0 ? '+' : '') + perf + ' %'; $('pxPartV').textContent = euro(partVal);
+    var y = (mode === 'ech') ? N : yr;
+    var capInvested = M * (1 - cgp / 100), entryCGP = M - capInvested, entryProduit = capInvested * ent / 100;
+    var partsAvecFrais = capInvested / partVal, partsSansFrais = M / partVal;
+    var gest = capInvested * ges / 100 * y, exit = 0, coupons = 0, capital = 0, valeur = 0, gain = 0, statut = '', extra = '';
+    if (mode === 'auto') {
+      coupons = capInvested * coup / 100 * y; capital = capInvested; valeur = Math.max(0, capital + coupons - gest); gain = valeur - M;
+      statut = 'Remboursement anticipé à ' + yr + ' ans : tu récupères le nominal investi (' + euro(capInvested) + ') + les coupons versés. Pas de perte en capital, pas de coûts de sortie.';
+    } else if (mode === 'ech') {
+      var adj = perf - dec * N, lvl = 100 + adj;
+      if (lvl >= bar) { capital = capInvested; coupons = capInvested * coup / 100 * N; statut = 'À l’échéance : sous-jacent net de décrément à ' + Math.round(adj) + ' % → au-dessus de la barrière (' + bar + ' %). Capital protégé + coupons.'; }
+      else { capital = capInvested * Math.max(0, lvl / 100); coupons = 0; statut = 'À l’échéance : sous-jacent net de décrément à ' + Math.round(adj) + ' % → sous la barrière (' + bar + ' %). Perte en capital : tu ne touches que ' + euro(capital) + '.'; }
+      valeur = Math.max(0, capital + coupons - gest); gain = valeur - M;
+      extra = 'Le décrément retire ' + pctv(dec) + '/an à l’indice, soit ~' + Math.round(dec * N) + ' pts sur ' + N + ' ans : la performance brute de ' + (perf > 0 ? '+' : '') + perf + ' % devient ' + Math.round(adj) + ' % nette.';
+    } else {
+      var adj2 = perf - dec * yr, mkt = capInvested * Math.max(0, (100 + adj2) / 100);
+      exit = mkt * sor / 100; coupons = 0; capital = mkt; valeur = Math.max(0, mkt - gest - exit); gain = valeur - M;
+      statut = 'Sortie volontaire à ' + yr + ' ans (produit non rappelé) : tu vends au prix de marché ≈ ' + euro(mkt) + ', puis tu paies ' + euro(exit) + ' de coûts de sortie et la gestion. La protection du capital ne s’applique pas avant l’échéance.';
+    }
+    var rendNet = (M > 0 && y > 0) ? (Math.pow(Math.max(0, valeur) / M, 1 / y) - 1) * 100 : 0;
+    $('pxCost').textContent = euro(entryCGP + gest + exit); $('pxRes').textContent = euro(valeur); $('pxNet').textContent = pctv(rendNet);
+    var lines = '';
+    if (entryCGP > 0) lines += laboLine('Frais d’entrée cabinet — retenus avant achat des parts', euro(entryCGP), false);
+    lines += laboLine('Capital réellement investi dans le produit', euro(capInvested), false);
+    lines += laboLine('Parts souscrites (VL ' + euro(partVal) + ')', (Math.round(partsAvecFrais * 100) / 100) + (entryCGP > 0 ? ' au lieu de ' + (Math.round(partsSansFrais * 100) / 100) + ' sans frais d’entrée' : ''), false);
+    lines += laboLine('Marge de structuration (déjà comprise dans le prix)', euro(entryProduit), false);
+    lines += laboLine('Frais de gestion cumulés (' + y + ' an' + (y > 1 ? 's' : '') + ')', euro(gest), false);
+    if (mode === 'vol') lines += laboLine('Coûts de sortie', euro(exit), false);
+    if (coupons > 0) lines += laboLine('Coupons perçus', '+' + euro(coupons), false);
+    lines += laboLine('Capital récupéré', euro(capital), false);
+    lines += laboLine(gain >= 0 ? 'Gain net estimé (sur ton versement initial)' : 'Perte nette estimée (sur ton versement initial)', euro(gain), true);
+    $('pxBreak').innerHTML = lines;
+    var incid = (M > 0 && y > 0) ? ((entryCGP + entryProduit + gest + exit) / M / y * 100) : 0;
+    $('pxNote').textContent = statut + (extra ? ' ' + extra : '') + ' · Incidence des coûts ≈ ' + pctv(incid) + '/an (toutes couches, comparable au DIC).';
+    renderPxScenTable();
+  }
+  function pxScenCompute(s) {
+    var M = +$('pxCap').value, N = +$('pxN').value, dec = +$('pxDec').value, bar = +$('pxBar').value, coup = +$('pxCoup').value, ges = +$('pxGes').value, cgp = +$('pxCgp').value;
+    var capInvested = M * (1 - cgp / 100);
+    var adj = s.perf - dec * N, lvl = 100 + adj;
+    var capital = lvl >= bar ? capInvested : capInvested * Math.max(0, lvl / 100);
+    var coupons = lvl >= bar ? capInvested * coup / 100 * N : 0;
+    var gest = capInvested * ges / 100 * N;
+    var valeur = Math.max(0, capital + coupons - gest);
+    var rendNet = (M > 0 && N > 0) ? (Math.pow(Math.max(0, valeur) / M, 1 / N) - 1) * 100 : 0;
+    return { valeur: valeur, rendNet: rendNet };
+  }
+  function renderPxScenTable() {
+    var head = '<div style="display:flex;align-items:center;gap:8px;padding-bottom:8px;font:500 9px \'Inter\',sans-serif;letter-spacing:.06em;color:var(--ink3);"><span style="flex:1;">SCÉNARIO</span><span style="width:60px;text-align:right;">S-JACENT</span><span style="width:76px;text-align:right;">NET REÇU</span><span style="width:52px;text-align:right;">/AN</span><span style="width:18px;"></span></div>';
+    var rows = laboState.pxScenarios.map(function (s, i) {
+      var c = pxScenCompute(s);
+      return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line);">' +
+        '<input data-pxrow="' + i + '" data-f="label" value="' + esc(s.label) + '" style="flex:1;min-width:0;background:none;border:none;color:var(--ink);font:500 11px \'Inter\',sans-serif;padding:0;">' +
+        '<span style="width:60px;display:flex;align-items:center;justify-content:flex-end;gap:2px;"><input data-pxrow="' + i + '" data-f="perf" type="number" value="' + s.perf + '" style="width:42px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font:500 11px \'Inter\',sans-serif;padding:4px 4px;text-align:right;"><span style="font:400 9.5px \'Inter\',sans-serif;color:var(--ink3);">%</span></span>' +
+        '<span id="pxScenVal_' + i + '" style="width:76px;text-align:right;font:500 11.5px \'Inter\',sans-serif;color:var(--ink);">' + euro(c.valeur) + '</span>' +
+        '<span id="pxScenRend_' + i + '" style="width:52px;text-align:right;font:500 11px \'Inter\',sans-serif;color:' + (c.rendNet >= 0 ? 'var(--acc2)' : 'var(--warn)') + ';">' + pctv(c.rendNet) + '</span>' +
+        '<button data-pxdel="' + i + '" type="button" style="width:18px;background:none;border:none;color:var(--ink3);cursor:pointer;font-size:12px;padding:0;">✕</button></div>';
+    }).join('');
+    $('pxScenTable').innerHTML = head + rows;
+  }
+  function pxScenUpdateRow(i) {
+    var s = laboState.pxScenarios[i]; if (!s) return;
+    var c = pxScenCompute(s);
+    var elV = $('pxScenVal_' + i), elR = $('pxScenRend_' + i);
+    if (elV) elV.textContent = euro(c.valeur);
+    if (elR) { elR.textContent = pctv(c.rendNet); elR.style.color = c.rendNet >= 0 ? 'var(--acc2)' : 'var(--warn)'; }
+  }
+  function pxMode(m) {
+    laboState.pxMode = m;
+    $('scAuto').classList.toggle('on', m === 'auto'); $('scEch').classList.toggle('on', m === 'ech'); $('scVol').classList.toggle('on', m === 'vol');
+    $('pxYrRow').style.display = (m === 'auto' || m === 'vol') ? '' : 'none';
+    $('pxPerfRow').style.display = (m === 'ech' || m === 'vol') ? '' : 'none';
+    $('pxSorRow').style.display = (m === 'vol') ? '' : 'none';
+    $('pxScenHint').textContent = (m === 'auto') ? 'Le sous-jacent a rempli la condition de rappel : tu es remboursé par anticipation au nominal + coupons.' : (m === 'ech') ? 'Le produit va au terme : le remboursement dépend de la performance du sous-jacent (après décrément) face à la barrière.' : 'Tu revends avant le terme sur le marché secondaire : pas de protection, plus des coûts de sortie.';
+    st();
+  }
+  function ciFreq(f) {
+    laboState.ciFreq = f;
+    $('ciFreqMois').classList.toggle('on', f === 'mois'); $('ciFreqAn').classList.toggle('on', f === 'an');
+    $('ciPmtLbl').textContent = (f === 'an') ? 'Versement annuel' : 'Versement mensuel';
+    ci();
+  }
+  function perFoyer(c) {
+    laboState.perCouple = c;
+    $('perSolo').classList.toggle('on', !c); $('perCouple').classList.toggle('on', c);
+    $('perR2Row').style.display = c ? '' : 'none';
+    per();
+  }
+  function perMode(m) {
+    laboState.perMode = m;
+    $('perLibre').classList.toggle('on', m === 'libre'); $('perObj').classList.toggle('on', m === 'obj');
+    $('perLibreRow').style.display = (m === 'libre') ? '' : 'none'; $('perObjRow').style.display = (m === 'obj') ? '' : 'none';
+    per();
+  }
+  ['ciCap', 'ciPmt', 'ciRate', 'ciYr', 'ciFeeIn', 'ciFeeMgmt'].forEach(function (id) { $(id).addEventListener('input', ci); });
+  $('ciFreqMois').addEventListener('click', function () { ciFreq('mois'); });
+  $('ciFreqAn').addEventListener('click', function () { ciFreq('an'); });
+  ['perR1', 'perR2', 'perEnf', 'perVers', 'perTgt', 'perMo'].forEach(function (id) { $(id).addEventListener('input', per); });
+  $('perSolo').addEventListener('click', function () { perFoyer(false); });
+  $('perCouple').addEventListener('click', function () { perFoyer(true); });
+  $('perLibre').addEventListener('click', function () { perMode('libre'); });
+  $('perObj').addEventListener('click', function () { perMode('obj'); });
+  ['crCap', 'crRate', 'crYr'].forEach(function (id) { $(id).addEventListener('input', cr); });
+  ['frCap', 'frBrut', 'frFrais', 'frYr'].forEach(function (id) { $(id).addEventListener('input', fr); });
+  ['pxCap', 'pxCoup', 'pxDec', 'pxBar', 'pxN', 'pxEnt', 'pxGes', 'pxCgp', 'pxSor', 'pxYr', 'pxPerf', 'pxPart'].forEach(function (id) { $(id).addEventListener('input', st); });
+  $('pxScenTable').addEventListener('input', function (e) {
+    var t = e.target, iAttr = t.getAttribute('data-pxrow');
+    if (iAttr == null) return;
+    var i = +iAttr, f = t.getAttribute('data-f');
+    if (f === 'label') laboState.pxScenarios[i].label = t.value;
+    else if (f === 'perf') { laboState.pxScenarios[i].perf = +t.value || 0; pxScenUpdateRow(i); }
+  });
+  $('pxScenTable').addEventListener('click', function (e) {
+    var t = e.target.closest('[data-pxdel]');
+    if (!t) return;
+    laboState.pxScenarios.splice(+t.getAttribute('data-pxdel'), 1);
+    renderPxScenTable();
+  });
+  $('pxScenAdd').addEventListener('click', function () {
+    laboState.pxScenarios.push({ label: 'Mon scénario', perf: 0 });
+    renderPxScenTable();
+  });
+  $('scAuto').addEventListener('click', function () { pxMode('auto'); });
+  $('scEch').addEventListener('click', function () { pxMode('ech'); });
+  $('scVol').addEventListener('click', function () { pxMode('vol'); });
+  $('pxGuideBtn').addEventListener('click', function () {
+    var hid = $('pxGuide').style.display === 'none';
+    $('pxGuide').style.display = hid ? '' : 'none';
+    $('pxGuideBtn').textContent = hid ? '✕ Masquer le guide' : '📄 Comment remplir depuis un DIC ? (exemples)';
+  });
+  $('pxFillCiti').addEventListener('click', function () {
+    $('pxCap').value = 10000; $('pxCoup').value = 8; $('pxDec').value = 4.7; $('pxBar').value = 40; $('pxN').value = 12;
+    $('pxEnt').value = 8.9; $('pxGes').value = 0.8; $('pxCgp').value = 0; $('pxSor').value = 1; pxMode('ech');
+  });
+  $('pxFillMS').addEventListener('click', function () {
+    $('pxCap').value = 10000; $('pxCoup').value = 5.5; $('pxDec').value = 0; $('pxBar').value = 100; $('pxN').value = 12;
+    $('pxEnt').value = 11.2; $('pxGes').value = 0.8; $('pxCgp').value = 0; $('pxSor').value = 0.5; pxMode('ech');
+  });
+  ciFreq(laboState.ciFreq); perFoyer(laboState.perCouple); perMode(laboState.perMode); cr(); fr(); pxMode(laboState.pxMode);
+}
+
+// ---- Calcul mental chronométré ----------------------------------------------
+var MEN_TIME = 25;
+var mentalState = { timer: null, left: 0, score: 0, idx: 0, total: 10, cur: null, log: [], answered: false };
+function _ri(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+function _pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+var MEN_GENS = [
+  function () { var b = _ri(2, 40) * 10; return { q: '10 % de ' + fmtNum(b) + ' = ?', a: b * 0.10, method: '10 % = on décale la virgule d’un cran : ' + fmtNum(b) + ' ÷ 10.' }; },
+  function () { var b = _ri(2, 40) * 10; return { q: '5 % de ' + fmtNum(b) + ' = ?', a: b * 0.05, method: '5 % = la moitié de 10 %. Prends 10 % puis ÷ 2.' }; },
+  function () { var b = _ri(2, 30) * 10; return { q: '20 % de ' + fmtNum(b) + ' = ?', a: b * 0.20, method: '20 % = 10 % × 2.' }; },
+  function () { var b = _ri(2, 20) * 20; return { q: '25 % de ' + fmtNum(b) + ' = ?', a: b * 0.25, method: '25 % = ÷ 4 (la moitié de la moitié).' }; },
+  function () { var b = _ri(2, 40) * 10; return { q: '50 % de ' + fmtNum(b) + ' = ?', a: b * 0.50, method: '50 % = ÷ 2.' }; },
+  function () { var b = _ri(3, 30) * 100; return { q: '1 % de ' + fmtNum(b) + ' = ?', a: b * 0.01, method: '1 % = ÷ 100.' }; },
+  function () { var b = _ri(2, 20) * 20; return { q: '15 % de ' + fmtNum(b) + ' = ?', a: b * 0.15, method: '15 % = 10 % + sa moitié (5 %).' }; },
+  function () { var n = _ri(4, 40) * 10; return { q: fmtNum(n) + ' × 5 = ?', a: n * 5, method: '×5 = ×10 puis ÷ 2.' }; },
+  function () { var n = _ri(3, 30) * 4; return { q: fmtNum(n) + ' × 25 = ?', a: n * 25, method: '×25 = ×100 puis ÷ 4.' }; },
+  function () { var n = _ri(4, 40) * 2; return { q: fmtNum(n) + ' × 50 = ?', a: n * 50, method: '×50 = ×100 puis ÷ 2.' }; },
+  function () { var n = _ri(3, 20); return { q: fmtNum(n) + ' × 9 = ?', a: n * 9, method: '×9 = ×10 moins une fois le nombre.' }; },
+  function () { var n = _ri(3, 20); return { q: fmtNum(n) + ' × 11 = ?', a: n * 11, method: '×11 = ×10 plus une fois le nombre.' }; },
+  function () {
+    var a = _ri(15, 90) * 10, b = _ri(15, 90) * 10;
+    var ra = Math.round(a / 100) * 100, rb = Math.round(b / 100) * 100, adj = (a - ra) + (b - rb);
+    var adjTxt = adj === 0 ? '' : (' puis ajuste de ' + (adj > 0 ? '+' : '') + adj + '.');
+    return { q: fmtNum(a) + ' + ' + fmtNum(b) + ' = ?', a: a + b, method: fmtNum(a) + ' ≈ ' + fmtNum(ra) + ' et ' + fmtNum(b) + ' ≈ ' + fmtNum(rb) + ' → ' + fmtNum(ra + rb) + '.' + adjTxt };
+  },
+  function () { var base = _ri(5, 40) * 100, p = _pick([10, 20, 25, 50]); return { q: 'Augmenter ' + fmtNum(base) + ' de ' + p + ' % = ?', a: base * (1 + p / 100), method: 'Augmenter de ' + p + ' % = ×(1 + ' + p + '/100). Ici ×' + (1 + p / 100).toString().replace('.', ',') + '.' }; },
+  function () { var cap = _pick([5000, 10000, 20000, 50000]), r = _pick([2, 3, 4, 5]); return { q: 'Intérêts d’un an : ' + r + ' % de ' + fmtNum(cap) + ' = ?', a: cap * r / 100, method: 'Intérêts = capital × taux %. Ex : ' + r + ' % de ' + fmtNum(cap) + '.' }; },
+  function () { var r = _pick([2, 3, 4, 6, 8, 9, 12]); return { q: 'À ' + r + ' %/an, en combien d’années un capital double (règle de 72) ?', a: Math.round(72 / r * 10) / 10, method: 'Temps pour doubler ≈ 72 ÷ taux. Ici 72 ÷ ' + r + '.' }; }
+];
+function mentalGen() { return _pick(MEN_GENS)(); }
+
+function tplMental(v) {
+  return '<div style="flex:1;overflow:auto;min-height:0;">' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
+    '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:16px;text-align:center;">Calcul <span style="font-style:italic;">mental</span></div>' +
+    '<div style="font:400 13px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;text-align:center;">' + mentalState.total + ' questions, ' + MEN_TIME + ' s chacune. À chaque réponse, une astuce de calcul — et un récapitulatif complet à la fin.</div></div>' +
+    '<div id="menStage" style="margin:22px 24px 0;"></div><div style="height:32px;"></div></div>';
+}
+function mentalIntroHtml(v) {
+  return '<div style="background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px;text-align:center;">' +
+    '<div style="font:300 22px Fraunces,serif;">Prêt ?</div>' +
+    '<div style="font:400 12px \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;">Meilleur score : <b style="color:var(--ink);font-family:\'Inter\',sans-serif;">' + v.mentalBest + '</b> / ' + mentalState.total + '</div>' +
+    '<button data-action="mentalStart" style="margin-top:16px;border:none;border-radius:999px;padding:14px 22px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Commencer →</button></div>';
+}
+function wireMentalIntro() {
+  var btn = document.querySelector('#menStage [data-action="mentalStart"]');
+  if (btn) btn.addEventListener('click', mentalStart);
+}
+function mentalStart() { mentalState.score = 0; mentalState.idx = 0; mentalState.log = []; mentalNext(); }
+function mentalNext() {
+  if (mentalState.timer) { clearInterval(mentalState.timer); mentalState.timer = null; }
+  if (mentalState.idx >= mentalState.total) { mentalEnd(); return; }
+  mentalState.cur = mentalGen(); mentalState.left = MEN_TIME; mentalState.answered = false;
+  var stage = document.getElementById('menStage');
+  if (!stage) return;
+  stage.innerHTML = '<div style="text-align:center;font:500 11px \'Inter\',sans-serif;color:var(--ink2);">Question ' + (mentalState.idx + 1) + ' / ' + mentalState.total + ' · Score ' + mentalState.score + '</div>' +
+    '<div style="height:4px;border-radius:2px;background:var(--line);overflow:hidden;margin-top:10px;"><div id="menBar" style="height:4px;background:var(--acc);width:100%;"></div></div>' +
+    '<div id="menTimer" style="text-align:center;font:500 26px \'Inter\',sans-serif;margin-top:10px;color:var(--ink);">' + MEN_TIME + '</div>' +
+    '<div id="menCard" style="background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:20px;margin-top:12px;">' +
+    '<div id="menQ" style="font:300 22px/1.35 Fraunces,serif;text-align:center;"></div>' +
+    '<input id="menInp" type="number" inputmode="decimal" autocomplete="off" placeholder="?" style="margin-top:16px;">' +
+    '<div id="menTip" style="display:none;margin-top:12px;font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--acc);"></div>' +
+    '<div style="margin-top:14px;"><button id="menValid" style="width:100%;border:none;border-radius:999px;padding:14px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Valider →</button></div></div>';
+  var qEl = document.getElementById('menQ'), inp = document.getElementById('menInp');
+  qEl.textContent = mentalState.cur.q;
+  try { inp.focus(); } catch (e) {}
+  function trySubmit() {
+    if (String(inp.value).trim() === '') {
+      inp.style.borderColor = 'var(--warn)';
+      inp.placeholder = 'Réponse obligatoire';
+      setTimeout(function () { inp.style.borderColor = ''; }, 900);
+      return;
+    }
+    mentalAnswer(false);
+  }
+  document.getElementById('menValid').addEventListener('click', trySubmit);
+  inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); trySubmit(); } });
+  mentalState.timer = setInterval(function () {
+    if (state.screen !== 'mental') { clearInterval(mentalState.timer); mentalState.timer = null; return; }
+    mentalState.left--;
+    var tEl = document.getElementById('menTimer');
+    if (tEl) { tEl.textContent = mentalState.left; tEl.style.color = mentalState.left <= 5 ? 'var(--warn)' : 'var(--ink)'; }
+    var bar = document.getElementById('menBar');
+    if (bar) bar.style.width = Math.max(0, mentalState.left / MEN_TIME * 100) + '%';
+    if (mentalState.left <= 0) { clearInterval(mentalState.timer); mentalState.timer = null; mentalAnswer(true); }
+  }, 1000);
+}
+function mentalAnswer(timeout) {
+  if (mentalState.answered) return;
+  if (mentalState.timer) { clearInterval(mentalState.timer); mentalState.timer = null; }
+  mentalState.answered = true;
+  var inp = document.getElementById('menInp');
+  var raw = inp ? inp.value : '';
+  var val = parseFloat(String(raw).replace(',', '.'));
+  var ok = (timeout !== true) && !isNaN(val) && Math.abs(val - mentalState.cur.a) < 0.01;
+  if (ok) mentalState.score++;
+  mentalState.log.push({ q: mentalState.cur.q, your: (timeout === true || raw === '') ? '—' : raw, a: mentalState.cur.a, ok: ok, method: mentalState.cur.method });
+  var card = document.getElementById('menCard');
+  if (inp) inp.disabled = true;
+  var vb = document.getElementById('menValid'); if (vb) vb.style.display = 'none';
+  var badge = document.createElement('div');
+  badge.style.cssText = 'text-align:center;font:600 14px \'Inter\',sans-serif;border-radius:12px;padding:10px;margin-bottom:14px;' +
+    (ok ? 'background:' + hexA('#4fcfa8', 0.16) + ';color:#4fcfa8;' : 'background:' + hexA('#e2895f', 0.16) + ';color:#e2895f;');
+  badge.textContent = ok ? '✅ Correct !' : (timeout ? '⏱ Temps écoulé' : '❌ Raté');
+  card.insertBefore(badge, card.firstChild);
+  var qEl = document.getElementById('menQ');
+  if (qEl && !ok) qEl.innerHTML = esc(mentalState.cur.q) + '<div style="font:500 13px \'Inter\',sans-serif;color:var(--warn);margin-top:8px;">Bonne réponse : ' + fmtNum(mentalState.cur.a) + '</div>';
+  var tip = document.getElementById('menTip');
+  if (tip) { tip.innerHTML = '💡 <b>Méthode :</b> ' + esc(mentalState.cur.method); tip.style.display = 'block'; tip.style.background = 'var(--panel2)'; tip.style.border = '1px solid var(--line)'; tip.style.borderRadius = '12px'; tip.style.padding = '12px 14px'; }
+  mentalState.idx++;
+  if (card) {
+    var nb = document.createElement('button');
+    nb.style.cssText = 'width:100%;border:none;border-radius:999px;padding:14px;margin-top:14px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;';
+    nb.textContent = (mentalState.idx >= mentalState.total ? 'Voir le récapitulatif →' : 'Question suivante →');
+    nb.addEventListener('click', function () { if (state.screen === 'mental') mentalNext(); });
+    card.appendChild(nb);
+    try { nb.focus(); } catch (e) {}
+  }
+}
+function mentalEnd() {
+  var wasBest = mentalState.score > (store.mentalBest || 0);
+  if (wasBest) { store.mentalBest = mentalState.score; save(); }
+  var stage = document.getElementById('menStage');
+  if (!stage) return;
+  var pct = Math.round(mentalState.score / mentalState.total * 100);
+  var h = '<div style="background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px;text-align:center;">' +
+    '<div style="font:400 12px \'Inter\',sans-serif;color:var(--ink2);">Terminé !</div>' +
+    '<div style="font:300 46px Fraunces,serif;margin-top:8px;">' + mentalState.score + ' / ' + mentalState.total + '</div>' +
+    '<div style="font:400 12.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + (pct >= 80 ? 'Excellent' : pct >= 50 ? 'Bien' : 'À retravailler') + (wasBest ? ' — 🏆 nouveau record !' : '') + '</div>' +
+    '<div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:4px;">Meilleur : <b style="color:var(--ink);font-family:\'Inter\',sans-serif;">' + (store.mentalBest || 0) + '</b> / ' + mentalState.total + '</div>' +
+    '<button id="menAgain" style="margin-top:14px;border:none;border-radius:999px;padding:14px 22px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Rejouer →</button></div>';
+  h += '<div style="margin-top:18px;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">RÉCAPITULATIF</div><div style="display:flex;flex-direction:column;gap:9px;margin-top:12px;">';
+  mentalState.log.forEach(function (r) {
+    h += '<div style="background:var(--panel);border:1px solid ' + (r.ok ? 'var(--line)' : 'var(--warn)') + ';border-radius:14px;padding:13px;">' +
+      '<div style="display:flex;gap:9px;align-items:flex-start;font:400 12.5px/1.4 \'Inter\',sans-serif;"><span style="color:' + (r.ok ? 'var(--acc)' : 'var(--warn)') + ';font-weight:600;">' + (r.ok ? '✓' : '✗') + '</span><span>' + esc(r.q) + '</span></div>' +
+      '<div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">Ta réponse : <b style="color:var(--ink);">' + esc(r.your) + '</b> · Bonne réponse : <b style="color:var(--ink);">' + fmtNum(r.a) + '</b></div>' +
+      '<div style="font:400 11px/1.5 \'Inter\',sans-serif;color:var(--acc);margin-top:6px;">💡 ' + esc(r.method) + '</div></div>';
+  });
+  h += '</div></div>';
+  stage.innerHTML = h;
+  document.getElementById('menAgain').addEventListener('click', mentalStart);
+}
+
+// ---- render loop -----------------------------------------------------------
+var appEl, confettiEl, screenEl, tabsEl;
+var lastScreenKey = null;
+var lastReadyFlag = false;
+
+function reviveSvgReveal(root) {
+  root.querySelectorAll('svg').forEach(function (svg) {
+    if (svg.querySelector('.v16bar-anim, .v16draw, [data-hole]')) return;
+    Array.prototype.forEach.call(svg.children, function (c, i) {
+      c.style.transformBox = 'fill-box';
+      c.style.transformOrigin = 'center';
+      c.style.animation = 'kfRise .4s cubic-bezier(.16,1,.3,1) both';
+      c.style.animationDelay = (i * 0.06).toFixed(2) + 's';
+    });
+  });
+}
+
+function animateCountUp(root) {
+  root.querySelectorAll('[data-countup]').forEach(function (el) {
+    var target = parseFloat(el.getAttribute('data-countup'));
+    if (!isFinite(target)) return;
+    var suffix = el.getAttribute('data-countup-suffix') || '';
+    var start = performance.now(), dur = 700;
+    function tick(now) {
+      var p = Math.min(1, (now - start) / dur);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(target * eased) + suffix;
+      if (p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+function ensureSkeleton() {
+  appEl = document.getElementById('app');
+  appEl.innerHTML = '<div id="confetti-slot"></div><div id="screen" class="scr"></div><div id="tabs-slot"></div>';
+  confettiEl = document.getElementById('confetti-slot');
+  screenEl = document.getElementById('screen');
+  tabsEl = document.getElementById('tabs-slot');
+}
+
+function flipOrderRows(mutateFn) {
+  var rows = Array.prototype.slice.call(document.querySelectorAll('[data-order-row]'));
+  var oldPos = {};
+  rows.forEach(function (r) { oldPos[r.getAttribute('data-idx')] = r.getBoundingClientRect().top; });
+  mutateFn();
+  render();
+  var newRows = Array.prototype.slice.call(document.querySelectorAll('[data-order-row]'));
+  newRows.forEach(function (r) {
+    var old = oldPos[r.getAttribute('data-idx')];
+    if (old == null) return;
+    var delta = old - r.getBoundingClientRect().top;
+    if (Math.abs(delta) < 1) return;
+    r.style.transition = 'none';
+    r.style.transform = 'translateY(' + delta + 'px)';
+    requestAnimationFrame(function () {
+      r.style.transition = 'transform .28s cubic-bezier(.16,1,.3,1)';
+      r.style.transform = 'translateY(0)';
+    });
+  });
+}
+function render() {
+  if (!appEl) ensureSkeleton();
+  var v = computeVals();
+  appEl.setAttribute('data-theme', 'dark');
+  confettiEl.innerHTML = v.isConfetti ? confettiHtml() : '';
+  tabsEl.innerHTML = v.showTabs ? tplTabs(v) : '';
+
+  var html = '';
+  if (v.isOnb) html = tplOnb(v);
+  else if (v.isHome) html = tplHome(v);
+  else if (v.isBrowse) html = tplBrowse(v);
+  else if (v.isCat) html = tplCat(v);
+  else if (v.isQuiz) html = tplQuiz(v);
+  else if (v.isDone) html = tplDone(v);
+  else if (v.isExamPick) html = tplExamPick(v);
+  else if (v.isExamResult) html = tplExamResult(v);
+  else if (v.isSrs) html = tplSrs(v);
+  else if (v.isCourses) html = tplCourses(v);
+  else if (v.isCoursePole) html = tplCoursePole(v);
+  else if (v.isFiche) html = tplFiche(v);
+  else if (v.isFicheReview) html = tplFicheReview(v);
+  else if (v.isProgress) html = tplProgress(v);
+  else if (v.isProfile) html = tplProfile(v);
+  else if (v.isLabo) html = tplLabo(v);
+  else if (v.isCulture) html = tplCulture(v);
+  else if (v.isCultureDetail) html = tplCultureDetail(v);
+  else if (v.isCultureTest) html = tplCultureTest(v);
+  else if (v.isMental) html = tplMental(v);
+  else if (v.isBuilder) html = tplBuilder(v);
+  else if (v.isSearch) html = tplSearch(v);
+  else if (v.isParcours) html = tplParcours(v);
+  else if (v.isFormulas) html = tplFormulas(v);
+  screenEl.innerHTML = html;
+
+  if (v.isSearch && document.activeElement && !document.activeElement.matches('[data-search-input]')) {
+    var searchEl = document.getElementById('searchInput');
+    if (searchEl) { searchEl.focus(); searchEl.setSelectionRange(searchEl.value.length, searchEl.value.length); }
+  }
+  if (v.isLabo) wireLabo();
+  if (v.isMental) {
+    var menStage = document.getElementById('menStage');
+    if (menStage) menStage.innerHTML = mentalIntroHtml(v);
+    wireMentalIntro();
+  }
+  if (v.isBuilder) {
+    var bldN = document.getElementById('bldN');
+    if (bldN) bldN.addEventListener('input', function () {
+      state.buildN = +bldN.value;
+      document.getElementById('bldNV').textContent = state.buildN;
+    });
+  }
+  if (v.isFiche) {
+    var ficheScroll = screenEl.firstElementChild, ficheFill = document.getElementById('ficheProgressFill');
+    if (ficheScroll && ficheFill) {
+      ficheScroll.addEventListener('scroll', function () {
+        var max = ficheScroll.scrollHeight - ficheScroll.clientHeight;
+        var pct = max > 0 ? Math.min(100, (ficheScroll.scrollTop / max) * 100) : 0;
+        ficheFill.style.width = pct + '%';
+      });
+    }
+    screenEl.querySelectorAll('[data-fold-head]').forEach(function (hd, idx) {
+      hd.addEventListener('click', function () {
+        var sec = hd.parentElement, body = sec.querySelector('.fold-body'), arr = hd.querySelector('.fold-arr');
+        var open = sec.classList.toggle('open');
+        body.classList.toggle('fold-closed', !open);
+        arr.style.transform = 'rotate(' + (open ? '90deg' : '0deg') + ')';
+        if (open) {
+          var inner = body.firstElementChild;
+          if (inner) {
+            var html = inner.innerHTML;
+            inner.innerHTML = '';
+            void inner.offsetWidth;
+            inner.innerHTML = html;
+          }
+          if (state.fiche != null) {
+            if (!store.ficheSectionsSeen) store.ficheSectionsSeen = {};
+            if (!store.ficheSectionsSeen[state.fiche]) store.ficheSectionsSeen[state.fiche] = {};
+            var wasSeen = !!store.ficheSectionsSeen[state.fiche][idx];
+            store.ficheSectionsSeen[state.fiche][idx] = true;
+            maybeCompleteFiche(state.fiche);
+            save();
+            if (!wasSeen) {
+              var iconSpan = hd.querySelector('span');
+              if (iconSpan) { iconSpan.textContent = '✓'; iconSpan.style.background = v.ficheAccent; iconSpan.style.color = 'var(--on)'; }
+              var total = v.ficheSections.length;
+              var seenCount = Object.keys(store.ficheSectionsSeen[state.fiche]).length;
+              var secStatus = document.getElementById('ficheSecStatus');
+              if (secStatus) {
+                secStatus.textContent = (seenCount >= total ? '✓' : seenCount + '/' + total) + ' sections lues';
+                secStatus.style.color = seenCount >= total ? 'var(--acc2)' : 'var(--ink2)';
+              }
+              var badge = document.getElementById('ficheValidatedBadge');
+              if (badge && store.fichesSeen && store.fichesSeen[state.fiche]) badge.style.display = '';
+            }
+          }
+        }
+      });
+    });
+  }
+
+  reviveSvgReveal(screenEl);
+
+  var justBecameReady = state.ready && !lastReadyFlag;
+  lastReadyFlag = state.ready;
+
+  if (v.screenKey !== lastScreenKey) {
+    lastScreenKey = v.screenKey;
+    var animClass = state.navDir === 'fwd' ? 'kfin-fwd' : state.navDir === 'back' ? 'kfin-back' : 'kfin';
+    state.navDir = null;
+    screenEl.classList.remove('kfin', 'kfin-fwd', 'kfin-back');
+    void screenEl.offsetWidth;
+    screenEl.classList.add(animClass);
+    animateCountUp(screenEl);
+  } else if (justBecameReady) {
+    animateCountUp(screenEl);
+  }
+}
+
+// ---- event dispatch ---------------------------------------------------------
+function onAppClick(e) {
+  var btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  var d = btn.dataset;
+  switch (d.action) {
+    case 'resetProgress': state.confirmReset = true; render(); break;
+    case 'resetProgressCancel': state.confirmReset = false; render(); break;
+    case 'resetProgressConfirm':
+      try { localStorage.removeItem(KEY); } catch (e) {}
+      store = { srs: {}, xp: 0, streak: 0, seen: 0, poles: {}, best: {}, seeded: true, name: null, mentalBest: 0, daily: null, examInstant: store ? store.examInstant : false, fichesSeen: {}, ficheSectionsSeen: {}, ficheTested: {}, ficheTestReview: {}, flagged: {}, programStart: null, parcoursMinutesDay: 30, parcoursObjectiveDays: 63, parcoursPriorityPoles: [], history: [], cultureBest: {}, cultureSeen: {}, cultureSpecSeen: {} };
+      state.confirmReset = false;
+      save();
+      go('home');
+      break;
+    case 'toggleNotif': state.notif = !state.notif; render(); break;
+    case 'toggleExamInstant': store.examInstant = !store.examInstant; save(); render(); break;
+    case 'exportData': exportData(); break;
+    case 'genAttestation': generateAttestation(); break;
+    case 'importDataPick': { var fi = document.getElementById('importFileInput'); if (fi) fi.click(); break; }
+    case 'importDataCancel': state.pendingImport = null; state.confirmImport = false; render(); break;
+    case 'importDataConfirm':
+      if (state.pendingImport) { store = state.pendingImport; fillStoreDefaults(); save(); }
+      state.pendingImport = null; state.confirmImport = false;
+      go('home');
+      break;
+    case 'goTab': go(d.k); break;
+    case 'onbNameNext': store.name = (state.nameInput || '').trim() || 'Camille'; save(); state.nameInput = null; state.onb = 0; render(); break;
+    case 'renameSave': store.name = (state.nameInput || '').trim() || store.name || 'Camille'; save(); state.nameInput = null; render(); break;
+    case 'onbNameSkip': state.nameInput = null; state.onb = 0; render(); break;
+    case 'onbNext': state.onb = Math.min(2, state.onb + 1); render(); break;
+    case 'pickLevel': state.level = +d.idx; store.level = state.level; save(); render(); break;
+    case 'startDiag': startDiagQuiz(); break;
+    case 'startDaily': startDailyQuiz(); break;
+    case 'startSrs': startSrsQuiz(); break;
+    case 'goHome': go('home'); break;
+    case 'goParcoursFromDone': go('parcours'); break;
+    case 'goBack': goBack(); break;
+    case 'goBrowse': goChild('browse'); break;
+    case 'goCulture': goChild('culture'); break;
+    case 'goFormulas': goChild('formulas'); break;
+    case 'formulaToggle':
+      state.formulaOpen = state.formulaOpen === d.id ? null : d.id;
+      if (!store.formulesSeen) store.formulesSeen = {};
+      store.formulesSeen[d.id] = true; save();
+      render();
+      break;
+    case 'formulaJump': {
+      var fjI = +d.i, fjF = FORMULES[fjI];
+      if (!fjF) break;
+      state.formulaOpen = fjF.id;
+      if (!store.formulesSeen) store.formulesSeen = {};
+      store.formulesSeen[fjF.id] = true; save();
+      render();
+      var fsec = document.getElementById('fsec-' + fjI);
+      if (fsec) fsec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      break;
+    }
+    case 'cultureGo': {
+      var cgId = d.id || d.fiche;
+      state.cultureSel = cgId; state.cultureSecOpen = null;
+      if (!store.cultureSeen) store.cultureSeen = {};
+      store.cultureSeen[cgId] = true; save();
+      goChild('cultureDetail');
+      break;
+    }
+    case 'cultureSecToggle': {
+      var newI = state.cultureSecOpen === +d.i ? null : +d.i;
+      state.cultureSecOpen = newI;
+      if (newI != null && state.cultureSel) {
+        if (!store.cultureSpecSeen) store.cultureSpecSeen = {};
+        store.cultureSpecSeen[state.cultureSel + '#' + newI] = true;
+        save();
+      }
+      render();
+      break;
+    }
+    case 'cultureJump': {
+      var jI = +d.i;
+      state.cultureSecOpen = jI;
+      if (state.cultureSel) {
+        if (!store.cultureSpecSeen) store.cultureSpecSeen = {};
+        store.cultureSpecSeen[state.cultureSel + '#' + jI] = true;
+        save();
+      }
+      render();
+      var csec = document.getElementById('csec-' + jI);
+      if (csec) csec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      break;
+    }
+    case 'startCultureTest':
+      state.cultureSel = d.id || state.cultureSel;
+      state.cultureTestIdx = 0; state.cultureTestScore = 0; state.cultureTestPick = null; state.cultureTestAnswered = false;
+      state.cultureTestSet = pickCultureTestSet(cultureMetier(state.cultureSel), 6);
+      goChild('cultureTest');
+      break;
+    case 'cultureTestPick': {
+      if (state.cultureTestAnswered) break;
+      var cq = (state.cultureTestSet || [])[state.cultureTestIdx];
+      if (!cq) break;
+      var ci = +d.i;
+      state.cultureTestPick = ci; state.cultureTestAnswered = true;
+      if (ci === cq.correct) state.cultureTestScore++;
+      render();
+      break;
+    }
+    case 'cultureTestNext':
+      state.cultureTestIdx++; state.cultureTestPick = null; state.cultureTestAnswered = false;
+      if (state.cultureTestIdx >= (state.cultureTestSet || []).length) {
+        if (!store.cultureBest) store.cultureBest = {};
+        var prevBest = store.cultureBest[state.cultureSel] || 0;
+        store.cultureBest[state.cultureSel] = Math.max(prevBest, state.cultureTestScore);
+        save();
+      }
+      render();
+      break;
+    case 'goSrs': go('srs'); break;
+    case 'goCourses': go('courses'); break;
+    case 'goExamPick': goChild('examPick'); break;
+    case 'goLabo': goChild('labo'); break;
+    case 'goMental': goChild('mental'); break;
+    case 'goBuilder': goChild('builder'); break;
+    case 'coursePoleGo': goChild('coursePole', { coursePoleSel: d.pole }); break;
+    case 'buildLevel': state.buildLevel = d.lv; render(); break;
+    case 'buildDom': {
+      var domV = d.dom;
+      if (domV === 'all') { state.buildDom = ['all']; }
+      else {
+        state.buildDom = state.buildDom.filter(function (x) { return x !== 'all'; });
+        var di = state.buildDom.indexOf(domV);
+        if (di >= 0) state.buildDom.splice(di, 1); else state.buildDom.push(domV);
+        if (!state.buildDom.length) state.buildDom = ['all'];
+      }
+      render();
+      break;
+    }
+    case 'buildType': {
+      var typV = d.t, ti = state.buildTypes.indexOf(typV);
+      if (ti >= 0) { if (state.buildTypes.length > 1) state.buildTypes.splice(ti, 1); }
+      else state.buildTypes.push(typV);
+      render();
+      break;
+    }
+    case 'startBuilder': if (buildPool().length) startBuilder(); break;
+    case 'poleToggle':
+      state.openPole = state.openPole === d.pole ? null : d.pole;
+      state.screen = 'browse';
+      render();
+      break;
+    case 'catGo': goChild('cat', { cat: d.cat }); break;
+    case 'subGo':
+      if (d.theory) { goChild('fiche', { fiche: d.theory }); }
+      else if (d.simu) { goChild('labo'); }
+      else startCat(d.sub, 12);
+      break;
+    case 'ficheGo':
+      if (!store.ficheSectionsSeen) store.ficheSectionsSeen = {};
+      if (!store.ficheSectionsSeen[d.fiche]) store.ficheSectionsSeen[d.fiche] = {};
+      store.ficheSectionsSeen[d.fiche][0] = true;
+      maybeCompleteFiche(d.fiche);
+      save();
+      goChild('fiche', { fiche: d.fiche });
+      break;
+    case 'goSearch': goChild('search'); break;
+    case 'goParcours': goChild('parcours'); break;
+    case 'parcoursSetMinutes': state.parcoursSetupMinutes = +d.v; render(); break;
+    case 'parcoursSetObjective': state.parcoursSetupObjective = +d.v; render(); break;
+    case 'parcoursTogglePriority': {
+      var arr = state.parcoursSetupPriority || (state.parcoursSetupPriority = []);
+      var pi = arr.indexOf(d.pole);
+      if (pi >= 0) arr.splice(pi, 1);
+      else if (arr.length < 3) arr.push(d.pole);
+      render();
+      break;
+    }
+    case 'startParcours':
+      store.programStart = today();
+      store.parcoursMinutesDay = state.parcoursSetupMinutes || 30;
+      store.parcoursObjectiveDays = state.parcoursSetupObjective || 63;
+      store.parcoursPriorityPoles = (state.parcoursSetupPriority || []).slice();
+      save();
+      render();
+      break;
+    case 'parcoursStartQuiz': startCat(d.sub, +d.n || 12, { fromParcours: true }); break;
+    case 'parcoursToggleWeek': {
+      var n = +d.n;
+      state.parcoursOpenWeek = state.parcoursOpenWeek === n ? -1 : n;
+      render();
+      break;
+    }
+    case 'ficheJump': {
+      var sec = document.getElementById('sec-' + d.i);
+      if (sec) {
+        if (!sec.classList.contains('open')) sec.querySelector('[data-fold-head]').click();
+        sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      break;
+    }
+    case 'searchGo':
+      if (d.kind === 'fiche') goChild('fiche', { fiche: d.id });
+      else if (d.kind === 'culture') {
+        state.cultureSel = d.id; state.cultureSecOpen = null;
+        if (!store.cultureSeen) store.cultureSeen = {};
+        store.cultureSeen[d.id] = true; save();
+        goChild('cultureDetail');
+      }
+      else if (d.kind === 'formula') {
+        state.formulaOpen = d.id;
+        if (!store.formulesSeen) store.formulesSeen = {};
+        store.formulesSeen[d.id] = true; save();
+        goChild('formulas');
+      }
+      else startCat(d.id, 12);
+      break;
+    case 'startFicheQuiz': startFicheQ(state.fiche); break;
+    case 'startFicheReview': startFicheReview(state.fiche); break;
+    case 'goFicheReview': goChild('ficheReview'); break;
+    case 'goFicheReviewFromDone': go('ficheReview'); break;
+    case 'flagTopic': {
+      if (!store.flagged) store.flagged = {};
+      if (store.flagged[d.cat]) delete store.flagged[d.cat];
+      else store.flagged[d.cat] = { at: today() };
+      save(); render();
+      break;
+    }
+    case 'memvizStart': memvizStart(); break;
+    case 'memvizSkipToRecall': memvizEnterRecall(); break;
+    case 'answerQcm': answerQcm(+d.i); break;
+    case 'answerVf': answerVf(+d.i); break;
+    case 'calcKey':
+      if (d.k === '⌫') state.calc = state.calc.slice(0, -1);
+      else if (d.k === '−') state.calc = state.calc.charAt(0) === '-' ? state.calc.slice(1) : '-' + state.calc;
+      else if (d.k === ',' && state.calc.indexOf(',') !== -1) { /* un seul séparateur décimal */ }
+      else state.calc = (state.calc + d.k).slice(0, 12);
+      render();
+      break;
+    case 'validate': {
+      var it = cur(); if (!it) break;
+      if (it.q.type === 'calc') validateCalc();
+      else if (it.q.type === 'texte' || it.q.type === 'open') validateTexteOpen();
+      else if (it.q.type === 'memviz') { memvizValidate(); }
+      else if (it.q.type === 'order') {
+        var ok = !!(state.orderCur && state.orderCur.every(function (v, i) { return v === i; }));
+        grade(ok);
+      }
+      break;
+    }
+    case 'orderUp': {
+      var pos = +d.pos;
+      if (state.orderCur && pos > 0) {
+        flipOrderRows(function () { var tmp = state.orderCur[pos]; state.orderCur[pos] = state.orderCur[pos - 1]; state.orderCur[pos - 1] = tmp; });
+      }
+      break;
+    }
+    case 'orderDown': {
+      var pos2 = +d.pos;
+      if (state.orderCur && pos2 < state.orderCur.length - 1) {
+        flipOrderRows(function () { var tmp2 = state.orderCur[pos2]; state.orderCur[pos2] = state.orderCur[pos2 + 1]; state.orderCur[pos2 + 1] = tmp2; });
+      }
+      break;
+    }
+    case 'next': nextQ(); break;
+    case 'quitQuiz': memvizReset(); goBack(); break;
+    case 'doneAgain': {
+      var meta = state.quiz ? state.quiz.meta : {};
+      if (meta.kind === 'diag') go('progress'); else startDailyQuiz();
+      break;
+    }
+    case 'reviewExam': {
+      var keys = state.results.filter(function (r) { return !r.ok; }).map(function (r) { return r.key; });
+      if (!keys.length) { go('home'); break; }
+      startList(keys, { kind: 'cat', title: "Revue de l'examen" });
+      break;
+    }
+    case 'examGo': startExam(d.key, d.label); break;
+    case 'weakGo': goChild('browse', { openPole: d.pole }); break;
+  }
+}
+
+function waitData() {
+  if (window.CGP_DATA) { seed(); state.ready = true; logHistory(); render(); return; }
+  setTimeout(waitData, 120);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  ensureSkeleton();
+  appEl.addEventListener('click', onAppClick);
+  appEl.addEventListener('change', function (e) {
+    if (e.target.matches('[data-exam-date-input]')) { store.examDate = e.target.value || null; save(); render(); }
+    if (e.target.matches('[data-import-file-input]')) {
+      var file = e.target.files && e.target.files[0];
+      e.target.value = '';
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function () {
+        var parsed;
+        try { parsed = JSON.parse(reader.result); } catch (err) { alert('Fichier invalide : ce n\'est pas une sauvegarde JSON valide.'); return; }
+        if (!parsed || typeof parsed !== 'object' || !parsed.srs) { alert('Fichier invalide : ce fichier ne ressemble pas à une sauvegarde Dossier CGP.'); return; }
+        state.pendingImport = parsed;
+        state.confirmImport = true;
+        render();
+      };
+      reader.readAsText(file);
+    }
+  });
+  appEl.addEventListener('input', function (e) {
+    if (e.target.matches('[data-texte-input]')) state.texte = e.target.value;
+    if (e.target.matches('[data-memviz-input]')) state.memvizAnswers[+e.target.dataset.i] = e.target.value;
+    if (e.target.matches('[data-name-input]')) state.nameInput = e.target.value;
+    if (e.target.matches('[data-search-input]')) {
+      state.search = e.target.value;
+      var pos = e.target.selectionStart;
+      render();
+      var el = document.getElementById('searchInput');
+      if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (err) {} }
+    }
+  });
+  load();
+  if (!store.seeded) { state.screen = 'onb'; state.onb = -1; }
+  render();
+  waitData();
+  setInterval(function () {
+    if (!store || document.visibilityState !== 'visible') return;
+    store.totalSeconds = (store.totalSeconds || 0) + 15;
+    save();
+  }, 15000);
+});
+
+})();
