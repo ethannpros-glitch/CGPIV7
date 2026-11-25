@@ -19,7 +19,22 @@ a{color:#dbb46f}
 a:hover{color:#eccea0}
 button{font:inherit}
 textarea{font-family:inherit}
-:root,[data-theme="dark"]{--bg:#0c0e10;--bg-hi:#171a1d;--panel:#15181b;--panel2:#1d2125;--line:#2b3136;--ink:#f6f1e7;--ink2:#b9c1c4;--ink3:#828b8e;--dim:#565e61;--acc:#dbb46f;--acc2:#4fcfa8;--gold:#f2cd82;--warn:#e2895f;--on:#191307}
+:root,[data-theme="dark"]{--bg:#0c0e10;--bg-hi:#171a1d;--panel:#15181b;--panel2:#1d2125;--line:#2b3136;--ink:#f6f1e7;--ink2:#b9c1c4;--ink3:#828b8e;--dim:#565e61;--acc:#dbb46f;--acc2:#4fcfa8;--gold:#f2cd82;--warn:#e2895f;--on:#191307;
+  /* Spacing scale — two rhythms, both used consistently across dossier-cgp.js:
+     macro (block/section gaps): --sp-4 16 · --sp-5 24 · --sp-6 32 · --sp-7 48
+     micro (intra-component gaps, 2px grid): --sp-05 2 · --sp-1 4 · --sp-2 8 · --sp-3 12 · --sp-4 16
+     Kept as real px literals in the markup (inline styles can't always take var() inside
+     shorthand reliably across the templating approach used here), but every margin/padding
+     in the templates now snaps to one of these steps instead of ad hoc 18/20/22/26/28px. */
+  --sp-05:2px;--sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;--sp-7:48px;
+  /* Typographic hierarchy — five named rungs, used consistently:
+     DISPLAY  — Fraunces 300, 38–62px, line-height .9–1.08, letter-spacing -.03em  → hero numbers, big greetings
+     TITLE    — Fraunces 300, 24–34px, line-height 1.1–1.2, letter-spacing -.02/-.025em → screen/section headers
+     BODY     — Inter 400, 13–14px, line-height 1.6–1.78, color var(--ink2)      → paragraphs, explanations
+     CAPTION  — Inter 400/500, 10.5–12.5px, color var(--ink3)                    → meta, counters, helper text
+     LABEL    — Inter 600, 10px, letter-spacing .12em (9px/.09em for the nested sub-rung),
+                uppercase, color var(--ink3) or a semantic accent → section kickers, overline tags */
+}
 .panel-glass{background:linear-gradient(165deg,rgba(255,255,255,.05),rgba(255,255,255,0) 45%),var(--panel);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 1px 0 rgba(0,0,0,.4)}
 /* Ambient surface: every panel/tile gets a whisper of depth, never a floating drop-shadow.
    Real elevation is reserved for .card-hero, applied only to the one or two elements per
