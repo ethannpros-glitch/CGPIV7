@@ -21,7 +21,14 @@ button{font:inherit}
 textarea{font-family:inherit}
 :root,[data-theme="dark"]{--bg:#0c0e10;--bg-hi:#171a1d;--panel:#15181b;--panel2:#1d2125;--line:#2b3136;--ink:#f6f1e7;--ink2:#b9c1c4;--ink3:#828b8e;--dim:#565e61;--acc:#dbb46f;--acc2:#4fcfa8;--gold:#f2cd82;--warn:#e2895f;--on:#191307}
 .panel-glass{background:linear-gradient(165deg,rgba(255,255,255,.05),rgba(255,255,255,0) 45%),var(--panel);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 1px 0 rgba(0,0,0,.4)}
-[style*="background:var(--panel)"]{box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 1px 0 rgba(0,0,0,.4),0 16px 32px -20px rgba(0,0,0,.6)}
+/* Ambient surface: every panel/tile gets a whisper of depth, never a floating drop-shadow.
+   Real elevation is reserved for .card-hero, applied only to the one or two elements per
+   screen that should actually detach from the page (see dossier-cgp.js). */
+[style*="background:var(--panel)"]{box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
+.card-hero{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 20px 44px -22px rgba(0,0,0,.65),0 0 0 1px rgba(219,180,111,.08) !important}
+.btn-cta{display:block;width:100%;box-sizing:border-box;border:none;border-radius:999px;padding:16px;font:600 13.5px 'Inter',sans-serif;color:var(--on);text-align:center;cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite}
+.btn-cta:disabled{opacity:.4;cursor:default;animation:none}
+.btn-cta-sm{display:inline-block;border:none;border-radius:999px;padding:14px 22px;font:600 13.5px 'Inter',sans-serif;color:var(--on);text-align:center;cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite}
 @keyframes kfSweep{0%{background-position:0% 50%}100%{background-position:200% 50%}}
 @keyframes kfSpin{to{transform:rotate(360deg)}}
 @keyframes kfBreathe{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}

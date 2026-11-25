@@ -4,6 +4,7 @@
 var IV = [1, 3, 7, 16, 35, 90];
 var LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 var KEY = 'cgp_proto_v2';
+var ICON_SEARCH = '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="8.5" cy="8.5" r="6.5" stroke="currentColor" stroke-width="1.6"></circle><line x1="13.4" y1="13.4" x2="18" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line></svg>';
 function getUserName() { return (store && store.name) || 'Camille'; }
 var today = function () { return Math.floor(Date.now() / 86400000); };
 
@@ -1481,7 +1482,7 @@ function tplMemviz(v) {
       '<div style="font-size:30px;">🧠</div>' +
       '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--gold);margin-top:12px;">QUESTION DE MÉMORISATION</div>' +
       '<div style="font:400 13px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;">Le visuel va s\'afficher ' + v.memvizNextTime + ' secondes. Mémorise bien les éléments en surbrillance : ils seront ensuite masqués et à retrouver.</div>' +
-      '<button data-action="memvizStart" style="margin-top:18px;border:none;border-radius:999px;padding:14px 24px;font:600 13px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Je suis prêt·e, afficher</button>' +
+      '<button data-action="memvizStart" class="btn-cta-sm" style="margin-top:18px;">Je suis prêt·e, afficher</button>' +
       '</div>';
   }
   if (v.memvizPhase === 'memorize') {
@@ -1537,14 +1538,14 @@ function tplOnb(v) {
       '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:16px;">Pour personnaliser vos rappels, votre tableau de bord et vos statistiques.</div>' +
       '<input data-name-input value="' + esc(v.nameInput || '') + '" placeholder="Votre prénom" maxlength="24" style="margin-top:28px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:17px 18px;font:500 16px \'Inter\',sans-serif;color:var(--ink);outline:none;" />' +
       '<div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">' +
-      '<button data-action="onbNameNext" style="border:none;border-radius:999px;padding:17px;font:600 14px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Continuer</button>' +
+      '<button data-action="onbNameNext" class="btn-cta">Continuer</button>' +
       '<button data-action="onbNameSkip" style="background:none;border:none;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink3);cursor:pointer;">Passer</button></div>';
   }
   if (v.onb0) {
     out += '<div style="font:300 42px/1.06 Fraunces,serif;letter-spacing:-.03em;margin-top:20px;">Préparez la<br><span style="font-style:italic;background:linear-gradient(100deg,var(--acc),var(--gold),var(--acc2),var(--acc));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:kfSweep 9s linear infinite;">certification</span><br>en dix minutes par jour.</div>' +
       '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:18px;">' + v.totalQ + ' questions, ' + v.ficheCount + ' fiches, ' + v.poleChips.length + ' pôles. L\'application choisit à votre place ce qu\'il faut revoir.</div>' +
       '<div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">' +
-      '<button data-action="onbNext" style="border:none;border-radius:999px;padding:17px;font:600 14px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Commencer</button>' +
+      '<button data-action="onbNext" class="btn-cta">Commencer</button>' +
       '<button data-action="goHome" style="background:none;border:none;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink3);cursor:pointer;">Passer</button></div>';
   }
   if (v.onb1) {
@@ -1559,7 +1560,7 @@ function tplOnb(v) {
       '<div style="margin-top:22px;"><label style="display:block;font:500 11px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-bottom:8px;">DATE D\'EXAMEN (FACULTATIF)</label>' +
       '<input type="date" data-exam-date-input value="' + esc(v.examDate || '') + '" style="width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px 16px;font:500 14px \'Inter\',sans-serif;color:var(--ink);outline:none;" />' +
       '<div style="font:400 11px \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;">Pour suivre un compte à rebours et adapter le rythme. Modifiable à tout moment dans Paramètres.</div></div>' +
-      '<div style="margin-top:auto;padding-top:22px;"><button data-action="onbNext" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 14px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Continuer</button></div>';
+      '<div style="margin-top:auto;padding-top:22px;"><button data-action="onbNext" class="btn-cta" style="width:100%;">Continuer</button></div>';
   }
   if (v.onb2) {
     var feats = [
@@ -1576,7 +1577,7 @@ function tplOnb(v) {
     out += '<div style="font:300 34px/1.12 Fraunces,serif;letter-spacing:-.025em;margin-top:20px;">Un tour rapide de l\'application.</div>' +
       '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:16px;">' + v.totalQ + ' questions vérifiées, ' + v.ficheCount + ' fiches de cours, ' + v.poleChips.length + ' pôles. Voici l\'essentiel :</div>' +
       '<div style="margin:22px 0 0;display:flex;flex-direction:column;gap:10px;">' + featRows + '</div>' +
-      '<div style="margin-top:auto;"><button data-action="goHome" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 14px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">C\'est parti</button></div>';
+      '<div style="margin-top:auto;"><button data-action="goHome" class="btn-cta" style="width:100%;">C\'est parti</button></div>';
   }
   out += '</div>';
   return out;
@@ -1629,7 +1630,7 @@ function tplParcours(v) {
       '<div style="font:400 11.5px/1.6 \'Inter\',sans-serif;color:var(--ink3);margin-top:6px;">Les semaines liées à ces thèmes passent en premier et reçoivent 50% de questions en plus par jour.</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">' + poleChips + '</div></div>' +
       '<div style="margin:20px 24px 0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;font:400 12px/1.7 \'Inter\',sans-serif;color:var(--ink2);">≈ <b style="color:var(--ink);">' + previewQpd + ' questions/jour</b> et des semaines d\'environ <b style="color:var(--ink);">' + previewWeekLen + ' jours</b>, soit <b style="color:var(--ink);">' + (previewWeekLen * 9) + ' jours au total</b> pour les 9 étapes.</div>' +
-      '<div style="margin:20px 24px 0;"><button data-action="startParcours" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Commencer mon parcours</button></div>' +
+      '<div style="margin:20px 24px 0;"><button data-action="startParcours" class="btn-cta" style="width:100%;">Commencer mon parcours</button></div>' +
       '<div style="height:26px;"></div></div>';
   }
   var weeks = v.parcoursWeeks.map(function (w) {
@@ -1740,7 +1741,7 @@ function tplHome(v) {
     '<div style="padding:58px 24px 0;display:flex;justify-content:space-between;align-items:center;">' +
     '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.2em;color:var(--ink3);">CGP</div>' +
     '<div style="display:flex;align-items:center;gap:14px;">' +
-    '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink2);cursor:pointer;">🔍</button></div></div>' +
+    '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--ink2);cursor:pointer;">' + ICON_SEARCH + '</button></div></div>' +
     '<div style="padding:24px 24px 0;"><div style="font:300 42px/1.02 Fraunces,serif;letter-spacing:-.025em;">' + esc(v.greeting) + '<br><span style="font-style:italic;background:linear-gradient(100deg,var(--acc),var(--gold),var(--acc2),var(--acc));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:kfSweep 9s linear infinite;">' + esc(v.userName) + '</span></div></div>' +
     (v.examDate ? '<div style="margin:18px 24px 0;display:flex;align-items:center;gap:10px;background:' + hexA('#dbb46f', 0.1) + ';border:1px solid ' + hexA('#dbb46f', 0.3) + ';border-radius:999px;padding:10px 16px;">' +
       '<span style="font:600 13px \'Inter\',sans-serif;color:var(--acc);flex-shrink:0;">' + (v.examDaysLeft > 0 ? 'J-' + v.examDaysLeft : (v.examDaysLeft === 0 ? 'Aujourd\'hui' : 'Examen passé')) + '</span>' +
@@ -1751,7 +1752,7 @@ function tplHome(v) {
       : '<span style="font:400 22px Fraunces,serif;color:var(--acc);">◈</span>') +
     '<span style="flex:1;"><span style="display:block;font:500 13.5px \'Inter\',sans-serif;">Mon parcours</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(v.parcoursWeekLabel) + '</span></span>' +
     '<span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button></div>' +
-    '<div style="margin:22px 24px 0;border-radius:24px;padding:22px;background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;gap:18px;">' +
+    '<div class="card-hero" style="margin:22px 24px 0;border-radius:24px;padding:22px;background:var(--panel);border:1px solid ' + hexA('#dbb46f', 0.25) + ';display:flex;flex-direction:column;gap:18px;">' +
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;"><div>' +
     '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.16em;color:var(--ink3);">DÉFI DU JOUR</div>' +
     '<div style="font:300 30px/1.15 Fraunces,serif;margin-top:10px;">5 <span style="font-size:15px;font-family:\'Inter\',sans-serif;font-weight:500;color:var(--ink2);">questions sur</span></div>' +
@@ -1766,7 +1767,7 @@ function tplHome(v) {
     '<div style="margin:8px 24px 0;font:400 10.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);">Ce sont deux choses différentes : <b style="color:var(--ink2);">maîtrise</b> = % de bonnes réponses (moyenne tous pôles) · <b style="color:var(--ink2);">à revoir</b> = nombre de questions dont la répétition espacée arrive à échéance aujourd\'hui, quel que soit ton niveau dessus.</div>' +
     (v.weakChips.length ? '<div style="margin:26px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">POINTS FAIBLES</div>' +
     '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">' + weak + '</div></div>' : '') +
-    (v.flaggedTopics.length ? '<div style="margin:26px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--warn);">🚩 À RETRAVAILLER</div>' +
+    (v.flaggedTopics.length ? '<div style="margin:26px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--warn);">À RETRAVAILLER</div>' +
       '<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">' + v.flaggedTopics.map(function (t) {
         return '<div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:13px 14px;">' +
           '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
@@ -1807,19 +1808,36 @@ function tplBrowse(v) {
     '<div style="padding:58px 24px 0;display:flex;justify-content:space-between;align-items:flex-start;">' +
     '<div><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.2em;color:var(--ink3);">BANQUE</div>' +
     '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:14px;">' + v.poles.length + ' <span style="font-style:italic;">pôles</span></div></div>' +
-    '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink2);cursor:pointer;flex-shrink:0;margin-top:2px;">🔍</button></div>' +
+    '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--ink2);cursor:pointer;flex-shrink:0;margin-top:2px;">' + ICON_SEARCH + '</button></div>' +
     '<div style="margin:22px 24px 0;display:flex;flex-direction:column;gap:10px;">' + poles + '</div>' +
     '<div style="height:26px;"></div></div>';
 }
 
 function tplCat(v) {
-  var subs = v.subs.map(function (s) {
+  var subBtn = function (s) {
     return '<button data-action="subGo" data-sub="' + esc(s.id) + '"' + (s.theory ? ' data-theory="' + esc(s.theory) + '"' : '') + (s.simu ? ' data-simu="' + esc(s.simu) + '"' : '') + ' class="hv-a" style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;font:500 13px/1.4 \'Inter\',sans-serif;">' + esc(s.label) + '</span><span style="font:500 10px \'Inter\',sans-serif;color:var(--dim);letter-spacing:.08em;">' + esc(s.badge) + '</span></button>';
-  }).join('');
+  };
+  // Group by role (cours / outil / entraînement) rather than mixing them flatly,
+  // so the sequence matches how one actually works through a topic: learn, then
+  // practise. When a category only holds one kind of content, skip the labels.
+  var fiches = v.subs.filter(function (s) { return s.theory; });
+  var simus = v.subs.filter(function (s) { return s.simu; });
+  var series = v.subs.filter(function (s) { return !s.theory && !s.simu; });
+  var groupCount = (fiches.length ? 1 : 0) + (simus.length ? 1 : 0) + (series.length ? 1 : 0);
+  var subsHtml;
+  if (groupCount > 1) {
+    var grp = function (label, items) {
+      if (!items.length) return '';
+      return '<div style="margin-top:20px;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);margin-bottom:9px;">' + label + '</div><div style="display:flex;flex-direction:column;gap:9px;">' + items.map(subBtn).join('') + '</div></div>';
+    };
+    subsHtml = grp('COURS', fiches) + grp('OUTIL', simus) + grp('S\'ENTRAÎNER', series);
+  } else {
+    subsHtml = '<div style="display:flex;flex-direction:column;gap:9px;">' + v.subs.map(subBtn).join('') + '</div>';
+  }
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> ' + esc(v.catPole) + '</button>' +
     '<div style="font:300 32px/1.14 Fraunces,serif;letter-spacing:-.025em;margin-top:16px;">' + esc(v.catLabel) + '</div></div>' +
-    '<div style="margin:20px 24px 0;display:flex;flex-direction:column;gap:9px;">' + subs + '</div>' +
+    '<div style="margin:20px 24px 0;">' + subsHtml + '</div>' +
     '<div style="height:26px;"></div></div>';
 }
 
@@ -1827,7 +1845,7 @@ function tplQuiz(v) {
   var mid = '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);"><div>' + esc(v.qCat) + (v.qIsReview ? ' <span style="color:var(--gold);">· RÉVISION</span>' : '') + '</div><div style="color:var(--acc);">' + esc(v.qTypeLabel) + '</div></div>' +
     '<div style="font:300 25px/1.3 Fraunces,serif;letter-spacing:-.01em;margin-top:16px;text-wrap:pretty;">' + esc(v.qText) + '</div>';
   if (v.qHasSvg) mid += '<div style="margin-top:16px;border-radius:16px;overflow:hidden;background:#faf8f3;">' + v.qSvg + '</div>';
-  if (v.isScenario) mid += '<div style="margin-top:16px;background:var(--panel2);border-left:3px solid var(--acc);border-radius:10px;padding:13px 15px;font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);"><b style="color:var(--ink);">Scénario —</b> ' + esc(v.qContexte) + '</div>';
+  if (v.isScenario) mid += '<div style="margin-top:16px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:13px 15px;"><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--acc);margin-bottom:5px;">SCÉNARIO</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);">' + esc(v.qContexte) + '</div></div>';
   if (v.isSpot) mid += '<div style="margin-top:14px;font:400 12px/1.5 \'Inter\',sans-serif;color:var(--warn);">Une seule affirmation est fausse. Repère-la.</div>';
   if (v.isDoc) mid += '<div style="margin-top:16px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;font:400 12px/1.7 \'Inter\',sans-serif;color:var(--ink2);white-space:pre-line;">' + esc(v.qDoc) + '</div>';
   if (v.hasOptions) mid += '<div style="display:flex;flex-direction:column;gap:9px;margin-top:22px;">' + v.options.map(tplOption).join('') + '</div>';
@@ -1843,7 +1861,7 @@ function tplQuiz(v) {
     if (v.wasKo) mid += '<div style="font:300 30px/1 Fraunces,serif;color:var(--warn);">Raté. <span style="font:500 12px \'Inter\',sans-serif;">' + esc(v.koNote) + '</span></div>';
     mid += (v.qFormula
       ? '<div style="margin-top:12px;padding:12px 14px;background:' + hexA(v.wasOk ? '#4fcfa8' : '#e2895f', 0.12) + ';border:1px solid ' + hexA(v.wasOk ? '#4fcfa8' : '#e2895f', 0.35) + ';border-radius:12px;">' +
-        '<div style="font:600 9.5px \'Inter\',sans-serif;letter-spacing:.1em;color:' + (v.wasOk ? 'var(--acc2)' : 'var(--warn)') + ';margin-bottom:5px;">📐 LE CALCUL</div>' +
+        '<div style="font:600 9.5px \'Inter\',sans-serif;letter-spacing:.1em;color:' + (v.wasOk ? 'var(--acc2)' : 'var(--warn)') + ';margin-bottom:5px;">LE CALCUL</div>' +
         '<div style="font:500 13.5px/1.6 \'Inter\',sans-serif;color:var(--ink);white-space:pre-line;">' + esc(v.qFormula) + '</div>' +
         (v.qExponentNote ? '<div style="font:400 11.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;padding-top:8px;border-top:1px solid ' + hexA(v.wasOk ? '#4fcfa8' : '#e2895f', 0.25) + ';">' + esc(v.qExponentNote) + '</div>' : '') +
         '</div>' +
@@ -1851,14 +1869,14 @@ function tplQuiz(v) {
       : '<div style="font:400 13px/1.75 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;text-wrap:pretty;white-space:pre-line;">' + esc(v.qExplain) + '</div>') +
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;">' +
       '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">REVOIR DANS ' + v.nextIn + ' J</div>' +
-      (v.qCatId ? '<button data-action="flagTopic" data-cat="' + esc(v.qCatId) + '" style="background:none;border:1px solid ' + (v.qFlagged ? 'var(--warn)' : 'var(--line)') + ';border-radius:999px;padding:6px 11px;font:500 10.5px \'Inter\',sans-serif;color:' + (v.qFlagged ? 'var(--warn)' : 'var(--ink3)') + ';cursor:pointer;white-space:nowrap;">' + (v.qFlagged ? '🚩 Sujet marqué' : '🚩 Retravailler ce sujet') + '</button>' : '') +
+      (v.qCatId ? '<button data-action="flagTopic" data-cat="' + esc(v.qCatId) + '" style="background:none;border:1px solid ' + (v.qFlagged ? 'var(--warn)' : 'var(--line)') + ';border-radius:999px;padding:6px 11px;font:500 10.5px \'Inter\',sans-serif;color:' + (v.qFlagged ? 'var(--warn)' : 'var(--ink3)') + ';cursor:pointer;white-space:nowrap;">' + (v.qFlagged ? 'Sujet marqué' : 'Retravailler ce sujet') + '</button>' : '') +
       '</div></div>';
   }
   mid += '<div style="height:20px;"></div>';
 
   var footer = '<div style="padding:12px 24px 40px;border-top:1px solid var(--line);background:var(--bg);">';
-  if (v.showValidate) footer += '<button data-action="validate" style="width:100%;border:none;border-radius:999px;padding:16px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + esc(v.validateLabel) + '</button>';
-  if (v.showNext) footer += '<button data-action="next" style="width:100%;border:none;border-radius:999px;padding:16px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + esc(v.nextLabel) + '</button>';
+  if (v.showValidate) footer += '<button data-action="validate" class="btn-cta" style="width:100%;">' + esc(v.validateLabel) + '</button>';
+  if (v.showNext) footer += '<button data-action="next" class="btn-cta" style="width:100%;">' + esc(v.nextLabel) + '</button>';
   if (v.showHint) footer += '<div style="text-align:center;font:400 11px \'Inter\',sans-serif;color:var(--ink3);padding:4px 0;">Touchez une réponse.</div>';
   footer += '</div>';
 
@@ -1890,7 +1908,7 @@ function tplDone(v) {
       '<span style="font-size:22px;">🔥</span><span style="font:500 12.5px/1.4 \'Inter\',sans-serif;color:var(--ink);"><b>' + v.streakMilestone + ' jours d\'affilée !</b><br><span style="color:var(--ink2);font-weight:400;">Une régularité qui paie, continue comme ça.</span></span></div>' : '') +
     '<div style="font:400 13px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:22px;">' + esc(v.doneNote) + '</div>' +
     '<div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">' +
-    '<button data-action="doneAgain" style="border:none;border-radius:999px;padding:17px;font:600 14px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + esc(v.doneCta) + '</button>' +
+    '<button data-action="doneAgain" class="btn-cta">' + esc(v.doneCta) + '</button>' +
     (v.doneShowFicheReview ? '<button data-action="goFicheReviewFromDone" style="background:none;border:1px solid var(--line);border-radius:999px;padding:15px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Revoir mes réponses</button>' : '') +
     (v.doneShowParcours ? '<button data-action="goParcoursFromDone" style="background:none;border:1px solid var(--acc);border-radius:999px;padding:15px;font:600 12.5px \'Inter\',sans-serif;color:var(--acc);cursor:pointer;">Retour au parcours</button>' : '') +
     '<button data-action="goHome" style="background:none;border:1px solid var(--line);border-radius:999px;padding:15px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Retour à l\'accueil</button></div></div>';
@@ -1920,7 +1938,7 @@ function tplBuilder(v) {
     '<div style="margin-top:24px;"><div style="display:flex;justify-content:space-between;font:500 12px \'Inter\',sans-serif;color:var(--ink2);"><span>Nombre de questions</span><b id="bldNV" style="color:var(--ink);font-family:\'Inter\',sans-serif;">' + v.buildN + '</b></div>' +
     '<input type="range" id="bldN" min="1" max="' + v.buildMaxN + '" step="1" value="' + v.buildN + '"></div>' +
     '<div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:10px;">' + v.buildAvail + ' question' + (v.buildAvail > 1 ? 's' : '') + ' disponible' + (v.buildAvail > 1 ? 's' : '') + ' avec cette sélection' + (v.buildAvail === 0 ? ' — élargis tes critères.' : '.') + '</div>' +
-    '<button data-action="startBuilder"' + (v.buildAvail < 1 ? ' disabled style="opacity:.4;"' : '') + ' style="width:100%;margin-top:16px;border:none;border-radius:999px;padding:16px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Lancer ma session →</button>' +
+    '<button data-action="startBuilder"' + (v.buildAvail < 1 ? ' disabled style="opacity:.4;"' : '') + ' class="btn-cta" style="width:100%;margin-top:16px;">Lancer ma session →</button>' +
     '</div><div style="height:32px;"></div></div>';
 }
 
@@ -1931,7 +1949,7 @@ function tplExamPick(v) {
     '<span style="font-size:26px;">⚡</span>' +
     '<span style="flex:1;"><span style="display:block;font:500 14px \'Inter\',sans-serif;">' + esc(g.label) + '</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(g.sub) + '</span></span>' +
     '<span style="font:500 10px \'Inter\',sans-serif;color:var(--gold);">' + esc(g.best) + '</span></button>';
-  var officielBtn = '<button data-action="examGo" data-key="' + esc(o.key) + '" data-label="' + esc(o.label) + '" class="hv-a stagger" style="background:linear-gradient(135deg,' + hexA('#dbb46f', 0.14) + ',var(--panel));border:1px solid var(--acc);border-radius:18px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;">' +
+  var officielBtn = '<button data-action="examGo" data-key="' + esc(o.key) + '" data-label="' + esc(o.label) + '" class="hv-a stagger card-hero" style="background:linear-gradient(135deg,' + hexA('#dbb46f', 0.14) + ',var(--panel));border:1px solid var(--acc);border-radius:18px;padding:18px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;">' +
     '<span style="font-size:26px;">⏱</span>' +
     '<span style="flex:1;"><span style="display:block;font:500 14px \'Inter\',sans-serif;">' + esc(o.label) + '</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(o.sub) + '</span></span>' +
     '<span style="font:500 10px \'Inter\',sans-serif;color:var(--acc);">' + esc(o.best) + '</span></button>';
@@ -1970,7 +1988,7 @@ function tplExamResult(v) {
     '<div style="margin-top:26px;font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">PAR PÔLE</div>' +
     '<div style="margin-top:14px;display:flex;flex-direction:column;gap:12px;">' + poles + '</div>' +
     '<div style="margin:26px 0 0;display:flex;flex-direction:column;gap:10px;">' +
-    '<button data-action="reviewExam" style="border:none;border-radius:999px;padding:16px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Revoir mes ' + v.doneKo + ' erreurs</button>' +
+    '<button data-action="reviewExam" class="btn-cta">Revoir mes ' + v.doneKo + ' erreurs</button>' +
     (v.doneShowParcours ? '<button data-action="goParcoursFromDone" style="background:none;border:1px solid var(--acc);border-radius:999px;padding:15px;font:600 12.5px \'Inter\',sans-serif;color:var(--acc);cursor:pointer;">Retour au parcours</button>' : '') +
     '<button data-action="goHome" style="background:none;border:1px solid var(--line);border-radius:999px;padding:15px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Retour à l\'accueil</button></div>' +
     '<div style="height:26px;"></div></div>';
@@ -1986,13 +2004,13 @@ function tplSrs(v) {
     '<div style="position:absolute;inset:11px;border-radius:50%;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;">' +
     '<div style="font:300 58px/1 Fraunces,serif;letter-spacing:-.03em;">' + v.dueCount + '</div>' +
     '<div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.16em;color:var(--ink3);margin-top:8px;">DUES AUJOURD\'HUI</div></div></div>' +
-    '<button data-action="startSrs" style="margin:30px 24px 0;width:calc(100% - 48px);border:none;border-radius:999px;padding:18px;font:600 14px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Commencer</button>' +
+    '<button data-action="startSrs" class="btn-cta" style="margin:30px 24px 0;width:calc(100% - 48px);">Commencer</button>' +
     '<div style="margin:30px 24px 0;display:flex;justify-content:space-between;">' +
     '<div><div style="font:300 30px/1 Fraunces,serif;">' + v.learnCount + '</div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">EN COURS</div></div>' +
     '<div><div style="font:300 30px/1 Fraunces,serif;color:var(--acc);">' + v.masteredCount + '</div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">MAÎTRISÉES</div></div>' +
     '<div><div style="font:300 30px/1 Fraunces,serif;color:var(--dim);">' + v.unseenCount + '</div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">JAMAIS VUES</div></div></div>' +
     '<div style="margin:26px 24px 0;padding-top:18px;border-top:1px solid var(--line);font:500 10.5px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--ink3);">1 · 3 · 7 · 16 · 35 · 90 JOURS</div>' +
-    (v.flaggedTopics.length ? '<div style="margin:26px 24px 0;padding-top:20px;border-top:1px solid var(--line);"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--warn);">🚩 À RETRAVAILLER</div>' +
+    (v.flaggedTopics.length ? '<div style="margin:26px 24px 0;padding-top:20px;border-top:1px solid var(--line);"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--warn);">À RETRAVAILLER</div>' +
       '<div style="font:400 11.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:6px;">Sujets que tu as marqués depuis un cours ou une question — reliés ici au cours et à un entraînement ciblé.</div>' +
       '<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">' + v.flaggedTopics.map(function (t) {
         return '<div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:13px 14px;">' +
@@ -2040,7 +2058,7 @@ function tplCourses(v) {
     '<div style="padding:58px 24px 0;display:flex;justify-content:space-between;align-items:flex-start;">' +
     '<div><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.2em;color:var(--ink3);">FICHES</div>' +
     '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:14px;">' + v.ficheCount + ' <span style="font-style:italic;">cours</span>, ' + v.coursePoles.length + ' pôles</div></div>' +
-    '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink2);cursor:pointer;flex-shrink:0;margin-top:2px;">🔍</button></div>' +
+    '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--ink2);cursor:pointer;flex-shrink:0;margin-top:2px;">' + ICON_SEARCH + '</button></div>' +
     '<div style="margin:22px 24px 0;display:flex;flex-direction:column;gap:12px;">' + cards +
     '<button data-action="goCulture" class="hv-a" style="position:relative;overflow:hidden;width:100%;background:linear-gradient(120deg,' + hexA('#dbb46f', 0.16) + ',var(--panel) 60%);border:1px solid ' + hexA('#dbb46f', 0.35) + ';border-radius:20px;padding:19px 20px;text-align:left;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:16px;box-sizing:border-box;">' +
     '<span style="position:absolute;right:-8px;top:-16px;font-size:68px;opacity:.13;transform:rotate(8deg);pointer-events:none;">🎓</span>' +
@@ -2104,7 +2122,7 @@ function formatBody(raw, accent) {
 function tplPara(p, i, accent) {
   var delay = ((i || 0) * 0.06).toFixed(2) + 's';
   if (p.callout) {
-    return '<div class="stagger" style="animation-delay:' + delay + ';margin:10px 0;background:var(--panel2);border-left:3px solid var(--gold);border-radius:10px;padding:11px 13px;">' +
+    return '<div class="stagger" style="animation-delay:' + delay + ';margin:10px 0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px 13px;">' +
       '<div style="font:600 9.5px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--gold);display:flex;align-items:center;gap:6px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--gold);animation:kfBreathe 2s ease-in-out infinite;"></span>' + esc(p.label) + '</div>' +
       '<div style="font:400 13px/1.65 \'Inter\',sans-serif;color:var(--ink);margin-top:5px;text-wrap:pretty;">' + emphasizeCaps(esc(p.text.trim())) + '</div></div>';
   }
@@ -2121,7 +2139,7 @@ function tplFiche(v) {
   var sections = v.ficheSections.map(function (s, i) {
     var col = s.warnish ? 'var(--warn)' : acc;
     var body = s.paras.map(function (p, pi) { return tplPara(p, pi, acc); }).join('') + (s.svg ? '<div class="stagger" style="animation-delay:' + (s.paras.length * 0.06).toFixed(2) + 's;margin-top:14px;border-radius:14px;overflow:hidden;background:#faf8f3;padding:8px;">' + s.svg + '</div>' : '');
-    return '<div id="sec-' + i + '" class="thsec' + (i === 0 ? ' open' : '') + '" style="margin-top:12px;border:1px solid var(--line);border-left:3px solid ' + hexA(col, 0.6) + ';border-radius:16px;overflow:hidden;background:var(--panel);animation:kfIn .4s cubic-bezier(.16,1,.3,1) both;animation-delay:' + (i * 0.05).toFixed(2) + 's;">' +
+    return '<div id="sec-' + i + '" class="thsec' + (i === 0 ? ' open' : '') + '" style="margin-top:12px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--panel);animation:kfIn .4s cubic-bezier(.16,1,.3,1) both;animation-delay:' + (i * 0.05).toFixed(2) + 's;">' +
       '<button data-fold-head style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:' + col + ';font:500 10px \'Inter\',sans-serif;letter-spacing:.12em;text-align:left;">' +
       '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + (s.seen ? col : hexA(col, 0.16)) + ';border:1px solid ' + hexA(col, 0.4) + ';display:flex;align-items:center;justify-content:center;font:500 10px \'Inter\',sans-serif;color:' + (s.seen ? 'var(--on)' : col) + ';">' + (s.seen ? '✓' : (s.warnish ? '!' : (i + 1))) + '</span>' +
       '<span style="flex:1;">' + esc(s.h) + '</span><span class="fold-arr" style="flex-shrink:0;transition:transform .25s;transform:rotate(' + (i === 0 ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
@@ -2145,7 +2163,7 @@ function tplFiche(v) {
     completionBar +
     '<div style="padding:6px 26px 0;">' + sections + '</div>' +
     '<div style="padding:26px 26px 30px;display:flex;flex-direction:column;gap:10px;">' + (v.ficheHasTest
-      ? '<button data-action="startFicheQuiz" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Tester la fiche</button>'
+      ? '<button data-action="startFicheQuiz" class="btn-cta" style="width:100%;">Tester la fiche</button>'
       : '<div style="text-align:center;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);margin-bottom:2px;">Fiche de synthèse — aucun test dédié, elle est validée une fois toutes les sections lues.</div>' +
         '<button data-action="startFicheReview" style="width:100%;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:15px;font:600 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">↻ Réviser avec des questions d\'autres fiches</button>') +
     (v.ficheHasReview ? '<button data-action="goFicheReview" style="width:100%;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:15px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Revoir les questions du test</button>' : '') +
@@ -2156,20 +2174,20 @@ function tplFicheReview(v) {
   var acc = v.ficheAccent;
   var items = v.ficheReviewItems.map(function (it) {
     var col = it.ok ? 'var(--acc2)' : 'var(--warn)';
-    return '<div style="margin-top:12px;border:1px solid var(--line);border-left:3px solid ' + hexA(col, 0.6) + ';border-radius:16px;background:var(--panel);padding:16px;">' +
+    return '<div style="margin-top:12px;border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:16px;">' +
       '<div style="display:flex;align-items:flex-start;gap:10px;">' +
       '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + hexA(col, 0.18) + ';border:1px solid ' + hexA(col, 0.4) + ';display:flex;align-items:center;justify-content:center;font:600 11px \'Inter\',sans-serif;color:' + col + ';">' + (it.ok ? '✓' : '✕') + '</span>' +
       '<div style="flex:1;font:400 13.5px/1.55 \'Inter\',sans-serif;">' + (it.isReview ? '<span style="display:block;font:600 9.5px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--gold);margin-bottom:4px;">RÉVISION · FICHE PRÉCÉDENTE</span>' : '') + esc(it.text) + '</div></div>' +
       '<div style="margin-top:10px;padding-left:32px;font:500 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);">Votre réponse : <span style="color:' + col + ';">' + esc(it.pickTxt) + '</span>' +
       (!it.ok && it.showCorrect ? '<br>Bonne réponse : <span style="color:var(--acc2);">' + esc(it.correctTxt) + '</span>' : '') + '</div>' +
       (it.formula ? '<div style="margin-top:8px;margin-left:32px;padding:10px 12px;background:' + hexA(it.ok ? '#4fcfa8' : '#e2895f', 0.12) + ';border:1px solid ' + hexA(it.ok ? '#4fcfa8' : '#e2895f', 0.35) + ';border-radius:10px;">' +
-        '<div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.1em;color:' + (it.ok ? 'var(--acc2)' : 'var(--warn)') + ';margin-bottom:4px;">📐 LE CALCUL</div>' +
+        '<div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.1em;color:' + (it.ok ? 'var(--acc2)' : 'var(--warn)') + ';margin-bottom:4px;">LE CALCUL</div>' +
         '<div style="font:500 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink);white-space:pre-line;">' + esc(it.formula) + '</div>' +
         (it.exponentNote ? '<div style="font:400 11px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:6px;padding-top:6px;border-top:1px solid ' + hexA(it.ok ? '#4fcfa8' : '#e2895f', 0.25) + ';">' + esc(it.exponentNote) + '</div>' : '') +
         '</div>' : '') +
       (it.explain ? '<div style="margin-top:8px;padding:10px 12px;background:var(--surface,rgba(255,255,255,.03));border-radius:10px;padding-left:32px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);white-space:pre-line;">' + esc(it.explain) + '</div>' : '') +
       (it.catId ? '<div style="margin-top:10px;padding-left:32px;">' +
-        '<button data-action="flagTopic" data-cat="' + esc(it.catId) + '" style="background:none;border:1px solid ' + (it.flagged ? 'var(--warn)' : 'var(--line)') + ';border-radius:999px;padding:6px 11px;font:500 10.5px \'Inter\',sans-serif;color:' + (it.flagged ? 'var(--warn)' : 'var(--ink3)') + ';cursor:pointer;">' + (it.flagged ? '🚩 Sujet marqué' : '🚩 Retravailler ce sujet') + '</button></div>' : '') +
+        '<button data-action="flagTopic" data-cat="' + esc(it.catId) + '" style="background:none;border:1px solid ' + (it.flagged ? 'var(--warn)' : 'var(--line)') + ';border-radius:999px;padding:6px 11px;font:500 10.5px \'Inter\',sans-serif;color:' + (it.flagged ? 'var(--warn)' : 'var(--ink3)') + ';cursor:pointer;">' + (it.flagged ? 'Sujet marqué' : 'Retravailler ce sujet') + '</button></div>' : '') +
       '</div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
@@ -3027,7 +3045,7 @@ function tplCultureDetail(v) {
     '<div style="margin:20px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">RÉMUNÉRATION INDICATIVE</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + esc(m.remuneration) + '</div></div>' +
     '<div style="margin:20px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">STATUT JURIDIQUE USUEL</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + esc(m.statut) + '</div></div>' +
     (m.investLimites ? '<div style="margin:20px 24px 0;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">LIMITES D\'INVESTISSEMENT PROFESSIONNEL</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + esc(m.investLimites) + '</div></div>' : '') +
-    '<div style="padding:26px 24px 30px;"><button data-action="startCultureTest" data-id="' + esc(m.id) + '" style="width:100%;border:none;border-radius:999px;padding:17px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + testBtnLabel + '</button></div>' +
+    '<div style="padding:26px 24px 30px;"><button data-action="startCultureTest" data-id="' + esc(m.id) + '" class="btn-cta" style="width:100%;">' + testBtnLabel + '</button></div>' +
     '<div style="height:10px;"></div></div>';
 }
 function tplCultureTest(v) {
@@ -3042,7 +3060,7 @@ function tplCultureTest(v) {
       '<div style="font:400 12px \'Inter\',sans-serif;color:var(--ink2);">Terminé !</div>' +
       '<div style="font:300 46px Fraunces,serif;margin-top:8px;">' + v.cultureTestScore + ' / ' + total + '</div>' +
       '<div style="font:400 12.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + (pct >= 80 ? 'Excellent — culture générale solide.' : pct >= 50 ? 'Bien, quelques révisions possibles.' : 'À revoir — relis la fiche du métier.') + '</div>' +
-      '<button data-action="goBack" style="margin-top:18px;border:none;border-radius:999px;padding:14px 22px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Retour au métier →</button></div></div>';
+      '<button data-action="goBack" class="btn-cta-sm" style="margin-top:18px;">Retour au métier →</button></div></div>';
   }
   var q = v.cultureTestSet[idx];
   var answered = v.cultureTestAnswered;
@@ -3061,7 +3079,7 @@ function tplCultureTest(v) {
     '<div style="font:300 21px/1.4 Fraunces,serif;margin-top:10px;">' + esc(q.q) + '</div></div>' +
     '<div style="margin:18px 24px 0;">' + opts + '</div>' +
     (answered ? '<div style="margin:16px 24px 0;padding:13px 14px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);">💡 ' + esc(q.explain) + '</div>' +
-      '<div style="padding:20px 24px 30px;"><button data-action="cultureTestNext" style="width:100%;border:none;border-radius:999px;padding:15px;font:600 13px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">' + (idx + 1 >= total ? 'Voir le résultat →' : 'Question suivante →') + '</button></div>' : '<div style="height:20px;"></div>') +
+      '<div style="padding:20px 24px 30px;"><button data-action="cultureTestNext" class="btn-cta" style="width:100%;">' + (idx + 1 >= total ? 'Voir le résultat →' : 'Question suivante →') + '</button></div>' : '<div style="height:20px;"></div>') +
     '</div>';
 }
 
@@ -3438,7 +3456,7 @@ function mentalIntroHtml(v) {
   return '<div style="background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:22px;text-align:center;">' +
     '<div style="font:300 22px Fraunces,serif;">Prêt ?</div>' +
     '<div style="font:400 12px \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;">Meilleur score : <b style="color:var(--ink);font-family:\'Inter\',sans-serif;">' + v.mentalBest + '</b> / ' + mentalState.total + '</div>' +
-    '<button data-action="mentalStart" style="margin-top:16px;border:none;border-radius:999px;padding:14px 22px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Commencer →</button></div>';
+    '<button data-action="mentalStart" class="btn-cta-sm" style="margin-top:16px;">Commencer →</button></div>';
 }
 function wireMentalIntro() {
   var btn = document.querySelector('#menStage [data-action="mentalStart"]');
@@ -3458,7 +3476,7 @@ function mentalNext() {
     '<div id="menQ" style="font:300 22px/1.35 Fraunces,serif;text-align:center;"></div>' +
     '<input id="menInp" type="number" inputmode="decimal" autocomplete="off" placeholder="?" style="margin-top:16px;">' +
     '<div id="menTip" style="display:none;margin-top:12px;font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--acc);"></div>' +
-    '<div style="margin-top:14px;"><button id="menValid" style="width:100%;border:none;border-radius:999px;padding:14px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Valider →</button></div></div>';
+    '<div style="margin-top:14px;"><button id="menValid" class="btn-cta" style="width:100%;">Valider →</button></div></div>';
   var qEl = document.getElementById('menQ'), inp = document.getElementById('menInp');
   qEl.textContent = mentalState.cur.q;
   try { inp.focus(); } catch (e) {}
@@ -3508,7 +3526,8 @@ function mentalAnswer(timeout) {
   mentalState.idx++;
   if (card) {
     var nb = document.createElement('button');
-    nb.style.cssText = 'width:100%;border:none;border-radius:999px;padding:14px;margin-top:14px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;';
+    nb.className = 'btn-cta';
+    nb.style.cssText = 'width:100%;margin-top:14px;';
     nb.textContent = (mentalState.idx >= mentalState.total ? 'Voir le récapitulatif →' : 'Question suivante →');
     nb.addEventListener('click', function () { if (state.screen === 'mental') mentalNext(); });
     card.appendChild(nb);
@@ -3526,7 +3545,7 @@ function mentalEnd() {
     '<div style="font:300 46px Fraunces,serif;margin-top:8px;">' + mentalState.score + ' / ' + mentalState.total + '</div>' +
     '<div style="font:400 12.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + (pct >= 80 ? 'Excellent' : pct >= 50 ? 'Bien' : 'À retravailler') + (wasBest ? ' — 🏆 nouveau record !' : '') + '</div>' +
     '<div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:4px;">Meilleur : <b style="color:var(--ink);font-family:\'Inter\',sans-serif;">' + (store.mentalBest || 0) + '</b> / ' + mentalState.total + '</div>' +
-    '<button id="menAgain" style="margin-top:14px;border:none;border-radius:999px;padding:14px 22px;font:600 13.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite;">Rejouer →</button></div>';
+    '<button id="menAgain" class="btn-cta-sm" style="margin-top:14px;">Rejouer →</button></div>';
   h += '<div style="margin-top:18px;"><div style="font:500 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--ink3);">RÉCAPITULATIF</div><div style="display:flex;flex-direction:column;gap:9px;margin-top:12px;">';
   mentalState.log.forEach(function (r) {
     h += '<div style="background:var(--panel);border:1px solid ' + (r.ok ? 'var(--line)' : 'var(--warn)') + ';border-radius:14px;padding:13px;">' +
