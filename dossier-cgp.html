@@ -8,18 +8,27 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Dossier CGP">
-<meta name="theme-color" content="#0c0e10">
+<meta name="theme-color" content="#0d0e10">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..600;1,9..144,300..600&family=Inter:wght@400;500;600;700&family=Inter:ital@1&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;height:100%;background:#0a0c0e}
+html,body{margin:0;padding:0;height:100%;background:#090a0b}
 body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
-a{color:#dbb46f}
-a:hover{color:#eccea0}
+a{color:#a9814a}
+a:hover{color:#d9b87c}
 button{font:inherit}
 textarea{font-family:inherit}
-:root,[data-theme="dark"]{--bg:#0c0e10;--bg-hi:#171a1d;--panel:#15181b;--panel2:#1d2125;--line:#2b3136;--ink:#f6f1e7;--ink2:#b9c1c4;--ink3:#828b8e;--dim:#565e61;--acc:#dbb46f;--acc2:#4fcfa8;--gold:#f2cd82;--warn:#e2895f;--on:#191307;
+:root,[data-theme="dark"]{
+  /* ---- Encre & Laiton : palette d'identité -------------------------------
+     Surfaces : encre bleu-noir profonde, jamais un simple gris anthracite.
+     Accent primaire : laiton mat (bronze d'un fermoir de classeur), pas d'or criard.
+     Accent secondaire : vert d'encre (bouteille), remplace le teal "fintech".
+     Alerte / sceau : rouge de cire à cacheter, utilisé aussi pour les tampons officiels. */
+  --bg:#0d0e10;--bg-hi:#17191b;--panel:#15171a;--panel2:#1d2023;--line:#2c2f33;
+  --rule:#3c3326;--rule-dim:#2a241a;
+  --ink:#f2ecdd;--ink2:#b8b8ac;--ink3:#85867c;--dim:#55564f;
+  --acc:#a9814a;--acc2:#5f7f66;--gold:#cda96c;--warn:#a8432f;--on:#1b140a;
   /* Spacing scale — two rhythms, both used consistently across dossier-cgp.js:
      macro (block/section gaps): --sp-4 16 · --sp-5 24 · --sp-6 32 · --sp-7 48
      micro (intra-component gaps, 2px grid): --sp-05 2 · --sp-1 4 · --sp-2 8 · --sp-3 12 · --sp-4 16
@@ -28,28 +37,29 @@ textarea{font-family:inherit}
      in the templates now snaps to one of these steps instead of ad hoc 18/20/22/26/28px. */
   --sp-05:2px;--sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;--sp-7:48px;
   /* Typographic hierarchy — five named rungs, used consistently:
-     DISPLAY  — Fraunces 300, 38–62px, line-height .9–1.08, letter-spacing -.03em  → hero numbers, big greetings
+     COVER    — Fraunces (variable, 340–460), 46–72px, line-height .86–.95, letter-spacing -.035em
+                → front-of-dossier numbers (scores, %, compteurs), set like a cover-page folio
      TITLE    — Fraunces 300, 24–34px, line-height 1.1–1.2, letter-spacing -.02/-.025em → screen/section headers
      BODY     — Inter 400, 13–14px, line-height 1.6–1.78, color var(--ink2)      → paragraphs, explanations
      CAPTION  — Inter 400/500, 10.5–12.5px, color var(--ink3)                    → meta, counters, helper text
      LABEL    — Inter 600, 10px, letter-spacing .12em (9px/.09em for the nested sub-rung),
-                uppercase, color var(--ink3) or a semantic accent → section kickers, overline tags */
+                uppercase, color var(--ink3) or a semantic accent → folio kickers, overline tags */
 }
 .panel-glass{background:linear-gradient(165deg,rgba(255,255,255,.05),rgba(255,255,255,0) 45%),var(--panel);box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 1px 0 rgba(0,0,0,.4)}
 /* Ambient surface: every panel/tile gets a whisper of depth, never a floating drop-shadow.
    Real elevation is reserved for .card-hero, applied only to the one or two elements per
    screen that should actually detach from the page (see dossier-cgp.js). */
 [style*="background:var(--panel)"]{box-shadow:inset 0 1px 0 rgba(255,255,255,.04)}
-.card-hero{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 20px 44px -22px rgba(0,0,0,.65),0 0 0 1px rgba(219,180,111,.08) !important}
-.btn-cta{display:block;width:100%;box-sizing:border-box;border:none;border-radius:999px;padding:16px;font:600 13.5px 'Inter',sans-serif;color:var(--on);text-align:center;cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite}
+.card-hero{box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 20px 44px -22px rgba(0,0,0,.65),0 0 0 1px rgba(169,129,74,.14) !important}
+.btn-cta{display:block;width:100%;box-sizing:border-box;border:none;border-radius:999px;padding:16px;font:600 13px/1 'Inter',sans-serif;letter-spacing:.02em;color:var(--on);text-align:center;cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite}
 .btn-cta:disabled{opacity:.4;cursor:default;animation:none}
-.btn-cta-sm{display:inline-block;border:none;border-radius:999px;padding:14px 22px;font:600 13.5px 'Inter',sans-serif;color:var(--on);text-align:center;cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite}
+.btn-cta-sm{display:inline-block;border:none;border-radius:999px;padding:14px 22px;font:600 13px 'Inter',sans-serif;letter-spacing:.02em;color:var(--on);text-align:center;cursor:pointer;background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 10s linear infinite}
 @keyframes kfSweep{0%{background-position:0% 50%}100%{background-position:200% 50%}}
 @keyframes kfSpin{to{transform:rotate(360deg)}}
 @keyframes kfBreathe{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
 @keyframes kfCalm{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
 @keyframes kfFill{from{transform:scaleX(.15)}to{transform:scaleX(1)}}
-@keyframes kfGlow{0%,100%{box-shadow:0 0 0 0 rgba(219,180,111,0)}50%{box-shadow:0 0 0 9px rgba(219,180,111,.16)}}
+@keyframes kfGlow{0%,100%{box-shadow:0 0 0 0 rgba(169,129,74,0)}50%{box-shadow:0 0 0 9px rgba(169,129,74,.18)}}
 @keyframes kfIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 @keyframes kfInFwd{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
 @keyframes kfInBack{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
@@ -57,12 +67,13 @@ textarea{font-family:inherit}
 @keyframes kfFall{0%{transform:translateY(-40px) rotate(0);opacity:1}100%{transform:translateY(760px) rotate(620deg);opacity:0}}
 @keyframes kfShake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}
 @keyframes kfRise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-@keyframes kfPulseRing{0%{box-shadow:0 0 0 0 rgba(219,180,111,.35)}100%{box-shadow:0 0 0 14px rgba(219,180,111,0)}}
-#app{min-height:100dvh;max-width:480px;margin:0 auto;width:100%;background:radial-gradient(85% 60% at 18% -6%,rgba(219,180,111,.10) 0%,rgba(219,180,111,0) 55%),radial-gradient(70% 55% at 100% 0%,rgba(79,207,168,.08) 0%,rgba(79,207,168,0) 60%),radial-gradient(120% 90% at 50% -8%,var(--bg-hi) 0%,var(--bg) 60%);color:var(--ink);display:flex;flex-direction:column;overflow:hidden;position:relative}
+@keyframes kfPulseRing{0%{box-shadow:0 0 0 0 rgba(169,129,74,.35)}100%{box-shadow:0 0 0 14px rgba(169,129,74,0)}}
+@keyframes kfStamp{0%{opacity:0;transform:scale(1.7) rotate(-14deg)}60%{opacity:1}100%{opacity:1;transform:scale(1) rotate(-4deg)}}
+#app{min-height:100dvh;max-width:480px;margin:0 auto;width:100%;background:radial-gradient(85% 60% at 18% -6%,rgba(169,129,74,.12) 0%,rgba(169,129,74,0) 55%),radial-gradient(70% 55% at 100% 0%,rgba(95,127,102,.10) 0%,rgba(95,127,102,0) 60%),radial-gradient(120% 90% at 50% -8%,var(--bg-hi) 0%,var(--bg) 60%);color:var(--ink);display:flex;flex-direction:column;overflow:hidden;position:relative}
 @media (min-width:640px){
-  html,body{background:#050607}
+  html,body{background:#050506}
   body{padding:36px 20px;min-height:100vh}
-  #app{min-height:0;height:calc(100dvh - 72px);border-radius:28px;box-shadow:0 40px 90px rgba(0,0,0,.55),0 0 0 1px var(--line);}
+  #app{min-height:0;height:calc(100dvh - 72px);border-radius:22px;box-shadow:0 40px 90px rgba(0,0,0,.55),0 0 0 1px var(--line);}
 }
 @media (min-width:1024px){
   body{padding:0;display:flex;align-items:center;justify-content:center}
@@ -76,21 +87,20 @@ textarea{font-family:inherit}
     background:var(--panel);border-right:1px solid var(--line);
     box-sizing:border-box;
   }
-  #tabs-slot>div{
+  #tabs-slot .nav-rail{
     display:flex !important;flex-direction:column !important;
     justify-content:flex-start !important;align-items:stretch !important;
-    padding:34px 16px !important;background:none !important;
-    height:100%;box-sizing:border-box;
+    padding:34px 16px !important;background:none !important;border-top:none !important;
+    gap:3px !important;height:100%;box-sizing:border-box;
   }
-  #tabs-slot>div>div{
-    display:flex !important;flex-direction:column !important;
-    background:none !important;border:none !important;border-radius:0 !important;
-    padding:0 !important;gap:4px !important;width:100%;
+  #tabs-slot .tab-item{
+    width:100% !important;display:flex !important;flex-direction:row !important;align-items:center !important;
+    gap:10px !important;text-align:left !important;justify-content:flex-start !important;
+    border-radius:3px !important;padding:12px 14px !important;border-top:none !important;
+    border-left:2px solid transparent !important;
   }
-  #tabs-slot button{
-    width:100% !important;text-align:left !important;
-    border-radius:12px !important;padding:13px 16px !important;
-  }
+  #tabs-slot .tab-item .ti-ico{margin-bottom:0 !important;font-size:15px !important}
+  #tabs-slot .tab-item.on{background:var(--panel2) !important;border-left-color:var(--acc) !important}
   #screen{max-width:760px;width:100%;margin:0 auto;}
 }
 #confetti-slot{position:absolute;inset:0;pointer-events:none;z-index:40;overflow:hidden}
@@ -101,7 +111,7 @@ textarea{font-family:inherit}
 button{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s ease,border-color .18s ease,background-color .18s ease,box-shadow .18s ease}
 button:active{transform:scale(.96)}
 .hv-a{transition:transform .16s ease,border-color .18s ease,box-shadow .18s ease}
-.hv-a:hover{border-color:var(--acc);transform:translateY(-2px);box-shadow:0 12px 28px rgba(0,0,0,.34),0 0 0 1px rgba(219,180,111,.1)}
+.hv-a:hover{border-color:var(--acc);transform:translateY(-2px);box-shadow:0 12px 28px rgba(0,0,0,.34),0 0 0 1px rgba(169,129,74,.14)}
 .hv-a:active{transform:translateY(0) scale(.97)}
 .hv-b:hover{border-color:var(--acc);background:var(--panel2)}
 .hv-c:hover{background:var(--panel2)}
@@ -130,6 +140,63 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 .fold-body{overflow:hidden;transition:grid-template-rows .3s cubic-bezier(.16,1,.3,1);display:grid;grid-template-rows:1fr}
 .fold-body>div{overflow:hidden;min-height:0}
 .fold-body.fold-closed{grid-template-rows:0fr}
+
+/* ==== Identité "Dossier" : registre, onglets de classeur, sceau =========
+   Trois motifs récurrents qui remplacent les cartes génériques empilées :
+   1) .ledger / .ledger-row  — lignes de registre (grand livre), avec un filet
+      de marge vertical couleur laiton, pour toute donnée tabulaire (stats, listes).
+   2) .binder-tabs           — séparateurs de classeur découpés en trapèze,
+      pour naviguer entre pôles/catégories/examens au lieu de boutons identiques.
+   3) .seal / .seal-wax      — tampon/sceau en relief pour séries, examens
+      réussis, attestations — remplace le pictogramme coloré générique.
+   + .folio-num              — traitement éditorial des gros chiffres (Fraunces
+      variable, graisse intermédiaire), façon page de couverture de dossier.
+   + .folio-kicker           — surtitre avec tiret laiton, écho du "tab" d'onglet.
+   + .paper-ruled            — fond réglé (registre) pour l'écran de quiz. */
+.folio-num{font-family:Fraunces,serif;font-weight:380;letter-spacing:-.04em;line-height:.86;color:var(--ink);font-variant-numeric:tabular-nums}
+.folio-kicker{display:inline-flex;align-items:center;gap:8px;font:600 10px 'Inter',sans-serif;letter-spacing:.14em;color:var(--ink3)}
+.folio-kicker::before{content:'';width:13px;height:1px;background:var(--acc);flex-shrink:0}
+.folio-kicker.fk-r::before{display:none}
+.folio-kicker.fk-r::after{content:'';width:13px;height:1px;background:var(--acc);flex-shrink:0;order:1}
+
+.ledger{border-top:1px solid var(--rule)}
+.ledger-row{position:relative;display:flex;align-items:center;gap:10px;padding:13px 2px 13px 18px;border-bottom:1px solid var(--rule)}
+.ledger-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--rule)}
+.ledger-row:last-child{border-bottom:none}
+.ledger-row.lr-tight{padding-top:10px;padding-bottom:10px}
+.ledger-total{border-top:1px solid var(--rule);border-bottom:3px double var(--rule);padding:12px 2px}
+
+.paper-ruled{background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 27px,var(--rule-dim) 27px,var(--rule-dim) 28px)}
+
+.binder-tabs{display:flex;gap:5px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
+.binder-tabs::-webkit-scrollbar{display:none}
+.binder-tabs .btab{flex-shrink:0;border:1px solid var(--line);border-bottom:2px solid var(--line);background:var(--bg-hi);color:var(--ink3);
+  font:600 10px 'Inter',sans-serif;letter-spacing:.06em;padding:10px 14px 9px;cursor:pointer;white-space:nowrap;
+  clip-path:polygon(10% 0,100% 0,90% 100%,0% 100%);transition:color .18s ease,background-color .18s ease,border-color .18s ease}
+.binder-tabs .btab.on{background:var(--panel);color:var(--ink);border-color:var(--rule);border-bottom-color:var(--btab-acc,var(--acc))}
+.binder-tabs .btab .btab-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--btab-acc,var(--acc));margin-right:6px;vertical-align:middle}
+
+.nav-rail{display:flex;gap:0;background:var(--bg);border-top:1px solid var(--line)}
+.nav-rail .tab-item{flex:1;min-width:0;background:none;border:none;border-top:2px solid transparent;color:var(--ink3);
+  font:600 9.5px 'Inter',sans-serif;letter-spacing:.06em;padding:12px 2px 10px;cursor:pointer;text-align:center;
+  transition:color .18s ease,border-color .18s ease}
+.nav-rail .tab-item .ti-ico{display:block;font:400 16px Fraunces,serif;margin-bottom:3px;line-height:1}
+.nav-rail .tab-item.on{color:var(--acc);border-top-color:var(--acc)}
+
+.seal{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;width:60px;height:60px;border-radius:50%;
+  background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.16),rgba(255,255,255,0) 55%),var(--gold);
+  box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--gold),inset 0 1px 2px rgba(0,0,0,.35),inset 0 -2px 4px rgba(255,255,255,.12),0 6px 14px -6px rgba(0,0,0,.5);
+  color:var(--on);transform:rotate(-5deg);animation:kfStamp .5s cubic-bezier(.2,1.3,.4,1) both}
+.seal::before{content:'';position:absolute;inset:6px;border-radius:50%;border:1px dashed rgba(27,20,10,.38)}
+.seal .seal-glyph{font:600 22px Fraunces,serif;letter-spacing:-.02em;position:relative}
+.seal.seal-sm{width:40px;height:40px}
+.seal.seal-sm::before{inset:4px}
+.seal.seal-sm .seal-glyph{font-size:15px}
+.seal.seal-wax{background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.14),rgba(255,255,255,0) 55%),var(--warn);
+  box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--warn),inset 0 1px 2px rgba(0,0,0,.4),inset 0 -2px 4px rgba(255,255,255,.1),0 6px 14px -6px rgba(0,0,0,.5);color:#f4e4dc}
+.seal.seal-ink{background:radial-gradient(circle at 34% 28%,rgba(255,255,255,.14),rgba(255,255,255,0) 55%),var(--acc2);
+  box-shadow:0 0 0 2px var(--bg),0 0 0 3px var(--acc2),inset 0 1px 2px rgba(0,0,0,.4),inset 0 -2px 4px rgba(255,255,255,.1),0 6px 14px -6px rgba(0,0,0,.5);color:#eef3ee}
+
 @media (prefers-reduced-motion:reduce){*{animation-duration:.001s !important;animation-iteration-count:1 !important;transition-duration:.001s !important}}
 </style>
 </head>

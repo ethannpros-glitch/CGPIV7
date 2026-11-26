@@ -9,38 +9,38 @@ function getUserName() { return (store && store.name) || 'Camille'; }
 var today = function () { return Math.floor(Date.now() / 86400000); };
 
 var PROGRAM = [
-  { n: 1, title: 'Les bases du marché', poles: ['Culture financière'], accent: '#a888c9',
+  { n: 1, title: 'Les bases du marché', poles: ['Culture financière'], accent: '#7d6b96',
     theory: ['th_mc_interets', 'th_mc_capi', 'th_mc_diversif', 'th_mc_risque', 'th_mc_oblig', 'th_mc_options', 'th_mc_macro', 'th_crypto'],
     quiz: ['mc_interets', 'mc_oblig', 'mc_action', 'mc_risque', 'mc_options', 'mc_macro', 'mc_portefeuille', 'mc_produits', 'mc_analyse', 'mc_corpo', 'mc_cas', 'crypto_q'],
     validation: 'Maîtrise du pôle Culture financière ≥ 70 %, toutes les fiches ouvertes au moins une fois.' },
-  { n: 2, title: 'Assurance-vie & capitalisation', poles: ['Les enveloppes'], accent: '#f2cd82',
+  { n: 2, title: 'Assurance-vie & capitalisation', poles: ['Les enveloppes'], accent: '#cda96c',
     theory: ['th_av', 'th_av_methodo', 'th_av_appro', 'th_capi', 'th_lux'],
     quiz: ['av_fondamentaux', 'av_rachat', 'lecture_contrat', 'av_appro', 'av_expert', 'capi_fond', 'lux_fond'],
     validation: '"Fondamentaux de l\'AV" et "Rachats & fiscalité" ≥ 75 %. Tu dois savoir citer de tête la règle des 8 ans.' },
-  { n: 3, title: 'PER, PEA, compte-titres', poles: ['Les enveloppes'], accent: '#f2cd82',
+  { n: 3, title: 'PER, PEA, compte-titres', poles: ['Les enveloppes'], accent: '#cda96c',
     theory: ['th_per', 'th_per_methodo', 'th_per_appro', 'th_pee', 'th_bourse'],
     quiz: ['per_fondamentaux', 'per_fiscalite', 'per_deblocage', 'per_percol', 'per_prefon', 'per_reseau', 'per_appro', 'pee_perco', 'bourse_pea', 'bourse_cto'],
     validation: 'Session personnalisée "PER" seul, niveau Expert, 15 questions ≥ 75 %.' },
-  { n: 4, title: 'Le pôle le plus dense', poles: ['Supports & actifs'], accent: '#4fcfa8',
+  { n: 4, title: 'Le pôle le plus dense', poles: ['Supports & actifs'], accent: '#5f7f66',
     theory: ['th_fonds', 'th_lire_etf', 'th_etf_actif', 'th_struct_gen', 'th_struct', 'th_lire_structure', 'th_frais_struct', 'th_lire_dic', 'th_immo_levier', 'th_immo', 'th_scpi', 'th_pe', 'th_pe2'],
     quiz: ['fonds_choix', 'fonds_etf', 'etf_actif', 'struct_dic', 'struct_action', 'struct_lecture', 'frais_struct', 'immo_patrimoine', 'scpi_pierre', 'soc_sci_struct', 'pe_fondamentaux', 'pe_structuration', 'pe_fiscalite', 'pe_strategie'],
     validation: 'Maîtrise du pôle ≥ 65 % (le plus dur, repris en semaine 8). Sais expliquer une barrière de protection.' },
-  { n: 5, title: 'IR, IFI, succession, démembrement', poles: ['Fiscalité & transmission'], accent: '#6fa8d0',
+  { n: 5, title: 'IR, IFI, succession, démembrement', poles: ['Fiscalité & transmission'], accent: '#5b7290',
     theory: ['th_fisc', 'th_fisc_part_appro', 'th_fisc_patri_appro', 'th_succession', 'th_dutreil', 'th_dem', 'th_mat', 'th_quotient', 'th_ir_escalier', 'th_pvimmo_duree', 'th_av_horssucc'],
     quiz: ['fisc_ir', 'fisc_part_appro', 'fisc_patri_appro', 'fisc_expert', 'succession', 'ing_donation', 'ing_dutreuil', 'dem_fondamentaux', 'dem_expert', 'mat_regimes'],
     validation: '"Démembrement" et "Succession" ≥ 75 %. Sais citer de tête 2 tranches du barème art. 669.' },
-  { n: 6, title: 'Retraite, prévoyance, crédit', poles: ['Retraite & protection', 'Financement & levier'], accent: '#d98a9c',
+  { n: 6, title: 'Retraite, prévoyance, crédit', poles: ['Retraite & protection', 'Financement & levier'], accent: '#9c6b74',
     theory: ['th_retraite', 'th_retraite_etages', 'th_prev', 'th_prevoyance', 'th_prev_trou', 'th_lombard', 'th_hypo'],
     quiz: ['retraite_base', 'retraite_compl', 'prev_fondamentaux', 'prev_madelin', 'protection_sociale', 'credit_lombard', 'credit_hypo', 'ing_lombard', 'prev_emprunteur'],
     validation: '"Crédit Lombard" ≥ 75 %. Sais expliquer un appel de marge sans relire le cours.' },
-  { n: 7, title: 'Ingénierie & réglementation', poles: ['Entreprise & ingénierie', 'Métier & méthode'], accent: '#9db56a',
+  { n: 7, title: 'Ingénierie & réglementation', poles: ['Entreprise & ingénierie', 'Métier & méthode'], accent: '#788a52',
     theory: ['th_soc', 'th_gerance_appro', 'th_entreprise_appro', 'th_ing', 'th_holding_sci', 'th_holding_flux', 'th_reg', 'th_amf', 'th_grille_methode', 'th_grille_per', 'th_grille_struct', 'th_arbitrage', 'th_vocab', 'th_esg'],
     quiz: ['soc_ei_micro', 'soc_sarl', 'soc_sas', 'soc_sel', 'gerance_appro', 'entreprise_appro', 'ing_expert', 'soc_holding', 'soc_holding_v8', 'soc_mbo', 'soc_holding_sci', 'ing_150bter', 'reg_mif', 'reg_lcb', 'amf', 'arbitrage', 'reg_esg'],
     validation: '"Certification AMF" ≥ 80 %. "Holding" ≥ 70 %.' },
-  { n: 8, title: 'Rattrapage ciblé', poles: [], accent: '#e2895f', consolidation: true,
+  { n: 8, title: 'Rattrapage ciblé', poles: [], accent: '#a8432f', consolidation: true,
     theory: [], quiz: [],
     validation: 'Examen blanc Niveau 1 ≥ 85 %, Niveau 2 ≥ 75 %, aucun pôle sous 70 % dans Stats.' },
-  { n: 9, title: 'Conditions réelles', poles: [], accent: '#dbb46f', consolidation: true,
+  { n: 9, title: 'Conditions réelles', poles: [], accent: '#a9814a', consolidation: true,
     theory: [], quiz: [],
     validation: 'Niveau 3 · Technique ≥ 80 % sur 2 tentatives. Mise à niveau générale ≥ 85 %.' }
 ];
@@ -1347,19 +1347,19 @@ function scoreKwPoints(rawTxt, points) {
 }
 function hexA(hex, a) {
   var h = (hex || '').replace('#', '');
-  if (h.length !== 6) return 'rgba(219,180,111,' + a + ')';
+  if (h.length !== 6) return 'rgba(169,129,74,' + a + ')';
   var r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
   return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
 }
 var poleStyle = {
-  'Les enveloppes': { accent: '#f2cd82', glyph: '🛡️' },
-  'Supports & actifs': { accent: '#4fcfa8', glyph: '📈' },
-  'Financement & levier': { accent: '#e2895f', glyph: '⚖️' },
-  'Retraite & protection': { accent: '#d98a9c', glyph: '🕰️' },
-  'Fiscalité & transmission': { accent: '#6fa8d0', glyph: '📜' },
-  'Entreprise & ingénierie': { accent: '#9db56a', glyph: '🏢' },
-  'Métier & méthode': { accent: '#dbb46f', glyph: '🎯' },
-  'Culture financière': { accent: '#a888c9', glyph: '🌐' }
+  'Les enveloppes': { accent: '#cda96c', glyph: '🛡️' },
+  'Supports & actifs': { accent: '#5f7f66', glyph: '📈' },
+  'Financement & levier': { accent: '#a8432f', glyph: '⚖️' },
+  'Retraite & protection': { accent: '#9c6b74', glyph: '🕰️' },
+  'Fiscalité & transmission': { accent: '#5b7290', glyph: '📜' },
+  'Entreprise & ingénierie': { accent: '#788a52', glyph: '🏢' },
+  'Métier & méthode': { accent: '#a9814a', glyph: '🎯' },
+  'Culture financière': { accent: '#7d6b96', glyph: '🌐' }
 };
 function poleAccent(p) { return (poleStyle[p] && poleStyle[p].accent) || 'var(--acc)'; }
 function poleGlyph(p) { return (poleStyle[p] && poleStyle[p].glyph) || '📘'; }
@@ -1407,20 +1407,23 @@ function esc(s) {
 
 function tplOption(o) {
   var out = '', delay = (o.i * 0.05).toFixed(2) + 's';
-  if (o.pending) out += '<button data-action="answerQcm" data-i="' + o.i + '" class="hv-b stagger" style="animation-delay:' + delay + ';display:flex;gap:13px;align-items:flex-start;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--ink);cursor:pointer;"><span style="font:400 15px Fraunces,serif;color:var(--acc);">' + o.letter + '</span><span>' + esc(o.text) + '</span></button>';
-  if (o.good) out += '<div class="stagger" style="animation-delay:' + delay + ';display:flex;gap:13px;align-items:flex-start;border-radius:16px;padding:16px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--on);background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 12s linear infinite,kfPop .3s ease both,kfPulseRing 1s ease-out .3s both;"><span style="font:400 15px Fraunces,serif;opacity:.75;">' + o.letter + '</span><span>' + esc(o.text) + '</span></div>';
-  if (o.bad) out += '<div class="shake" style="display:flex;gap:13px;align-items:flex-start;border-radius:16px;padding:16px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--warn);border:1px solid var(--warn);"><span style="font:400 15px Fraunces,serif;">' + o.letter + '</span><span>' + esc(o.text) + '</span></div>';
-  if (o.mute) out += '<div class="stagger" style="animation-delay:' + delay + ';display:flex;gap:13px;align-items:flex-start;border-radius:16px;padding:16px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--ink3);border:1px solid var(--line);"><span style="font:400 15px Fraunces,serif;">' + o.letter + '</span><span>' + esc(o.text) + '</span></div>';
-  if (o.sel) out += '<div class="shake" style="display:flex;gap:13px;align-items:flex-start;border-radius:16px;padding:16px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--ink);border:1px solid var(--ink3);background:var(--panel2);"><span style="font:400 15px Fraunces,serif;color:var(--ink3);">' + o.letter + '</span><span>' + esc(o.text) + '</span></div>';
+  var badge = function (col, fill, glyph) {
+    return '<span style="flex-shrink:0;width:25px;height:25px;border-radius:50%;' + (fill ? 'background:' + col + ';color:var(--on);' : 'border:1px solid ' + col + ';color:' + col + ';') + 'display:flex;align-items:center;justify-content:center;font:500 12px Fraunces,serif;">' + (glyph || o.letter) + '</span>';
+  };
+  if (o.pending) out += '<button data-action="answerQcm" data-i="' + o.i + '" class="hv-b stagger" style="animation-delay:' + delay + ';display:flex;gap:14px;align-items:flex-start;text-align:left;background:none;border:none;border-bottom:1px solid var(--rule);width:100%;padding:15px 2px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">' + badge('var(--ink3)') + '<span style="padding-top:2px;">' + esc(o.text) + '</span></button>';
+  if (o.good) out += '<div class="stagger" style="animation-delay:' + delay + ';display:flex;gap:14px;align-items:flex-start;border-bottom:1px solid var(--rule);padding:15px 2px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--ink);background:' + hexA('#5f7f66', 0.14) + ';animation:kfPop .3s ease both;">' + badge('var(--acc2)', true, '✓') + '<span style="padding-top:2px;">' + esc(o.text) + '</span></div>';
+  if (o.bad) out += '<div class="shake" style="display:flex;gap:14px;align-items:flex-start;border-bottom:1px solid var(--rule);padding:15px 2px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--warn);background:' + hexA('#a8432f', 0.1) + ';">' + badge('var(--warn)', true, '✕') + '<span style="padding-top:2px;">' + esc(o.text) + '</span></div>';
+  if (o.mute) out += '<div class="stagger" style="animation-delay:' + delay + ';display:flex;gap:14px;align-items:flex-start;border-bottom:1px solid var(--rule);padding:15px 2px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--ink3);">' + badge('var(--line)') + '<span style="padding-top:2px;">' + esc(o.text) + '</span></div>';
+  if (o.sel) out += '<div class="shake" style="display:flex;gap:14px;align-items:flex-start;border-bottom:1px solid var(--rule);padding:15px 2px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--ink);background:var(--panel2);">' + badge('var(--ink3)') + '<span style="padding-top:2px;">' + esc(o.text) + '</span></div>';
   return out;
 }
 function tplVf(b) {
   var out = '', delay = (b.i * 0.06).toFixed(2) + 's';
-  if (b.pending) out += '<button data-action="answerVf" data-i="' + b.i + '" class="hv-b stagger" style="animation-delay:' + delay + ';flex:1;background:var(--panel);border:1px solid var(--line);border-radius:22px;padding:26px 0;font:400 25px Fraunces,serif;color:var(--ink);cursor:pointer;">' + esc(b.label) + '</button>';
-  if (b.good) out += '<div style="flex:1;border-radius:22px;padding:26px 0;text-align:center;font:400 25px Fraunces,serif;color:var(--on);background:linear-gradient(110deg,var(--acc2),var(--acc),var(--gold),var(--acc2));background-size:220% 100%;animation:kfSweep 12s linear infinite,kfPop .3s ease both;">' + esc(b.label) + '</div>';
-  if (b.bad) out += '<div class="shake" style="flex:1;border-radius:22px;padding:26px 0;text-align:center;font:400 25px Fraunces,serif;color:var(--warn);border:1px solid var(--warn);">' + esc(b.label) + '</div>';
-  if (b.mute) out += '<div style="flex:1;border-radius:22px;padding:26px 0;text-align:center;font:400 25px Fraunces,serif;color:var(--dim);border:1px solid var(--line);">' + esc(b.label) + '</div>';
-  if (b.sel) out += '<div class="shake" style="flex:1;border-radius:22px;padding:26px 0;text-align:center;font:400 25px Fraunces,serif;color:var(--ink);border:1px solid var(--ink3);background:var(--panel2);">' + esc(b.label) + '</div>';
+  if (b.pending) out += '<button data-action="answerVf" data-i="' + b.i + '" class="hv-b stagger" style="animation-delay:' + delay + ';flex:1;background:none;border:1px solid var(--line);padding:24px 0;font:400 23px Fraunces,serif;color:var(--ink);cursor:pointer;">' + esc(b.label) + '</button>';
+  if (b.good) out += '<div style="flex:1;border:1px solid var(--acc2);background:' + hexA('#5f7f66', 0.16) + ';padding:24px 0;text-align:center;font:400 23px Fraunces,serif;color:var(--ink);animation:kfPop .3s ease both;">✓ ' + esc(b.label) + '</div>';
+  if (b.bad) out += '<div class="shake" style="flex:1;border:1px solid var(--warn);background:' + hexA('#a8432f', 0.1) + ';padding:24px 0;text-align:center;font:400 23px Fraunces,serif;color:var(--warn);">✕ ' + esc(b.label) + '</div>';
+  if (b.mute) out += '<div style="flex:1;border:1px solid var(--line);padding:24px 0;text-align:center;font:400 23px Fraunces,serif;color:var(--dim);">' + esc(b.label) + '</div>';
+  if (b.sel) out += '<div class="shake" style="flex:1;border:1px solid var(--ink3);background:var(--panel2);padding:24px 0;text-align:center;font:400 23px Fraunces,serif;color:var(--ink);">' + esc(b.label) + '</div>';
   return out;
 }
 function tplCalc(v) {
@@ -1490,11 +1493,11 @@ function tplMemviz(v) {
     return '<div style="margin-top:16px;display:flex;align-items:center;gap:12px;">' +
       '<div style="flex:1;height:4px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="height:4px;width:' + pct + '%;background:linear-gradient(90deg,var(--acc2),var(--gold));transition:width 1s linear;"></div></div>' +
       '<div style="font:600 13px \'Inter\',sans-serif;color:' + (v.memvizTimeLeft <= 3 ? 'var(--warn)' : 'var(--gold)') + ';flex-shrink:0;">' + v.memvizTimeLeft + ' s</div></div>' +
-      '<div style="margin-top:14px;border-radius:16px;overflow:hidden;background:#faf8f3;">' + v.memvizFullSvg + '</div>' +
+      '<div style="margin-top:14px;border-radius:16px;overflow:hidden;background:#f5efe1;">' + v.memvizFullSvg + '</div>' +
       '<div style="text-align:center;margin-top:14px;"><button data-action="memvizSkipToRecall" style="background:none;border:none;color:var(--ink3);font:400 11.5px \'Inter\',sans-serif;cursor:pointer;text-decoration:underline;">J\'ai fini de mémoriser →</button></div>';
   }
   var svg = v.memvizResult ? v.memvizFullSvg : v.memvizBlankSvg;
-  var out = '<div style="margin-top:14px;border-radius:16px;overflow:hidden;background:#faf8f3;">' + svg + '</div>';
+  var out = '<div style="margin-top:14px;border-radius:16px;overflow:hidden;background:#f5efe1;">' + svg + '</div>';
   if (v.memvizResult) {
     out += '<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">' + v.memvizResult.map(function (r) {
       var col = r.ok ? 'var(--acc2)' : 'var(--warn)';
@@ -1514,16 +1517,16 @@ function tplMemviz(v) {
 
 function confettiHtml() {
   var pieces = [
-    ['8%', '0', '7px', '12px', '2px', '#f2cd82', '2.4s', '.05s'],
-    ['18%', '0', '6px', '10px', '2px', '#dbb46f', '2.8s', '.3s'],
-    ['28%', '0', '8px', '8px', '50%', '#4fcfa8', '2.2s', '.18s'],
-    ['37%', '0', '6px', '13px', '2px', '#ef8b7a', '3s', '.5s'],
-    ['46%', '0', '7px', '11px', '2px', '#f2cd82', '2.6s', '.1s'],
-    ['55%', '0', '9px', '9px', '50%', '#dbb46f', '2.9s', '.42s'],
-    ['64%', '0', '6px', '12px', '2px', '#4fcfa8', '2.3s', '.24s'],
-    ['73%', '0', '7px', '10px', '2px', '#f2cd82', '3.1s', '.6s'],
-    ['82%', '0', '8px', '8px', '50%', '#ef8b7a', '2.5s', '.34s'],
-    ['91%', '0', '6px', '12px', '2px', '#dbb46f', '2.7s', '.14s']
+    ['8%', '0', '7px', '12px', '2px', '#cda96c', '2.4s', '.05s'],
+    ['18%', '0', '6px', '10px', '2px', '#a9814a', '2.8s', '.3s'],
+    ['28%', '0', '8px', '8px', '50%', '#5f7f66', '2.2s', '.18s'],
+    ['37%', '0', '6px', '13px', '2px', '#c97b52', '3s', '.5s'],
+    ['46%', '0', '7px', '11px', '2px', '#cda96c', '2.6s', '.1s'],
+    ['55%', '0', '9px', '9px', '50%', '#a9814a', '2.9s', '.42s'],
+    ['64%', '0', '6px', '12px', '2px', '#5f7f66', '2.3s', '.24s'],
+    ['73%', '0', '7px', '10px', '2px', '#cda96c', '3.1s', '.6s'],
+    ['82%', '0', '8px', '8px', '50%', '#c97b52', '2.5s', '.34s'],
+    ['91%', '0', '6px', '12px', '2px', '#a9814a', '2.7s', '.14s']
   ];
   return pieces.map(function (p) {
     return '<span style="position:absolute;left:' + p[0] + ';top:' + p[1] + ';width:' + p[2] + ';height:' + p[3] + ';border-radius:' + p[4] + ';background:' + p[5] + ';animation:kfFall ' + p[6] + ' linear ' + p[7] + ' both;"></span>';
@@ -1531,53 +1534,55 @@ function confettiHtml() {
 }
 
 function tplOnb(v) {
-  var out = '<div style="flex:1;display:flex;flex-direction:column;padding:64px 26px 40px;overflow:auto;">' +
-    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">DOSSIER CGP · ' + esc(v.onbStepLabel) + '</div>';
+  var out = '<div style="flex:1;display:flex;flex-direction:column;padding:60px 26px 40px;overflow:auto;position:relative;">' +
+    '<div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--rule);padding-bottom:12px;">' +
+    '<span style="font:600 10px \'Inter\',sans-serif;letter-spacing:.16em;color:var(--acc);">DOSSIER N° CGP·26</span>' +
+    '<span style="font:500 10px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--ink3);">' + esc(v.onbStepLabel) + '</span></div>';
   if (v.onbName) {
-    out += '<div style="font:300 38px/1.12 Fraunces,serif;letter-spacing:-.025em;margin-top:16px;">Comment doit-on<br><span style="font-style:italic;background:linear-gradient(100deg,var(--acc),var(--gold),var(--acc2),var(--acc));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:kfSweep 9s linear infinite;">vous appeler</span> ?</div>' +
-      '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:16px;">Pour personnaliser vos rappels, votre tableau de bord et vos statistiques.</div>' +
-      '<input data-name-input value="' + esc(v.nameInput || '') + '" placeholder="Votre prénom" maxlength="24" style="margin-top:24px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:17px 18px;font:500 16px \'Inter\',sans-serif;color:var(--ink);outline:none;" />' +
+    out += '<div class="folio-num" style="font-size:40px;margin-top:26px;">Comment doit-on<br><span style="font-style:italic;color:var(--acc);">vous appeler</span> ?</div>' +
+      '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:18px;">Pour personnaliser vos rappels, votre tableau de bord et vos statistiques.</div>' +
+      '<input data-name-input value="' + esc(v.nameInput || '') + '" placeholder="Votre prénom" maxlength="24" style="margin-top:24px;background:var(--panel);border:1px solid var(--line);border-bottom:2px solid var(--acc);border-radius:4px;padding:17px 18px;font:500 16px \'Inter\',sans-serif;color:var(--ink);outline:none;" />' +
       '<div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">' +
       '<button data-action="onbNameNext" class="btn-cta">Continuer</button>' +
       '<button data-action="onbNameSkip" style="background:none;border:none;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink3);cursor:pointer;">Passer</button></div>';
   }
   if (v.onb0) {
-    out += '<div style="font:300 42px/1.06 Fraunces,serif;letter-spacing:-.03em;margin-top:16px;">Préparez la<br><span style="font-style:italic;background:linear-gradient(100deg,var(--acc),var(--gold),var(--acc2),var(--acc));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:kfSweep 9s linear infinite;">certification</span><br>en dix minutes par jour.</div>' +
-      '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:16px;">' + v.totalQ + ' questions, ' + v.ficheCount + ' fiches, ' + v.poleChips.length + ' pôles. L\'application choisit à votre place ce qu\'il faut revoir.</div>' +
+    out += '<div class="folio-num" style="font-size:46px;margin-top:26px;">Préparez la<br><span style="font-style:italic;color:var(--acc);">certification</span><br>en dix minutes par jour.</div>' +
+      '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:18px;">' + v.totalQ + ' questions, ' + v.ficheCount + ' fiches, ' + v.poleChips.length + ' pôles. L\'application choisit à votre place ce qu\'il faut revoir.</div>' +
       '<div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">' +
       '<button data-action="onbNext" class="btn-cta">Commencer</button>' +
       '<button data-action="goHome" style="background:none;border:none;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink3);cursor:pointer;">Passer</button></div>';
   }
   if (v.onb1) {
     var lvs = v.levels.map(function (lv, i) {
-      return '<button data-action="pickLevel" data-idx="' + i + '" class="hv-a" style="display:flex;align-items:center;gap:14px;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;cursor:pointer;color:var(--ink);">' +
-        '<span style="font:400 22px Fraunces,serif;color:var(--acc);">' + lv.n + '</span>' +
+      return '<button data-action="pickLevel" data-idx="' + i + '" class="hv-a ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);">' +
+        '<span class="folio-num" style="font-size:24px;width:30px;flex-shrink:0;color:' + (lv.on ? 'var(--acc)' : 'var(--dim)') + ';">' + lv.n + '</span>' +
         '<span style="flex:1;"><span style="display:block;font:500 14px \'Inter\',sans-serif;">' + esc(lv.title) + '</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(lv.sub) + '</span></span>' +
-        (lv.on ? '<span style="width:9px;height:9px;border-radius:50%;background:var(--acc);"></span>' : '') + '</button>';
+        (lv.on ? '<span class="seal seal-sm" style="width:26px;height:26px;flex-shrink:0;"><span class="seal-glyph" style="font-size:13px;">✓</span></span>' : '') + '</button>';
     }).join('');
-    out += '<div style="font:300 34px/1.12 Fraunces,serif;letter-spacing:-.025em;margin-top:16px;">Où en êtes-vous ?</div>' +
-      '<div style="display:flex;flex-direction:column;gap:10px;margin-top:24px;">' + lvs + '</div>' +
+    out += '<div class="folio-num" style="font-size:32px;margin-top:26px;">Où en êtes-vous ?</div>' +
+      '<div class="ledger" style="margin-top:22px;">' + lvs + '</div>' +
       '<div style="margin-top:24px;"><label style="display:block;font:500 11px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-bottom:8px;">DATE D\'EXAMEN (FACULTATIF)</label>' +
-      '<input type="date" data-exam-date-input value="' + esc(v.examDate || '') + '" style="width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px 16px;font:500 14px \'Inter\',sans-serif;color:var(--ink);outline:none;" />' +
+      '<input type="date" data-exam-date-input value="' + esc(v.examDate || '') + '" style="width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px 16px;font:500 14px \'Inter\',sans-serif;color:var(--ink);outline:none;" />' +
       '<div style="font:400 11px \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;">Pour suivre un compte à rebours et adapter le rythme. Modifiable à tout moment dans Paramètres.</div></div>' +
       '<div style="margin-top:auto;padding-top:22px;"><button data-action="onbNext" class="btn-cta" style="width:100%;">Continuer</button></div>';
   }
   if (v.onb2) {
     var feats = [
       { icon: '◈', title: 'Mon parcours', sub: 'Un programme guidé, semaine après semaine, à ton rythme.' },
-      { icon: '📘', title: 'Fiches de cours', sub: v.ficheCount + ' fiches illustrées, chacune avec son test de validation.' },
+      { icon: '§', title: 'Fiches de cours', sub: v.ficheCount + ' fiches illustrées, chacune avec son test de validation.' },
       { icon: '⏱', title: 'Calcul mental', sub: 'Des réflexes de calcul chronométrés, avec la méthode expliquée.' },
       { icon: '∑', title: 'Labo', sub: 'Des simulateurs pour visualiser intérêts, frais, crédit et PER.' }
     ];
     var featRows = feats.map(function (f) {
-      return '<div style="display:flex;align-items:center;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px;">' +
-        '<span style="flex-shrink:0;width:40px;height:40px;border-radius:12px;background:' + hexA('#dbb46f', 0.16) + ';display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--acc);">' + f.icon + '</span>' +
+      return '<div class="ledger-row">' +
+        '<span class="folio-num" style="font-size:22px;width:30px;flex-shrink:0;color:var(--acc);">' + f.icon + '</span>' +
         '<span style="flex:1;min-width:0;"><span style="display:block;font:500 13.5px \'Inter\',sans-serif;">' + esc(f.title) + '</span><span style="display:block;font:400 11.5px/1.4 \'Inter\',sans-serif;color:var(--ink2);margin-top:2px;">' + esc(f.sub) + '</span></span></div>';
     }).join('');
-    out += '<div style="font:300 34px/1.12 Fraunces,serif;letter-spacing:-.025em;margin-top:16px;">Un tour rapide de l\'application.</div>' +
+    out += '<div class="folio-num" style="font-size:32px;margin-top:26px;">Un tour rapide de l\'application.</div>' +
       '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:16px;">' + v.totalQ + ' questions vérifiées, ' + v.ficheCount + ' fiches de cours, ' + v.poleChips.length + ' pôles. Voici l\'essentiel :</div>' +
-      '<div style="margin:22px 0 0;display:flex;flex-direction:column;gap:10px;">' + featRows + '</div>' +
-      '<div style="margin-top:auto;"><button data-action="goHome" class="btn-cta" style="width:100%;">C\'est parti</button></div>';
+      '<div class="ledger" style="margin:20px 0 0;">' + featRows + '</div>' +
+      '<div style="margin-top:auto;padding-top:24px;"><button data-action="goHome" class="btn-cta" style="width:100%;">C\'est parti</button></div>';
   }
   out += '</div>';
   return out;
@@ -1619,8 +1624,8 @@ function tplParcours(v) {
     }).join('');
     return '<div style="flex:1;overflow:auto;min-height:0;">' +
       '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
-      '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:16px;">MON PARCOURS</div>' +
-      '<div style="font:300 32px/1.15 Fraunces,serif;letter-spacing:-.02em;margin-top:14px;">Prêt en <span style="font-style:italic;color:var(--acc);">' + esc(objLabel) + '</span>, à ta façon.</div>' +
+      '<div class="folio-kicker" style="margin-top:16px;">MON PARCOURS</div>' +
+      '<div class="folio-num" style="font-size:30px;margin-top:14px;">Prêt en <span style="font-style:italic;color:var(--acc);">' + esc(objLabel) + '</span>, à ta façon.</div>' +
       '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">Un programme construit sur les ' + v.ficheCount + ' fiches et ' + v.totalQ + ' questions de l\'app, réparti en 9 étapes. Chaque jour, une seule chose à faire. Chaque étape se débloque quand la précédente est validée — pas d\'avance sans avoir vraiment travaillé le sujet. Choisis ci-dessous le rythme et la durée qui te conviennent.</div></div>' +
       '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">COMBIEN DE TEMPS PAR JOUR ?</div>' +
       '<div style="display:flex;gap:8px;margin-top:10px;">' + mChip(15) + mChip(30) + mChip(45) + mChip(60) + '</div></div>' +
@@ -1689,13 +1694,13 @@ function tplParcours(v) {
   var paceColor = v.parcoursPaceStatus === 'avance' ? 'var(--acc2)' : v.parcoursPaceStatus === 'retard' ? 'var(--warn)' : 'var(--ink2)';
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
-    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:16px;">MON PARCOURS</div>' +
+    '<div class="folio-kicker" style="margin-top:16px;">MON PARCOURS</div>' +
     '<div style="display:flex;align-items:center;gap:16px;margin-top:14px;">' +
     '<div style="flex-shrink:0;position:relative;width:64px;height:64px;border-radius:50%;background:conic-gradient(var(--acc) ' + (v.parcoursOverallPct * 3.6) + 'deg,var(--line) ' + (v.parcoursOverallPct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
     '<span style="width:54px;height:54px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:600 13px \'Inter\',sans-serif;color:var(--acc);">' + v.parcoursOverallPct + '%</span></div>' +
-    '<div><div style="font:300 26px/1.1 Fraunces,serif;letter-spacing:-.02em;">Semaine ' + v.parcoursCurrentWeek + ' <span style="font-style:italic;color:var(--ink3);font-size:18px;">/ 9</span></div>' +
+    '<div><div class="folio-num" style="font-size:24px;">Semaine ' + v.parcoursCurrentWeek + ' <span style="font-style:italic;color:var(--ink3);font-size:16px;">/ 9</span></div>' +
     '<div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:4px;">Jour ' + v.parcoursDayInWeek + '/' + v.parcoursWeekLenDays + ' de cette semaine</div></div></div>' +
-    '<div style="margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;">' +
+    '<div style="margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel);border:1px solid var(--line);border-left:3px solid ' + paceColor + ';border-radius:4px;padding:12px 14px;">' +
     '<span style="font:500 12px \'Inter\',sans-serif;color:' + paceColor + ';">' + esc(v.parcoursPaceLabel || '') + '</span>' +
     '<span style="font:400 11px \'Inter\',sans-serif;color:var(--ink3);flex-shrink:0;">Objectif · ' + esc(v.parcoursDeadlineLabel || '') + '</span></div></div>' +
     '<div style="margin:24px 24px 0;">' + weeks + '</div>' +
@@ -1734,42 +1739,44 @@ function tplSearch(v) {
 }
 
 function tplHome(v) {
-  var weak = v.weakChips.map(function (w) {
-    return '<button data-action="weakGo" data-pole="' + esc(w.label) + '" class="hv-a" style="background:none;border:1px solid var(--line);border-radius:999px;padding:8px 13px;font:500 12px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">' + esc(w.label) + ' <span style="font-family:\'Inter\',sans-serif;font-size:10.5px;color:var(--warn);">' + w.pct + '</span></button>';
+  var weakRows = v.weakChips.map(function (w) {
+    return '<button data-action="weakGo" data-pole="' + esc(w.label) + '" class="ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);">' +
+      '<span style="flex:1;font:400 12.5px \'Inter\',sans-serif;">' + esc(w.label) + '</span>' +
+      '<span style="font:500 12px \'Inter\',sans-serif;color:var(--warn);flex-shrink:0;">' + w.pct + ' %</span>' +
+      '<span style="font:400 13px Fraunces,serif;color:var(--dim);flex-shrink:0;">&rsaquo;</span></button>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;display:flex;justify-content:space-between;align-items:center;">' +
-    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">CGP</div>' +
-    '<div style="display:flex;align-items:center;gap:14px;">' +
-    '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--ink2);cursor:pointer;">' + ICON_SEARCH + '</button></div></div>' +
-    '<div style="padding:24px 24px 0;"><div style="font:300 42px/1.02 Fraunces,serif;letter-spacing:-.025em;">' + esc(v.greeting) + '<br><span style="font-style:italic;background:linear-gradient(100deg,var(--acc),var(--gold),var(--acc2),var(--acc));background-size:200% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:kfSweep 9s linear infinite;">' + esc(v.userName) + '</span></div></div>' +
-    (v.examDate ? '<div style="margin:16px 24px 0;display:flex;align-items:center;gap:10px;background:' + hexA('#dbb46f', 0.1) + ';border:1px solid ' + hexA('#dbb46f', 0.3) + ';border-radius:999px;padding:10px 16px;">' +
-      '<span style="font:600 13px \'Inter\',sans-serif;color:var(--acc);flex-shrink:0;">' + (v.examDaysLeft > 0 ? 'J-' + v.examDaysLeft : (v.examDaysLeft === 0 ? 'Aujourd\'hui' : 'Examen passé')) + '</span>' +
-      '<span style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);flex:1;">avant l\'examen · ' + v.examCoveragePct + '% du programme vu au moins une fois</span></div>' : '') +
-    '<div style="margin:24px 24px 0;"><button data-action="goParcours" class="hv-a" style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:15px 16px;display:flex;align-items:center;gap:13px;text-align:left;cursor:pointer;color:var(--ink);box-sizing:border-box;">' +
+    '<div style="padding:54px 24px 14px;display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--rule);">' +
+    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.18em;color:var(--acc);">DOSSIER CGP</div>' +
+    '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:none;color:var(--ink3);cursor:pointer;padding:4px;">' + ICON_SEARCH + '</button></div>' +
+    '<div style="padding:22px 24px 0;"><div class="folio-num" style="font-size:38px;">' + esc(v.greeting) + '<br><span style="font-style:italic;color:var(--acc);">' + esc(v.userName) + '</span></div></div>' +
+    (v.examDate ? '<div class="ledger-row" style="margin:18px 24px 0;padding-left:0;">' +
+      '<span class="folio-num" style="font-size:22px;color:var(--warn);flex-shrink:0;">' + (v.examDaysLeft > 0 ? 'J-' + v.examDaysLeft : (v.examDaysLeft === 0 ? 'J-0' : '—')) + '</span>' +
+      '<span style="font:400 11.5px/1.4 \'Inter\',sans-serif;color:var(--ink2);flex:1;">avant l\'examen · ' + v.examCoveragePct + '% du programme vu au moins une fois</span></div>' : '') +
+    '<div style="margin:0 24px;"><button data-action="goParcours" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);padding-left:0;">' +
     (v.parcoursStartedFlag
-      ? '<span style="flex-shrink:0;position:relative;width:38px;height:38px;border-radius:50%;background:conic-gradient(var(--acc) ' + (v.parcoursOverallPct * 3.6) + 'deg,var(--line) ' + (v.parcoursOverallPct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;"><span style="width:32px;height:32px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font:600 12px \'Inter\',sans-serif;color:var(--acc);">' + v.parcoursOverallPct + '%</span></span>'
-      : '<span style="font:400 22px Fraunces,serif;color:var(--acc);">◈</span>') +
+      ? '<span style="flex-shrink:0;position:relative;width:34px;height:34px;border-radius:50%;background:conic-gradient(var(--acc) ' + (v.parcoursOverallPct * 3.6) + 'deg,var(--line) ' + (v.parcoursOverallPct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;"><span style="width:28px;height:28px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:600 10.5px \'Inter\',sans-serif;color:var(--acc);">' + v.parcoursOverallPct + '%</span></span>'
+      : '<span style="font:400 20px Fraunces,serif;color:var(--acc);flex-shrink:0;">◈</span>') +
     '<span style="flex:1;"><span style="display:block;font:500 13.5px \'Inter\',sans-serif;">Mon parcours</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(v.parcoursWeekLabel) + '</span></span>' +
     '<span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button></div>' +
-    '<div class="card-hero" style="margin:24px 24px 0;border-radius:24px;padding:24px;background:var(--panel);border:1px solid ' + hexA('#dbb46f', 0.25) + ';display:flex;flex-direction:column;gap:18px;">' +
+    '<div class="card-hero" style="margin:22px 24px 0;border-radius:16px;padding:22px;background:var(--panel);border:1px solid ' + hexA('#a9814a', 0.3) + ';border-left:3px solid var(--acc);display:flex;flex-direction:column;gap:16px;">' +
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;"><div>' +
-    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">DÉFI DU JOUR</div>' +
-    '<div style="font:300 30px/1.15 Fraunces,serif;margin-top:10px;">5 <span style="font-size:15px;font-family:\'Inter\',sans-serif;font-weight:500;color:var(--ink2);">questions sur</span></div>' +
+    '<div class="folio-kicker">DÉFI DU JOUR</div>' +
+    '<div class="folio-num" style="font-size:44px;margin-top:8px;">5<span style="font-size:14px;font-family:\'Inter\',sans-serif;font-weight:500;letter-spacing:0;color:var(--ink2);"> questions sur</span></div>' +
     '<div style="font:500 13px/1.5 \'Inter\',sans-serif;color:var(--acc);margin-top:4px;">' + esc(v.dailyTopics.join(' · ') || 'toutes les thématiques') + '</div></div>' +
-    '<div style="width:58px;height:58px;border-radius:50%;background:conic-gradient(var(--acc) 0turn ' + v.dailyTurn + ',var(--line) ' + v.dailyTurn + ' 1turn);display:flex;align-items:center;justify-content:center;"><div style="width:46px;height:46px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font:500 12px \'Inter\',sans-serif;">' + v.dailyPct + '%</div></div></div>' +
-    '<div style="height:3px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="width:' + v.dailyPct + '%;height:3px;background:linear-gradient(90deg,var(--acc2),var(--acc));transform-origin:left;animation:kfFill 1.1s cubic-bezier(.16,1,.3,1) both;"></div></div>' +
+    '<div style="width:50px;height:50px;border-radius:50%;background:conic-gradient(var(--acc) 0turn ' + v.dailyTurn + ',var(--line) ' + v.dailyTurn + ' 1turn);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:40px;height:40px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font:500 11px \'Inter\',sans-serif;">' + v.dailyPct + '%</div></div></div>' +
+    '<div style="height:3px;background:var(--line);overflow:hidden;"><div style="width:' + v.dailyPct + '%;height:3px;background:linear-gradient(90deg,var(--acc2),var(--acc));transform-origin:left;animation:kfFill 1.1s cubic-bezier(.16,1,.3,1) both;"></div></div>' +
     '<button data-action="startDaily" style="border:none;background:var(--acc);color:var(--on);border-radius:999px;padding:14px;text-align:center;font:600 13.5px \'Inter\',sans-serif;cursor:pointer;animation:kfGlow 3.2s ease-in-out infinite;">Je me lance · 3 min</button>' +
-    '<div style="font:400 10.5px \'Inter\',sans-serif;color:var(--ink3);text-align:center;margin-top:-10px;">Se tromper aussi, ça fait progresser.</div></div>' +
-    '<div style="margin:24px 24px 0;display:flex;align-items:flex-end;gap:22px;">' +
-    '<div><div style="font:300 52px/0.9 Fraunces,serif;letter-spacing:-.03em;"><span data-countup="' + v.mastery + '" data-countup-suffix="%">0%</span></div><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">MAÎTRISE</div></div>' +
-    '<button data-action="goSrs" style="background:none;border:none;border-left:1px solid var(--line);padding:0 0 0 22px;text-align:left;cursor:pointer;"><div style="font:300 52px/0.9 Fraunces,serif;letter-spacing:-.03em;color:var(--warn);"><span data-countup="' + v.dueCount + '">0</span></div><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">À REVOIR</div></button></div>' +
+    '<div style="font:400 10.5px \'Inter\',sans-serif;color:var(--ink3);text-align:center;margin-top:-8px;">Se tromper aussi, ça fait progresser.</div></div>' +
+    '<div class="ledger-total" style="margin:24px 24px 0;display:flex;align-items:flex-end;gap:24px;">' +
+    '<div><div class="folio-num" style="font-size:48px;"><span data-countup="' + v.mastery + '" data-countup-suffix="%">0%</span></div><div class="folio-kicker" style="margin-top:6px;">MAÎTRISE</div></div>' +
+    '<button data-action="goSrs" style="background:none;border:none;border-left:1px solid var(--rule);padding:0 0 0 22px;text-align:left;cursor:pointer;"><div class="folio-num" style="font-size:48px;color:var(--warn);"><span data-countup="' + v.dueCount + '">0</span></div><div class="folio-kicker" style="margin-top:6px;">À REVOIR</div></button></div>' +
     '<div style="margin:8px 24px 0;font:400 10.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);">Ce sont deux choses différentes : <b style="color:var(--ink2);">maîtrise</b> = % de bonnes réponses (moyenne tous pôles) · <b style="color:var(--ink2);">à revoir</b> = nombre de questions dont la répétition espacée arrive à échéance aujourd\'hui, quel que soit ton niveau dessus.</div>' +
-    (v.weakChips.length ? '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">POINTS FAIBLES</div>' +
-    '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;">' + weak + '</div></div>' : '') +
-    (v.flaggedTopics.length ? '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--warn);">À RETRAVAILLER</div>' +
-      '<div style="display:flex;flex-direction:column;gap:8px;margin-top:12px;">' + v.flaggedTopics.map(function (t) {
-        return '<div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:13px 14px;">' +
+    (v.weakChips.length ? '<div style="margin:26px 24px 0;"><div class="folio-kicker">POINTS FAIBLES</div>' +
+    '<div class="ledger" style="margin-top:6px;">' + weakRows + '</div></div>' : '') +
+    (v.flaggedTopics.length ? '<div style="margin:26px 24px 0;"><div class="folio-kicker" style="color:var(--warn);">À RETRAVAILLER</div>' +
+      '<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">' + v.flaggedTopics.map(function (t) {
+        return '<div style="background:var(--panel);border:1px solid var(--line);border-left:2px solid var(--warn);border-radius:4px;padding:13px 14px;">' +
           '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
           '<span style="font:500 12.5px \'Inter\',sans-serif;flex:1;min-width:0;">' + esc(t.label) + '</span>' +
           '<button data-action="flagTopic" data-cat="' + esc(t.catId) + '" style="flex-shrink:0;background:none;border:none;padding:2px 4px;font:400 13px \'Inter\',sans-serif;color:var(--ink3);cursor:pointer;">✕</button></div>' +
@@ -1778,45 +1785,51 @@ function tplHome(v) {
           '<button data-action="subGo" data-sub="' + esc(t.catId) + '" style="flex:1;background:var(--warn);border:none;border-radius:999px;padding:8px;font:600 11.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;">S\'entraîner</button>' +
           '</div></div>';
       }).join('') + '</div></div>' : '') +
-    '<div style="margin:24px 24px 0;padding-top:24px;border-top:1px solid var(--line);"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">EXPLORER</div>' +
-    '<div style="display:flex;gap:10px;margin-top:12px;">' +
-    '<button data-action="goBrowse" class="hv-a" style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;cursor:pointer;color:var(--ink);"><div style="font:300 26px/1 Fraunces,serif;">' + v.catCount + '</div><div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:8px;">Catégories</div></button>' +
-    '<button data-action="goExamPick" class="hv-a" style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;cursor:pointer;color:var(--ink);"><div style="font:300 26px/1 Fraunces,serif;">' + v.examFormatCount + '</div><div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:8px;">Examens blancs</div></button></div></div>' +
-    '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">OUTILS</div>' +
-    '<button data-action="goBuilder" class="hv-a" style="width:100%;margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;align-items:center;gap:14px;text-align:left;cursor:pointer;color:var(--ink);box-sizing:border-box;">' +
-    '<span style="font:400 24px Fraunces,serif;color:var(--acc);">◎</span><span style="flex:1;"><span style="display:block;font:500 13.5px \'Inter\',sans-serif;">Créer ma session</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">Domaines, formats et niveau au choix</span></span>' +
+    '<div style="margin:26px 24px 0;padding-top:20px;border-top:1px solid var(--rule);"><div class="folio-kicker">EXPLORER</div>' +
+    '<div class="ledger" style="margin-top:6px;">' +
+    '<button data-action="goBrowse" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);padding-left:0;"><span class="folio-num" style="font-size:26px;width:44px;flex-shrink:0;">' + v.catCount + '</span><span style="flex:1;font:400 12.5px \'Inter\',sans-serif;color:var(--ink2);">Catégories</span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
+    '<button data-action="goExamPick" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);padding-left:0;"><span class="folio-num" style="font-size:26px;width:44px;flex-shrink:0;">' + v.examFormatCount + '</span><span style="flex:1;font:400 12.5px \'Inter\',sans-serif;color:var(--ink2);">Examens blancs</span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button></div></div>' +
+    '<div style="margin:26px 24px 0;"><div class="folio-kicker">OUTILS</div>' +
+    '<div class="ledger" style="margin-top:6px;">' +
+    '<button data-action="goBuilder" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);padding-left:0;">' +
+    '<span style="font:400 20px Fraunces,serif;color:var(--acc);width:30px;flex-shrink:0;">◎</span><span style="flex:1;"><span style="display:block;font:500 13.5px \'Inter\',sans-serif;">Créer ma session</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">Domaines, formats et niveau au choix</span></span>' +
     '<span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
-    '<div style="margin-top:10px;display:flex;gap:10px;">' +
-    '<button data-action="goLabo" class="hv-a" style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;cursor:pointer;color:var(--ink);"><div style="font:400 22px Fraunces,serif;color:var(--acc);">∑</div><div style="font:500 13px \'Inter\',sans-serif;margin-top:8px;">Labo</div><div style="font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:2px;">5 simulateurs</div></button>' +
-    '<button data-action="goMental" class="hv-a" style="flex:1;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;text-align:left;cursor:pointer;color:var(--ink);"><div style="font:400 22px Fraunces,serif;color:var(--gold);">⏱</div><div style="font:500 13px \'Inter\',sans-serif;margin-top:8px;">Calcul mental</div><div style="font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:2px;">10 questions chrono</div></button></div></div>' +
+    '<button data-action="goLabo" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);padding-left:0;"><span style="font:400 20px Fraunces,serif;color:var(--acc);width:30px;flex-shrink:0;">∑</span><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Labo</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:2px;">5 simulateurs</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
+    '<button data-action="goMental" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);padding-left:0;"><span style="font:400 20px Fraunces,serif;color:var(--gold);width:30px;flex-shrink:0;">⏱</span><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Calcul mental</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:2px;">10 questions chrono</span></span><span style="font:400 15px Fraunces,serif;color:var(--gold);">&#8250;</span></button></div></div>' +
     '<div style="height:26px;"></div></div>';
 }
 
 function tplBrowse(v) {
-  var poles = v.poles.map(function (p, i) {
-    var cats = p.cats.map(function (c) {
-      return '<button data-action="catGo" data-cat="' + esc(c.id) + '" class="hv-c" style="width:100%;background:none;border:none;padding:12px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;font:400 12.5px/1.4 \'Inter\',sans-serif;">' + esc(c.label) + '</span><span style="font:500 10px \'Inter\',sans-serif;color:var(--dim);">' + esc(c.badge) + '</span></button>';
-    }).join('');
-    return '<div class="stagger" style="animation-delay:' + (i * 0.05).toFixed(2) + 's;background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;">' +
-      '<button data-action="poleToggle" data-pole="' + esc(p.label) + '" class="hv-c" style="width:100%;background:none;border:none;padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;">' +
-      '<span style="flex:1;min-width:0;"><span style="display:block;font:500 13.5px \'Inter\',sans-serif;">' + esc(p.label) + '</span><span style="display:block;font:500 9px \'Inter\',sans-serif;color:var(--dim);margin-top:4px;">' + esc(p.ratio) + '</span></span>' +
-      '<span style="width:52px;height:4px;border-radius:3px;background:var(--line);overflow:hidden;flex-shrink:0;"><span style="display:block;width:' + p.pct + '%;height:4px;background:linear-gradient(90deg,var(--acc2),var(--acc));transition:width .5s cubic-bezier(.16,1,.3,1);"></span></span>' +
-      '<span style="font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);width:26px;text-align:right;flex-shrink:0;">' + p.pct + '%</span>' +
-      '<span style="font:400 13px Fraunces,serif;color:var(--ink3);transition:transform .25s;transform:rotate(' + (p.open ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
-      (p.open ? '<div class="stagger" style="border-top:1px solid var(--line);padding:6px 0;">' + cats + '</div>' : '') + '</div>';
+  var rail = v.poles.map(function (p) {
+    var acc = poleAccent(p.label);
+    return '<button data-action="poleToggle" data-pole="' + esc(p.label) + '" class="btab' + (p.open ? ' on' : '') + '" style="--btab-acc:' + acc + ';">' +
+      '<span class="btab-dot"></span>' + esc(p.label) + '</button>';
   }).join('');
+  var active = v.poles.filter(function (p) { return p.open; })[0] || v.poles[0];
+  var activeAcc = active ? poleAccent(active.label) : 'var(--acc)';
+  var cats = active ? active.cats.map(function (c) {
+    return '<button data-action="catGo" data-cat="' + esc(c.id) + '" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);">' +
+      '<span style="flex:1;font:400 13px/1.4 \'Inter\',sans-serif;">' + esc(c.label) + '</span>' +
+      '<span style="font:500 10px \'Inter\',sans-serif;color:var(--dim);letter-spacing:.06em;flex-shrink:0;">' + esc(c.badge) + '</span>' +
+      '<span style="font:400 14px Fraunces,serif;color:' + activeAcc + ';flex-shrink:0;">&rsaquo;</span></button>';
+  }).join('') : '';
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;display:flex;justify-content:space-between;align-items:flex-start;">' +
-    '<div><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">BANQUE</div>' +
-    '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:14px;">' + v.poles.length + ' <span style="font-style:italic;">pôles</span></div></div>' +
+    '<div style="padding:54px 24px 0;display:flex;justify-content:space-between;align-items:flex-start;">' +
+    '<div><div class="folio-kicker">RÉPERTOIRE</div>' +
+    '<div class="folio-num" style="font-size:32px;margin-top:10px;">' + v.poles.length + ' <span style="font-style:italic;">pôles</span></div></div>' +
     '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--ink2);cursor:pointer;flex-shrink:0;margin-top:2px;">' + ICON_SEARCH + '</button></div>' +
-    '<div style="margin:24px 24px 0;display:flex;flex-direction:column;gap:10px;">' + poles + '</div>' +
+    '<div class="binder-tabs" style="margin:20px 0 0;padding-left:24px;">' + rail + '<span style="flex-shrink:0;width:8px;"></span></div>' +
+    '<div style="border-top:1px solid var(--rule);">' +
+    (active ? '<div style="padding:16px 24px 0;display:flex;align-items:center;justify-content:space-between;gap:10px;">' +
+      '<span style="font:500 9px \'Inter\',sans-serif;color:var(--dim);letter-spacing:.06em;">' + esc(active.ratio) + ' bonnes réponses</span>' +
+      '<span style="display:flex;align-items:center;gap:8px;"><span style="width:44px;height:3px;background:var(--line);overflow:hidden;display:inline-block;"><span style="display:block;width:' + active.pct + '%;height:3px;background:' + activeAcc + ';transition:width .5s cubic-bezier(.16,1,.3,1);"></span></span><span style="font:500 10.5px \'Inter\',sans-serif;color:' + activeAcc + ';">' + active.pct + '%</span></span></div>' : '') +
+    '<div class="ledger" style="margin:8px 24px 0;">' + cats + '</div></div>' +
     '<div style="height:26px;"></div></div>';
 }
 
 function tplCat(v) {
   var subBtn = function (s) {
-    return '<button data-action="subGo" data-sub="' + esc(s.id) + '"' + (s.theory ? ' data-theory="' + esc(s.theory) + '"' : '') + (s.simu ? ' data-simu="' + esc(s.simu) + '"' : '') + ' class="hv-a" style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:15px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;font:500 13px/1.4 \'Inter\',sans-serif;">' + esc(s.label) + '</span><span style="font:500 10px \'Inter\',sans-serif;color:var(--dim);letter-spacing:.08em;">' + esc(s.badge) + '</span></button>';
+    return '<button data-action="subGo" data-sub="' + esc(s.id) + '"' + (s.theory ? ' data-theory="' + esc(s.theory) + '"' : '') + (s.simu ? ' data-simu="' + esc(s.simu) + '"' : '') + ' class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);"><span style="flex:1;font:500 13px/1.4 \'Inter\',sans-serif;">' + esc(s.label) + '</span><span style="font:500 10px \'Inter\',sans-serif;color:var(--dim);letter-spacing:.08em;flex-shrink:0;">' + esc(s.badge) + '</span></button>';
   };
   // Group by role (cours / outil / entraînement) rather than mixing them flatly,
   // so the sequence matches how one actually works through a topic: learn, then
@@ -1829,23 +1842,25 @@ function tplCat(v) {
   if (groupCount > 1) {
     var grp = function (label, items) {
       if (!items.length) return '';
-      return '<div style="margin-top:16px;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-bottom:9px;">' + label + '</div><div style="display:flex;flex-direction:column;gap:9px;">' + items.map(subBtn).join('') + '</div></div>';
+      return '<div style="margin-top:22px;"><div class="folio-kicker">' + label + '</div><div class="ledger" style="margin-top:6px;">' + items.map(subBtn).join('') + '</div></div>';
     };
     subsHtml = grp('COURS', fiches) + grp('OUTIL', simus) + grp('S\'ENTRAÎNER', series);
   } else {
-    subsHtml = '<div style="display:flex;flex-direction:column;gap:9px;">' + v.subs.map(subBtn).join('') + '</div>';
+    subsHtml = '<div class="ledger">' + v.subs.map(subBtn).join('') + '</div>';
   }
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> ' + esc(v.catPole) + '</button>' +
-    '<div style="font:300 32px/1.14 Fraunces,serif;letter-spacing:-.025em;margin-top:16px;">' + esc(v.catLabel) + '</div></div>' +
-    '<div style="margin:24px 24px 0;">' + subsHtml + '</div>' +
+    '<div style="padding:54px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> ' + esc(v.catPole) + '</button>' +
+    '<div class="folio-num" style="font-size:30px;margin-top:18px;padding-bottom:16px;border-bottom:1px solid var(--rule);">' + esc(v.catLabel) + '</div></div>' +
+    '<div style="margin:0 24px;">' + subsHtml + '</div>' +
     '<div style="height:26px;"></div></div>';
 }
 
 function tplQuiz(v) {
-  var mid = '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);"><div>' + esc(v.qCat) + (v.qIsReview ? ' <span style="color:var(--gold);">· RÉVISION</span>' : '') + '</div><div style="color:var(--acc);">' + esc(v.qTypeLabel) + '</div></div>' +
-    '<div style="font:300 25px/1.3 Fraunces,serif;letter-spacing:-.01em;margin-top:16px;text-wrap:pretty;">' + esc(v.qText) + '</div>';
-  if (v.qHasSvg) mid += '<div style="margin-top:16px;border-radius:16px;overflow:hidden;background:#faf8f3;">' + v.qSvg + '</div>';
+  var mid = '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:16px;font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);"><div>' + esc(v.qCat) + (v.qIsReview ? ' <span style="color:var(--gold);">· RÉVISION</span>' : '') + '</div><div style="color:var(--acc);">' + esc(v.qTypeLabel) + '</div></div>' +
+    '<div style="display:flex;gap:14px;align-items:flex-start;margin-top:14px;">' +
+    '<span class="folio-num" style="font-size:22px;color:var(--dim);flex-shrink:0;">' + esc(v.quizPos.split(' ')[0] || v.quizPos) + '</span>' +
+    '<div style="font:400 22px/1.32 Fraunces,serif;letter-spacing:-.008em;text-wrap:pretty;flex:1;">' + esc(v.qText) + '</div></div>';
+  if (v.qHasSvg) mid += '<div style="margin-top:16px;border-radius:16px;overflow:hidden;background:#f5efe1;">' + v.qSvg + '</div>';
   if (v.isScenario) mid += '<div style="margin-top:16px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:13px 15px;"><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:var(--acc);margin-bottom:5px;">SCÉNARIO</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);">' + esc(v.qContexte) + '</div></div>';
   if (v.isSpot) mid += '<div style="margin-top:14px;font:400 12px/1.5 \'Inter\',sans-serif;color:var(--warn);">Une seule affirmation est fausse. Repère-la.</div>';
   if (v.isDoc) mid += '<div style="margin-top:16px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;font:400 12px/1.7 \'Inter\',sans-serif;color:var(--ink2);white-space:pre-line;">' + esc(v.qDoc) + '</div>';
@@ -1857,14 +1872,14 @@ function tplQuiz(v) {
   if (v.isOrder) mid += tplOrder(v);
   if (v.examAnswered) mid += '<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line);animation:kfIn .3s ease both;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">RÉPONSE ENREGISTRÉE · CORRECTION À LA FIN DE L\'ÉPREUVE</div></div>';
   if (v.answered) {
-    mid += '<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line);animation:kfIn .3s ease both;">';
-    if (v.wasOk) mid += '<div style="font:300 30px/1 Fraunces,serif;color:var(--acc);">Exact. <span style="font:500 12px \'Inter\',sans-serif;">+10 XP</span></div>';
-    if (v.wasKo) mid += '<div style="font:300 30px/1 Fraunces,serif;color:var(--warn);">Raté. <span style="font:500 12px \'Inter\',sans-serif;">' + esc(v.koNote) + '</span></div>';
+    mid += '<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--rule);animation:kfIn .3s ease both;">';
+    if (v.wasOk) mid += '<div style="display:flex;align-items:center;gap:12px;"><span class="seal seal-ink seal-sm"><span class="seal-glyph">✓</span></span><div class="folio-num" style="font-size:24px;color:var(--acc2);">Exact.<span style="font:500 12px \'Inter\',sans-serif;letter-spacing:0;color:var(--ink3);"> +10 XP</span></div></div>';
+    if (v.wasKo) mid += '<div style="display:flex;align-items:center;gap:12px;"><span class="seal seal-wax seal-sm"><span class="seal-glyph">✕</span></span><div class="folio-num" style="font-size:24px;color:var(--warn);">Raté.<span style="font:500 12px \'Inter\',sans-serif;letter-spacing:0;color:var(--ink3);"> ' + esc(v.koNote) + '</span></div></div>';
     mid += (v.qFormula
-      ? '<div style="margin-top:12px;padding:12px 14px;background:' + hexA(v.wasOk ? '#4fcfa8' : '#e2895f', 0.12) + ';border:1px solid ' + hexA(v.wasOk ? '#4fcfa8' : '#e2895f', 0.35) + ';border-radius:12px;">' +
+      ? '<div style="margin-top:12px;padding:12px 14px;background:' + hexA(v.wasOk ? '#5f7f66' : '#a8432f', 0.12) + ';border:1px solid ' + hexA(v.wasOk ? '#5f7f66' : '#a8432f', 0.35) + ';border-radius:12px;">' +
         '<div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:' + (v.wasOk ? 'var(--acc2)' : 'var(--warn)') + ';margin-bottom:5px;">LE CALCUL</div>' +
         '<div style="font:500 13.5px/1.6 \'Inter\',sans-serif;color:var(--ink);white-space:pre-line;">' + esc(v.qFormula) + '</div>' +
-        (v.qExponentNote ? '<div style="font:400 11.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;padding-top:8px;border-top:1px solid ' + hexA(v.wasOk ? '#4fcfa8' : '#e2895f', 0.25) + ';">' + esc(v.qExponentNote) + '</div>' : '') +
+        (v.qExponentNote ? '<div style="font:400 11.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;padding-top:8px;border-top:1px solid ' + hexA(v.wasOk ? '#5f7f66' : '#a8432f', 0.25) + ';">' + esc(v.qExponentNote) + '</div>' : '') +
         '</div>' +
         (v.qNarrative ? '<div style="font:400 13px/1.75 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;text-wrap:pretty;white-space:pre-line;">' + esc(v.qNarrative) + '</div>' : '')
       : '<div style="font:400 13px/1.75 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;text-wrap:pretty;white-space:pre-line;">' + esc(v.qExplain) + '</div>') +
@@ -1875,38 +1890,37 @@ function tplQuiz(v) {
   }
   mid += '<div style="height:20px;"></div>';
 
-  var footer = '<div style="padding:12px 24px 40px;border-top:1px solid var(--line);background:var(--bg);">';
+  var footer = '<div style="padding:12px 24px 36px;border-top:1px solid var(--rule);background:var(--bg);">';
   if (v.showValidate) footer += '<button data-action="validate" class="btn-cta" style="width:100%;">' + esc(v.validateLabel) + '</button>';
   if (v.showNext) footer += '<button data-action="next" class="btn-cta" style="width:100%;">' + esc(v.nextLabel) + '</button>';
   if (v.showHint) footer += '<div style="text-align:center;font:400 11px \'Inter\',sans-serif;color:var(--ink3);padding:4px 0;">Touchez une réponse.</div>';
   footer += '</div>';
 
-  return '<div style="flex:1;display:flex;flex-direction:column;min-height:0;">' +
-    '<div style="padding:56px 24px 0;"><div style="display:flex;align-items:center;gap:12px;">' +
+  return '<div style="flex:1;display:flex;flex-direction:column;min-height:0;background:var(--bg-hi);">' +
+    '<div style="padding:52px 24px 0;background:var(--bg);"><div style="display:flex;align-items:center;gap:12px;">' +
     '<button data-action="quitQuiz" style="background:none;border:none;padding:0;font:500 12.5px \'Inter\',sans-serif;color:var(--ink3);cursor:pointer;">Fermer</button>' +
-    '<div style="flex:1;text-align:center;font:500 11px \'Inter\',sans-serif;color:var(--ink2);">' + esc(v.quizTitle) + '</div>' +
+    '<div style="flex:1;text-align:center;font:600 10px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--ink3);">' + esc(v.quizTitle.toUpperCase()) + '</div>' +
     (v.examTimerLabel ? '<div style="font:600 11px \'Inter\',sans-serif;color:' + (v.examTimerLow ? 'var(--warn)' : 'var(--acc)') + ';margin-right:10px;">⏱ ' + esc(v.examTimerLabel) + '</div>' : '') +
     '<div style="font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);">' + esc(v.quizPos) + '</div></div>' +
-    '<div style="margin-top:14px;height:3px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="width:' + v.quizPct + '%;height:3px;background:linear-gradient(90deg,var(--acc2),var(--acc),var(--gold));transition:width .35s cubic-bezier(.16,1,.3,1);"></div></div></div>' +
-    '<div style="flex:1;overflow:auto;min-height:0;padding:0 24px;">' + mid + '</div>' +
+    '<div style="margin-top:14px;height:2px;background:var(--rule);overflow:hidden;"><div style="width:' + v.quizPct + '%;height:2px;background:var(--acc);transition:width .35s cubic-bezier(.16,1,.3,1);"></div></div></div>' +
+    '<div class="paper-ruled" style="flex:1;overflow:auto;min-height:0;padding:0 24px;">' + mid + '</div>' +
     footer + '</div>';
 }
 
 function tplDone(v) {
-  return '<div style="flex:1;display:flex;flex-direction:column;padding:64px 26px 40px;overflow:auto;">' +
-    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">' + esc(v.doneKicker) + '</div>' +
-    '<div style="font:300 38px/1.08 Fraunces,serif;letter-spacing:-.03em;margin-top:16px;">' + esc(v.doneTitle) + '</div>' +
-    '<div style="margin:30px auto 0;position:relative;width:196px;height:196px;">' +
-    '<div style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--acc2),var(--acc),var(--gold),var(--acc2));animation:kfSpin 22s linear infinite;"></div>' +
-    '<div style="position:absolute;inset:11px;border-radius:50%;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;">' +
-    '<div style="font:300 60px/1 Fraunces,serif;letter-spacing:-.03em;">' + v.donePct + '<span style="font-size:20px;">%</span></div>' +
-    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">' + esc(v.doneRatio) + '</div></div></div>' +
-    '<div style="margin-top:24px;display:flex;justify-content:space-between;">' +
-    '<div><div style="font:300 28px/1 Fraunces,serif;color:var(--acc);">+' + v.doneXp + '</div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:4px;">XP GAGNÉS</div></div>' +
-    '<div><div style="font:300 28px/1 Fraunces,serif;">' + v.doneKo + '</div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:4px;">À REVOIR</div></div>' +
-    '<div><div style="font:300 28px/1 Fraunces,serif;">' + v.streak + '</div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:4px;">JOURS</div></div></div>' +
-    (v.streakMilestone ? '<div class="stagger" style="margin-top:16px;background:' + hexA('#f2cd82', 0.12) + ';border:1px solid var(--gold);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;">' +
-      '<span style="font-size:22px;">🔥</span><span style="font:500 12.5px/1.4 \'Inter\',sans-serif;color:var(--ink);"><b>' + v.streakMilestone + ' jours d\'affilée !</b><br><span style="color:var(--ink2);font-weight:400;">Une régularité qui paie, continue comme ça.</span></span></div>' : '') +
+  var sealClass = v.donePct >= 70 ? 'seal-ink' : '';
+  return '<div style="flex:1;display:flex;flex-direction:column;padding:60px 26px 40px;overflow:auto;">' +
+    '<div class="folio-kicker">' + esc(v.doneKicker) + '</div>' +
+    '<div class="folio-num" style="font-size:34px;margin-top:14px;">' + esc(v.doneTitle) + '</div>' +
+    '<div style="margin:30px auto 0;display:flex;flex-direction:column;align-items:center;gap:14px;">' +
+    '<span class="seal ' + sealClass + '" style="width:128px;height:128px;">' +
+    '<span class="seal-glyph" style="font-size:38px;line-height:1;display:flex;flex-direction:column;align-items:center;">' + v.donePct + '<span style="font-size:11px;letter-spacing:.1em;margin-top:2px;">% · ' + esc(v.doneRatio) + '</span></span></span></div>' +
+    '<div class="ledger-total" style="margin-top:28px;display:flex;justify-content:space-between;">' +
+    '<div><div class="folio-num" style="font-size:26px;color:var(--acc);">+' + v.doneXp + '</div><div class="folio-kicker" style="margin-top:6px;">XP GAGNÉS</div></div>' +
+    '<div><div class="folio-num" style="font-size:26px;">' + v.doneKo + '</div><div class="folio-kicker" style="margin-top:6px;">À REVOIR</div></div>' +
+    '<div><div class="folio-num" style="font-size:26px;">' + v.streak + '</div><div class="folio-kicker" style="margin-top:6px;">JOURS</div></div></div>' +
+    (v.streakMilestone ? '<div class="stagger" style="margin-top:16px;display:flex;align-items:center;gap:14px;border-top:1px solid var(--rule);padding-top:16px;">' +
+      '<span class="seal seal-sm"><span class="seal-glyph">' + v.streakMilestone + '</span></span><span style="font:500 12.5px/1.4 \'Inter\',sans-serif;color:var(--ink);"><b>' + v.streakMilestone + ' jours d\'affilée.</b><br><span style="color:var(--ink2);font-weight:400;">Une régularité qui paie, continue comme ça.</span></span></div>' : '') +
     '<div style="font:400 13px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:24px;">' + esc(v.doneNote) + '</div>' +
     '<div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">' +
     '<button data-action="doneAgain" class="btn-cta">' + esc(v.doneCta) + '</button>' +
@@ -1946,48 +1960,51 @@ function tplBuilder(v) {
 function tplExamPick(v) {
   var g = v.niveauGeneral;
   var o = v.examOfficiel;
-  var niveauBtn = '<button data-action="examGo" data-key="' + esc(g.key) + '" data-label="' + esc(g.label) + '" class="hv-a stagger" style="background:linear-gradient(135deg,var(--panel2),var(--panel));border:1px solid var(--gold);border-radius:18px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;">' +
-    '<span style="font-size:26px;">⚡</span>' +
+  var niveauBtn = '<button data-action="examGo" data-key="' + esc(g.key) + '" data-label="' + esc(g.label) + '" class="hv-a stagger" style="background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;">' +
+    '<span style="font:400 24px Fraunces,serif;color:var(--gold);flex-shrink:0;">⚡</span>' +
     '<span style="flex:1;"><span style="display:block;font:500 14px \'Inter\',sans-serif;">' + esc(g.label) + '</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(g.sub) + '</span></span>' +
-    '<span style="font:500 10px \'Inter\',sans-serif;color:var(--gold);">' + esc(g.best) + '</span></button>';
-  var officielBtn = '<button data-action="examGo" data-key="' + esc(o.key) + '" data-label="' + esc(o.label) + '" class="hv-a stagger card-hero" style="background:linear-gradient(135deg,' + hexA('#dbb46f', 0.14) + ',var(--panel));border:1px solid var(--acc);border-radius:18px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;">' +
-    '<span style="font-size:26px;">⏱</span>' +
+    '<span style="font:500 10px \'Inter\',sans-serif;color:var(--gold);flex-shrink:0;">' + esc(g.best) + '</span></button>';
+  var officielBtn = '<button data-action="examGo" data-key="' + esc(o.key) + '" data-label="' + esc(o.label) + '" class="hv-a stagger card-hero" style="background:linear-gradient(135deg,' + hexA('#a9814a', 0.14) + ',var(--panel));border:1px solid var(--acc);border-radius:14px;padding:18px;display:flex;align-items:center;gap:16px;cursor:pointer;color:var(--ink);text-align:left;">' +
+    '<span class="seal seal-sm" style="width:46px;height:46px;flex-shrink:0;"><span class="seal-glyph" style="font-size:18px;">⏱</span></span>' +
     '<span style="flex:1;"><span style="display:block;font:500 14px \'Inter\',sans-serif;">' + esc(o.label) + '</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(o.sub) + '</span></span>' +
-    '<span style="font:500 10px \'Inter\',sans-serif;color:var(--acc);">' + esc(o.best) + '</span></button>';
-  var lvs = v.examLevels.map(function (e, ei) {
-    return '<button data-action="examGo" data-key="' + esc(e.key) + '" data-label="' + esc(e.label) + '" class="hv-a stagger" style="animation-delay:' + (ei * 0.06).toFixed(2) + 's;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;">' +
-      '<span style="font:300 30px/1 Fraunces,serif;color:var(--acc);">' + e.n + '</span>' +
-      '<span style="flex:1;"><span style="display:block;font:500 14px \'Inter\',sans-serif;">' + esc(e.label) + '</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(e.sub) + '</span></span>' +
-      '<span style="font:500 10px \'Inter\',sans-serif;color:var(--ink3);">' + esc(e.best) + '</span></button>';
+    '<span style="font:500 10px \'Inter\',sans-serif;color:var(--acc);flex-shrink:0;">' + esc(o.best) + '</span></button>';
+  var lvs = v.examLevels.map(function (e) {
+    return '<button data-action="examGo" data-key="' + esc(e.key) + '" data-label="' + esc(e.label) + '" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);">' +
+      '<span class="folio-num" style="font-size:24px;width:30px;flex-shrink:0;color:var(--acc);">' + e.n + '</span>' +
+      '<span style="flex:1;"><span style="display:block;font:500 13.5px \'Inter\',sans-serif;">' + esc(e.label) + '</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(e.sub) + '</span></span>' +
+      '<span style="font:500 10px \'Inter\',sans-serif;color:var(--ink3);flex-shrink:0;">' + esc(e.best) + '</span></button>';
   }).join('');
-  return '<div style="flex:1;overflow:auto;min-height:0;padding:58px 24px 0;">' +
+  return '<div style="flex:1;overflow:auto;min-height:0;padding:54px 24px 0;">' +
     '<button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
-    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:16px;">EXAMEN BLANC</div>' +
-    '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:14px;">Cinq <span style="font-style:italic;">formats</span></div>' +
-    '<div style="font:400 13px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;">Questions tirées au sort, sans correction avant la fin. Seuil de réussite : 60 % en entraînement, 50 % sur l\'examen officiel chronométré.</div>' +
-    '<div style="margin-top:24px;font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--acc);">FORMAT OFFICIEL</div>' +
+    '<div class="folio-kicker" style="margin-top:16px;">EXAMEN BLANC</div>' +
+    '<div class="folio-num" style="font-size:32px;margin-top:12px;padding-bottom:16px;border-bottom:1px solid var(--rule);">Cinq <span style="font-style:italic;color:var(--acc);">formats</span></div>' +
+    '<div style="font:400 13px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">Questions tirées au sort, sans correction avant la fin. Seuil de réussite : 60 % en entraînement, 50 % sur l\'examen officiel chronométré.</div>' +
+    '<div class="folio-kicker" style="margin-top:24px;color:var(--acc);">FORMAT OFFICIEL</div>' +
     '<div style="margin-top:10px;">' + officielBtn + '</div>' +
-    '<div style="margin-top:24px;font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--gold);">CHECK RAPIDE</div>' +
+    '<div class="folio-kicker" style="margin-top:24px;color:var(--gold);">CHECK RAPIDE</div>' +
     '<div style="margin-top:10px;">' + niveauBtn + '</div>' +
-    '<div style="margin-top:24px;font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">PROGRESSION PAR NIVEAU</div>' +
-    '<div style="margin-top:10px;display:flex;flex-direction:column;gap:10px;">' + lvs + '</div>' +
+    '<div class="folio-kicker" style="margin-top:24px;">PROGRESSION PAR NIVEAU</div>' +
+    '<div class="ledger" style="margin-top:6px;">' + lvs + '</div>' +
     '<div style="height:26px;"></div></div>';
 }
 
 function tplExamResult(v) {
+  var passed = v.examVerdict === 'Admis.';
   var poles = v.examByPole.map(function (p) {
-    return '<div style="display:flex;align-items:center;gap:12px;"><div style="flex:1;font:400 12.5px \'Inter\',sans-serif;">' + esc(p.label) + '</div>' +
-      '<div style="width:80px;height:5px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="width:' + p.pct + '%;height:5px;background:linear-gradient(90deg,var(--acc2),var(--acc));transform-origin:left;animation:kfFill 1s cubic-bezier(.16,1,.3,1) both;"></div></div>' +
-      '<div style="width:44px;text-align:right;font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);">' + esc(p.ratio) + '</div></div>';
+    return '<div class="ledger-row" style="padding-left:0;"><div style="flex:1;font:400 12.5px \'Inter\',sans-serif;">' + esc(p.label) + '</div>' +
+      '<div style="width:70px;height:3px;background:var(--line);overflow:hidden;flex-shrink:0;"><div style="width:' + p.pct + '%;height:3px;background:var(--acc);transform-origin:left;animation:kfFill 1s cubic-bezier(.16,1,.3,1) both;"></div></div>' +
+      '<div style="width:40px;text-align:right;font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);flex-shrink:0;">' + esc(p.ratio) + '</div></div>';
   }).join('');
-  return '<div style="flex:1;overflow:auto;min-height:0;padding:58px 24px 0;">' +
-    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">RÉSULTAT · ' + esc(v.examLabel) + '</div>' +
-    '<div style="font:300 38px/1.08 Fraunces,serif;letter-spacing:-.03em;margin-top:14px;">' + esc(v.examVerdict) + '</div>' +
-    '<div style="margin-top:24px;display:flex;align-items:flex-end;gap:20px;">' +
-    '<div><div style="font:300 62px/0.9 Fraunces,serif;letter-spacing:-.03em;color:var(--acc);">' + v.donePct + '<span style="font-size:22px;">%</span></div><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">SCORE</div></div>' +
-    '<div style="border-left:1px solid var(--line);padding-left:20px;"><div style="font:300 34px/1 Fraunces,serif;">' + esc(v.doneRatio) + '</div><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:8px;">BONNES RÉPONSES</div></div></div>' +
-    '<div style="margin-top:24px;font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">PAR PÔLE</div>' +
-    '<div style="margin-top:14px;display:flex;flex-direction:column;gap:12px;">' + poles + '</div>' +
+  return '<div style="flex:1;overflow:auto;min-height:0;padding:54px 24px 0;">' +
+    '<div class="folio-kicker">RÉSULTAT · ' + esc(v.examLabel) + '</div>' +
+    '<div style="display:flex;align-items:center;gap:16px;margin-top:16px;">' +
+    '<span class="seal' + (passed ? ' seal-ink' : ' seal-wax') + '" style="width:64px;height:64px;flex-shrink:0;"><span class="seal-glyph" style="font-size:22px;">' + (passed ? '✓' : '✕') + '</span></span>' +
+    '<div class="folio-num" style="font-size:30px;">' + esc(v.examVerdict) + '</div></div>' +
+    '<div class="ledger-total" style="margin-top:26px;display:flex;align-items:flex-end;gap:20px;">' +
+    '<div><div class="folio-num" style="font-size:50px;color:var(--acc);">' + v.donePct + '<span style="font-size:18px;">%</span></div><div class="folio-kicker" style="margin-top:6px;">SCORE</div></div>' +
+    '<div style="border-left:1px solid var(--rule);padding-left:20px;"><div class="folio-num" style="font-size:28px;">' + esc(v.doneRatio) + '</div><div class="folio-kicker" style="margin-top:8px;">BONNES RÉPONSES</div></div></div>' +
+    '<div class="folio-kicker" style="margin-top:26px;">PAR PÔLE</div>' +
+    '<div class="ledger" style="margin-top:8px;">' + poles + '</div>' +
     '<div style="margin:26px 0 0;display:flex;flex-direction:column;gap:10px;">' +
     '<button data-action="reviewExam" class="btn-cta">Revoir mes ' + v.doneKo + ' erreurs</button>' +
     (v.doneShowParcours ? '<button data-action="goParcoursFromDone" style="background:none;border:1px solid var(--acc);border-radius:999px;padding:16px;font:600 12.5px \'Inter\',sans-serif;color:var(--acc);cursor:pointer;">Retour au parcours</button>' : '') +
@@ -2036,11 +2053,11 @@ function tplFicheCard(f, idx, accent, action) {
     : pr > 0
       ? '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'Inter\',sans-serif;letter-spacing:.08em;color:' + acc + ';margin-top:4px;">' + pr + '% EN COURS</span>'
       : '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--dim);margin-top:4px;">' + esc(f.meta) + '</span>';
-  var numTag = idx != null ? '<span style="flex-shrink:0;width:22px;font:500 11px \'Inter\',sans-serif;color:var(--dim);text-align:center;">' + (idx < 9 ? '0' : '') + (idx + 1) + '</span>' : '';
-  return '<button data-action="' + (action || 'ficheGo') + '" data-fiche="' + esc(f.key) + '" class="hv-a" style="width:100%;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;box-sizing:border-box;">' +
-    numTag +
-    '<span style="flex-shrink:0;position:relative;width:46px;height:46px;border-radius:50%;background:conic-gradient(' + ringColor + ' ' + (pr * 3.6) + 'deg,var(--line) ' + (pr * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
-    '<span style="width:39px;height:39px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font-size:17px;">' + esc(f.icon) + '</span></span>' +
+  var numTag = idx != null ? ((idx < 9 ? '0' : '') + (idx + 1)) : '§';
+  return '<button data-action="' + (action || 'ficheGo') + '" data-fiche="' + esc(f.key) + '" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);">' +
+    '<span class="folio-num" style="font-size:19px;width:26px;flex-shrink:0;color:var(--dim);">' + numTag + '</span>' +
+    '<span style="flex-shrink:0;position:relative;width:38px;height:38px;border-radius:50%;background:conic-gradient(' + ringColor + ' ' + (pr * 3.6) + 'deg,var(--line) ' + (pr * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
+    '<span style="width:32px;height:32px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font-size:14px;">' + esc(f.icon) + '</span></span>' +
     '<span style="flex:1;min-width:0;"><span style="display:block;font:500 13.5px/1.35 \'Inter\',sans-serif;">' + esc(f.title) + '</span>' + badge + '</span>' +
     '<span style="flex-shrink:0;font:400 15px Fraunces,serif;color:' + acc + ';">&#8250;</span></button>';
 }
@@ -2061,20 +2078,20 @@ function tplCourses(v) {
     '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:14px;">' + v.ficheCount + ' <span style="font-style:italic;">cours</span>, ' + v.coursePoles.length + ' pôles</div></div>' +
     '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--ink2);cursor:pointer;flex-shrink:0;margin-top:2px;">' + ICON_SEARCH + '</button></div>' +
     '<div style="margin:24px 24px 0;display:flex;flex-direction:column;gap:12px;">' + cards +
-    '<button data-action="goCulture" class="hv-a" style="position:relative;overflow:hidden;width:100%;background:linear-gradient(120deg,' + hexA('#dbb46f', 0.16) + ',var(--panel) 60%);border:1px solid ' + hexA('#dbb46f', 0.35) + ';border-radius:20px;padding:19px 20px;text-align:left;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:16px;box-sizing:border-box;">' +
+    '<button data-action="goCulture" class="hv-a" style="position:relative;overflow:hidden;width:100%;background:linear-gradient(120deg,' + hexA('#a9814a', 0.16) + ',var(--panel) 60%);border:1px solid ' + hexA('#a9814a', 0.35) + ';border-radius:20px;padding:19px 20px;text-align:left;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:16px;box-sizing:border-box;">' +
     '<span style="position:absolute;right:-8px;top:-16px;font-size:68px;opacity:.13;transform:rotate(8deg);pointer-events:none;">🎓</span>' +
     '<span style="flex-shrink:0;position:relative;width:56px;height:56px;border-radius:50%;background:conic-gradient(var(--gold) ' + (v.cultureOverallPct * 3.6) + 'deg,var(--line) ' + (v.cultureOverallPct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
     '<span style="width:47px;height:47px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:500 12px \'Inter\',sans-serif;color:var(--gold);">' + v.cultureOverallPct + '%</span></span>' +
     '<span style="flex:1;min-width:0;position:relative;"><span style="display:block;font:300 17px/1.25 Fraunces,serif;">Culture générale</span>' +
     '<span style="display:block;font:500 9.5px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-top:6px;">' + v.cultureTestedCount + '/' + CULTURE_METIERS.length + ' MÉTIERS · MAÎTRISE ' + v.cultureOverallPct + '%</span></span>' +
     '<span style="flex-shrink:0;font:400 20px Fraunces,serif;color:var(--gold);position:relative;">&#8250;</span></button>' +
-    '<button data-action="goFormulas" class="hv-a" style="position:relative;overflow:hidden;width:100%;background:linear-gradient(120deg,' + hexA('#4fcfa8', 0.16) + ',var(--panel) 60%);border:1px solid ' + hexA('#4fcfa8', 0.35) + ';border-radius:20px;padding:19px 20px;text-align:left;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:16px;box-sizing:border-box;">' +
+    '<button data-action="goFormulas" class="hv-a" style="position:relative;overflow:hidden;width:100%;background:linear-gradient(120deg,' + hexA('#5f7f66', 0.16) + ',var(--panel) 60%);border:1px solid ' + hexA('#5f7f66', 0.35) + ';border-radius:20px;padding:19px 20px;text-align:left;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:16px;box-sizing:border-box;">' +
     '<span style="position:absolute;right:-8px;top:-16px;font-size:68px;opacity:.13;transform:rotate(8deg);pointer-events:none;">🧮</span>' +
-    '<span style="flex-shrink:0;position:relative;width:56px;height:56px;border-radius:50%;background:conic-gradient(#4fcfa8 ' + (Math.round(100 * v.formulesSeenCount / FORMULES.length) * 3.6) + 'deg,var(--line) ' + (Math.round(100 * v.formulesSeenCount / FORMULES.length) * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
-    '<span style="width:47px;height:47px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:500 12px \'Inter\',sans-serif;color:#4fcfa8;">' + v.formulesSeenCount + '/' + FORMULES.length + '</span></span>' +
+    '<span style="flex-shrink:0;position:relative;width:56px;height:56px;border-radius:50%;background:conic-gradient(#5f7f66 ' + (Math.round(100 * v.formulesSeenCount / FORMULES.length) * 3.6) + 'deg,var(--line) ' + (Math.round(100 * v.formulesSeenCount / FORMULES.length) * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
+    '<span style="width:47px;height:47px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:500 12px \'Inter\',sans-serif;color:#5f7f66;">' + v.formulesSeenCount + '/' + FORMULES.length + '</span></span>' +
     '<span style="flex:1;min-width:0;position:relative;"><span style="display:block;font:300 17px/1.25 Fraunces,serif;">Boîte à formules</span>' +
     '<span style="display:block;font:500 9.5px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-top:6px;">TOUTES LES MÉTHODOS DE CALCUL, PAS À PAS</span></span>' +
-    '<span style="flex-shrink:0;font:400 20px Fraunces,serif;color:#4fcfa8;position:relative;">&#8250;</span></button>' +
+    '<span style="flex-shrink:0;font:400 20px Fraunces,serif;color:#5f7f66;position:relative;">&#8250;</span></button>' +
     '</div>' +
     '<div style="height:26px;"></div></div>';
 }
@@ -2091,7 +2108,7 @@ function tplCoursePole(v) {
     '<span style="flex-shrink:0;width:50px;height:50px;border-radius:16px;background:' + hexA(acc, 0.18) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;font-size:22px;">' + v.coursePoleGlyph + '</span>' +
     '<div><div style="font:300 28px/1.1 Fraunces,serif;letter-spacing:-.02em;">' + esc(v.coursePoleLabel) + '</div>' +
     '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">' + v.coursePoleReadCount + '/' + v.coursePoleFichesList.length + ' LUES · MAÎTRISE ' + v.coursePolePct + '% <span style="text-transform:none;letter-spacing:0;color:var(--dim);">(quiz)</span></div></div></div></div></div>' +
-    '<div style="margin:6px 24px 0;display:flex;flex-direction:column;gap:9px;">' + cards + '</div>' +
+    '<div class="ledger" style="margin:6px 24px 0;">' + cards + '</div>' +
     '<div style="height:26px;"></div></div>';
 }
 
@@ -2135,11 +2152,11 @@ function tplFiche(v) {
   var acc = v.ficheAccent;
   var toc = v.ficheTocDots.map(function (d) {
     var col = d.warnish ? 'var(--warn)' : acc;
-    return '<button data-action="ficheJump" data-i="' + (d.n - 1) + '" style="flex-shrink:0;width:30px;height:30px;border-radius:50%;background:' + hexA(col, 0.14) + ';border:1px solid ' + hexA(col, 0.4) + ';color:' + col + ';font:500 11px \'Inter\',sans-serif;cursor:pointer;">' + d.n + '</button>';
+    return '<button data-action="ficheJump" data-i="' + (d.n - 1) + '" style="flex-shrink:0;min-width:28px;height:26px;padding:0 6px;border:1px solid ' + hexA(col, 0.45) + ';border-bottom:2px solid ' + col + ';background:' + hexA(col, 0.12) + ';color:' + col + ';font:500 11px \'Inter\',sans-serif;cursor:pointer;">' + d.n + '</button>';
   }).join('');
   var sections = v.ficheSections.map(function (s, i) {
     var col = s.warnish ? 'var(--warn)' : acc;
-    var body = s.paras.map(function (p, pi) { return tplPara(p, pi, acc); }).join('') + (s.svg ? '<div class="stagger" style="animation-delay:' + (s.paras.length * 0.06).toFixed(2) + 's;margin-top:14px;border-radius:14px;overflow:hidden;background:#faf8f3;padding:8px;">' + s.svg + '</div>' : '');
+    var body = s.paras.map(function (p, pi) { return tplPara(p, pi, acc); }).join('') + (s.svg ? '<div class="stagger" style="animation-delay:' + (s.paras.length * 0.06).toFixed(2) + 's;margin-top:14px;border-radius:14px;overflow:hidden;background:#f5efe1;padding:8px;">' + s.svg + '</div>' : '');
     return '<div id="sec-' + i + '" class="thsec' + (i === 0 ? ' open' : '') + '" style="margin-top:12px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--panel);animation:kfIn .4s cubic-bezier(.16,1,.3,1) both;animation-delay:' + (i * 0.05).toFixed(2) + 's;">' +
       '<button data-fold-head style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:' + col + ';font:500 10px \'Inter\',sans-serif;letter-spacing:.12em;text-align:left;">' +
       '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + (s.seen ? col : hexA(col, 0.16)) + ';border:1px solid ' + hexA(col, 0.4) + ';display:flex;align-items:center;justify-content:center;font:500 10px \'Inter\',sans-serif;color:' + (s.seen ? 'var(--on)' : col) + ';">' + (s.seen ? '✓' : (s.warnish ? '!' : (i + 1))) + '</span>' +
@@ -2158,7 +2175,7 @@ function tplFiche(v) {
     '<div style="display:flex;align-items:center;gap:14px;margin-top:16px;">' +
     '<span style="flex-shrink:0;width:52px;height:52px;border-radius:16px;background:' + hexA(acc, 0.18) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;font-size:23px;animation:kfCalm 3.4s ease-in-out infinite;">' + esc(v.ficheIcon) + '</span>' +
     '<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;align-items:center;font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);"><div>' + esc(v.ficheIdx) + '</div><div style="color:' + acc + ';">' + v.ficheMin + ' MIN</div></div>' +
-    '<div style="font:300 26px/1.15 Fraunces,serif;letter-spacing:-.02em;margin-top:6px;">' + esc(v.ficheTitle) + '</div></div></div>' +
+    '<div class="folio-num" style="font-size:24px;margin-top:6px;">' + esc(v.ficheTitle) + '</div></div></div>' +
     '<div style="font:400 10px/1.6 \'Inter\',sans-serif;color:var(--dim);margin-top:16px;">' + esc(v.ficheSource) + '</div>' +
     '<div style="margin-top:16px;display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;">' + toc + '</div></div>' +
     completionBar +
@@ -2181,10 +2198,10 @@ function tplFicheReview(v) {
       '<div style="flex:1;font:400 13.5px/1.55 \'Inter\',sans-serif;">' + (it.isReview ? '<span style="display:block;font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:var(--gold);margin-bottom:4px;">RÉVISION · FICHE PRÉCÉDENTE</span>' : '') + esc(it.text) + '</div></div>' +
       '<div style="margin-top:10px;padding-left:32px;font:500 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);">Votre réponse : <span style="color:' + col + ';">' + esc(it.pickTxt) + '</span>' +
       (!it.ok && it.showCorrect ? '<br>Bonne réponse : <span style="color:var(--acc2);">' + esc(it.correctTxt) + '</span>' : '') + '</div>' +
-      (it.formula ? '<div style="margin-top:8px;margin-left:32px;padding:10px 12px;background:' + hexA(it.ok ? '#4fcfa8' : '#e2895f', 0.12) + ';border:1px solid ' + hexA(it.ok ? '#4fcfa8' : '#e2895f', 0.35) + ';border-radius:10px;">' +
+      (it.formula ? '<div style="margin-top:8px;margin-left:32px;padding:10px 12px;background:' + hexA(it.ok ? '#5f7f66' : '#a8432f', 0.12) + ';border:1px solid ' + hexA(it.ok ? '#5f7f66' : '#a8432f', 0.35) + ';border-radius:10px;">' +
         '<div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:' + (it.ok ? 'var(--acc2)' : 'var(--warn)') + ';margin-bottom:4px;">LE CALCUL</div>' +
         '<div style="font:500 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink);white-space:pre-line;">' + esc(it.formula) + '</div>' +
-        (it.exponentNote ? '<div style="font:400 11px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:6px;padding-top:6px;border-top:1px solid ' + hexA(it.ok ? '#4fcfa8' : '#e2895f', 0.25) + ';">' + esc(it.exponentNote) + '</div>' : '') +
+        (it.exponentNote ? '<div style="font:400 11px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:6px;padding-top:6px;border-top:1px solid ' + hexA(it.ok ? '#5f7f66' : '#a8432f', 0.25) + ';">' + esc(it.exponentNote) + '</div>' : '') +
         '</div>' : '') +
       (it.explain ? '<div style="margin-top:8px;padding:10px 12px;background:var(--surface,rgba(255,255,255,.03));border-radius:10px;padding-left:32px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);white-space:pre-line;">' + esc(it.explain) + '</div>' : '') +
       (it.catId ? '<div style="margin-top:10px;padding-left:32px;">' +
@@ -2235,28 +2252,29 @@ function tplProgress(v) {
     return '<text x="' + d.lx + '" y="' + d.ly + '" text-anchor="' + d.anchor + '" dominant-baseline="middle" style="font:500 9px \'Inter\',sans-serif;fill:var(--ink3);">' + esc(d.label) + '</text>' +
       '<text x="' + d.lx + '" y="' + (d.ly + 12) + '" text-anchor="' + d.anchor + '" dominant-baseline="middle" style="font:600 9.5px \'Inter\',sans-serif;fill:var(--acc);">' + d.pct + '%</text>';
   }).join('');
-  var poles = v.poles.map(function (p, i) {
-    return '<div class="stagger" style="animation-delay:' + (i * 0.05).toFixed(2) + 's;display:flex;flex-direction:column;gap:7px;">' +
+  var poles = v.poles.map(function (p) {
+    var acc = poleAccent(p.label);
+    return '<div class="ledger-row" style="flex-direction:column;align-items:stretch;gap:7px;padding-left:18px;">' +
       '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;"><span style="font:400 12.5px \'Inter\',sans-serif;">' + esc(p.label) + '</span><span style="font:500 9.5px \'Inter\',sans-serif;color:var(--ink3);flex-shrink:0;">' + esc(p.ratio) + ' bonnes réponses</span></div>' +
-      '<div style="display:flex;align-items:center;gap:10px;"><div style="flex:1;height:5px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="width:' + p.pct + '%;height:5px;background:linear-gradient(90deg,var(--acc2),var(--acc));transform-origin:left;animation:kfFill 1.1s cubic-bezier(.16,1,.3,1) both;"></div></div>' +
-      '<div style="width:32px;text-align:right;font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);">' + p.pct + '%</div></div></div>';
+      '<div style="display:flex;align-items:center;gap:10px;"><div style="flex:1;height:3px;background:var(--line);overflow:hidden;"><div style="width:' + p.pct + '%;height:3px;background:' + acc + ';transform-origin:left;animation:kfFill 1.1s cubic-bezier(.16,1,.3,1) both;"></div></div>' +
+      '<div style="width:32px;text-align:right;font:500 10.5px \'Inter\',sans-serif;color:' + acc + ';">' + p.pct + '%</div></div></div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">PROGRESSION</div>' +
-    '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:14px;"><span data-countup="' + v.mastery + '">0</span> <span style="font-size:18px;">%</span> de <span style="font-style:italic;">maîtrise</span></div>' +
-    '<div style="font:400 11.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;">Moyenne du % de bonnes réponses aux questions testées, par pôle — la carte ci-dessous détaille chaque pôle.</div></div>' +
+    '<div style="padding:54px 24px 0;"><div class="folio-kicker">PROGRESSION</div>' +
+    '<div class="folio-num" style="font-size:32px;margin-top:12px;"><span data-countup="' + v.mastery + '">0</span><span style="font-size:17px;"> %</span> de <span style="font-style:italic;color:var(--acc);">maîtrise</span></div>' +
+    '<div style="font:400 11.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:10px;">Moyenne du % de bonnes réponses aux questions testées, par pôle — le registre ci-dessous détaille chaque pôle.</div></div>' +
     '<div style="padding:14px 20px 0;"><svg viewBox="0 0 400 340" style="width:100%;height:auto;">' +
-    '<polygon points="' + v.radarGridOuter + '" fill="none" stroke="var(--line)" stroke-width="1"></polygon>' +
-    '<polygon points="' + v.radarGridMid + '" fill="none" stroke="var(--line)" stroke-width="1"></polygon>' +
-    '<polygon points="' + v.radarGridInner + '" fill="none" stroke="var(--line)" stroke-width="1"></polygon>' +
-    '<polygon class="v16draw" points="' + v.radarPts + '" fill="rgba(219,180,111,.18)" stroke="var(--acc)" stroke-width="2" style="stroke-dasharray:900;stroke-dashoffset:900;animation:v16draw 1.1s cubic-bezier(.16,1,.3,1) .15s forwards,kfIn .5s ease .15s forwards;"></polygon>' + dots + radarLabels + '</svg></div>' +
+    '<polygon points="' + v.radarGridOuter + '" fill="none" stroke="var(--rule)" stroke-width="1"></polygon>' +
+    '<polygon points="' + v.radarGridMid + '" fill="none" stroke="var(--rule)" stroke-width="1"></polygon>' +
+    '<polygon points="' + v.radarGridInner + '" fill="none" stroke="var(--rule)" stroke-width="1"></polygon>' +
+    '<polygon class="v16draw" points="' + v.radarPts + '" fill="rgba(169,129,74,.18)" stroke="var(--acc)" stroke-width="2" style="stroke-dasharray:900;stroke-dashoffset:900;animation:v16draw 1.1s cubic-bezier(.16,1,.3,1) .15s forwards,kfIn .5s ease .15s forwards;"></polygon>' + dots + radarLabels + '</svg></div>' +
     tplMasteryChart(v.masteryHistory) +
-    '<div style="margin:16px 24px 0;font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">DÉTAIL PAR PÔLE</div>' +
-    '<div style="margin:10px 24px 0;display:flex;flex-direction:column;gap:16px;">' + poles + '</div>' +
-    '<div style="margin:24px 24px 0;padding-top:24px;border-top:1px solid var(--line);display:flex;justify-content:space-between;">' +
-    '<div><div style="font:300 28px/1 Fraunces,serif;"><span data-countup="' + v.xp + '">0</span></div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:4px;">XP TOTAL</div></div>' +
-    '<div><div style="font:300 28px/1 Fraunces,serif;"><span data-countup="' + v.answeredCount + '">0</span></div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:4px;">QUESTIONS VUES</div></div>' +
-    '<div><div style="font:300 28px/1 Fraunces,serif;"><span data-countup="' + v.streak + '">0</span></div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:4px;">JOURS DE SUITE</div></div></div>' +
+    '<div style="margin:22px 24px 0;" class="folio-kicker">DÉTAIL PAR PÔLE</div>' +
+    '<div class="ledger" style="margin:6px 24px 0;">' + poles + '</div>' +
+    '<div class="ledger-total" style="margin:24px 24px 0;display:flex;justify-content:space-between;">' +
+    '<div><div class="folio-num" style="font-size:26px;"><span data-countup="' + v.xp + '">0</span></div><div class="folio-kicker" style="margin-top:5px;">XP TOTAL</div></div>' +
+    '<div><div class="folio-num" style="font-size:26px;"><span data-countup="' + v.answeredCount + '">0</span></div><div class="folio-kicker" style="margin-top:5px;">QUESTIONS VUES</div></div>' +
+    '<div><div class="folio-num" style="font-size:26px;"><span data-countup="' + v.streak + '">0</span></div><div class="folio-kicker" style="margin-top:5px;">JOURS DE SUITE</div></div></div>' +
     '<div style="height:26px;"></div></div>';
 }
 
@@ -2269,57 +2287,58 @@ function tplProfile(v) {
     : '<span style="width:42px;height:24px;border-radius:999px;background:var(--line);display:flex;align-items:center;padding:2px;box-sizing:border-box;flex-shrink:0;"><span style="width:20px;height:20px;border-radius:50%;background:var(--dim);"></span></span>';
   var nameVal = v.nameInput != null ? v.nameInput : v.userName;
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">PARAMÈTRES</div>' +
-    '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:14px;">' + esc(v.userName) + '</div>' +
-    '<div style="font:400 12.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:8px;">Niveau ' + esc(v.levelLabel) + ' · ' + v.xp + ' XP</div></div>' +
-    '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-bottom:10px;">COMPTE</div>' +
-    '<div style="display:flex;gap:8px;">' +
+    '<div style="padding:54px 24px 20px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--rule);background:linear-gradient(160deg,' + hexA('#a9814a', 0.14) + ',transparent 70%);">' +
+    '<span class="seal seal-sm" style="width:52px;height:52px;flex-shrink:0;"><span class="seal-glyph" style="font-size:19px;">' + esc((v.userName || '?').charAt(0).toUpperCase()) + '</span></span>' +
+    '<div style="flex:1;min-width:0;"><div class="folio-kicker">FICHE PERSONNELLE</div>' +
+    '<div class="folio-num" style="font-size:26px;margin-top:6px;">' + esc(v.userName) + '</div>' +
+    '<div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">Niveau ' + esc(v.levelLabel) + ' · ' + v.xp + ' XP</div></div></div>' +
+    '<div style="margin:22px 24px 0;"><div class="folio-kicker">COMPTE</div>' +
+    '<div style="display:flex;gap:8px;margin-top:10px;">' +
     '<input data-name-input value="' + esc(nameVal) + '" placeholder="Votre prénom" maxlength="24" style="flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 15px;font:500 14px \'Inter\',sans-serif;color:var(--ink);outline:none;box-sizing:border-box;" />' +
     '<button data-action="renameSave" style="flex-shrink:0;border:none;border-radius:14px;padding:13px 18px;font:600 12.5px \'Inter\',sans-serif;color:var(--on);background:var(--acc);cursor:pointer;">Valider</button></div>' +
     '<label style="display:block;font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);margin:14px 0 8px;">DATE D\'EXAMEN</label>' +
     '<input type="date" data-exam-date-input value="' + esc(v.examDate || '') + '" style="width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 15px;font:500 14px \'Inter\',sans-serif;color:var(--ink);outline:none;" />' +
     '</div>' +
-    '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-bottom:10px;">PRÉFÉRENCES</div>' +
-    '<div style="background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;">' +
-    '<button data-action="toggleNotif" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Rappel quotidien</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(v.notifSub) + '</span></span>' + notifSwitch + '</button>' +
-    '<button data-action="toggleExamInstant" style="width:100%;background:none;border:none;padding:16px;display:flex;align-items:center;gap:10px;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;min-width:0;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Correction immédiate en examen blanc</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(v.examInstantSub) + '</span></span>' + examInstantSwitch + '</button></div></div>' +
-    '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-bottom:10px;">PROGRESSION</div>' +
-    '<div style="background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;">' +
-    '<button data-action="startDiag" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Refaire le diagnostic</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">5 questions pour recalibrer tes révisions</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
-    '<button data-action="resetProgress" style="width:100%;background:none;border:none;padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--warn);text-align:left;"><span style="flex:1;font:500 13px \'Inter\',sans-serif;">Réinitialiser ma progression</span></button></div></div>' +
-    (v.confirmReset ? '<div class="stagger" style="margin:16px 24px 0;background:var(--panel2);border:1px solid var(--warn);border-radius:18px;padding:16px;">' +
+    '<div style="margin:24px 24px 0;"><div class="folio-kicker">PRÉFÉRENCES</div>' +
+    '<div class="ledger" style="margin-top:4px;">' +
+    '<button data-action="toggleNotif" class="ledger-row" style="width:100%;background:none;border:none;cursor:pointer;color:var(--ink);text-align:left;padding-left:0;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Rappel quotidien</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(v.notifSub) + '</span></span>' + notifSwitch + '</button>' +
+    '<button data-action="toggleExamInstant" class="ledger-row" style="width:100%;background:none;border:none;gap:10px;cursor:pointer;color:var(--ink);text-align:left;padding-left:0;"><span style="flex:1;min-width:0;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Correction immédiate en examen blanc</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(v.examInstantSub) + '</span></span>' + examInstantSwitch + '</button></div></div>' +
+    '<div style="margin:24px 24px 0;"><div class="folio-kicker">PROGRESSION</div>' +
+    '<div class="ledger" style="margin-top:4px;">' +
+    '<button data-action="startDiag" class="ledger-row" style="width:100%;background:none;border:none;cursor:pointer;color:var(--ink);text-align:left;padding-left:0;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Refaire le diagnostic</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">5 questions pour recalibrer tes révisions</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
+    '<button data-action="resetProgress" class="ledger-row" style="width:100%;background:none;border:none;cursor:pointer;color:var(--warn);text-align:left;padding-left:0;"><span style="flex:1;font:500 13px \'Inter\',sans-serif;">Réinitialiser ma progression</span></button></div></div>' +
+    (v.confirmReset ? '<div class="stagger" style="margin:16px 24px 0;background:var(--panel2);border:1px solid var(--warn);border-radius:12px;padding:16px;">' +
       '<div style="font:500 13px \'Inter\',sans-serif;color:var(--ink);">Tout effacer ?</div>' +
       '<div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">XP, série, révisions et diagnostic seront définitivement remis à zéro sur cet appareil.</div>' +
       '<div style="display:flex;gap:10px;margin-top:14px;"><button data-action="resetProgressCancel" style="flex:1;background:none;border:1px solid var(--line);border-radius:999px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Annuler</button>' +
       '<button data-action="resetProgressConfirm" style="flex:1;background:var(--warn);border:none;border-radius:999px;padding:12px;font:600 12.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;">Confirmer</button></div></div>' : '') +
-    '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-bottom:10px;">DONNÉES</div>' +
-    '<div style="background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;">' +
-    '<button data-action="exportData" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Exporter ma progression</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">Télécharge un fichier de sauvegarde (.json)</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
-    '<button data-action="importDataPick" style="width:100%;background:none;border:none;border-bottom:1px solid var(--line);padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Importer une sauvegarde</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">Restaure la progression depuis un fichier .json</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
-    '<button data-action="genAttestation" style="width:100%;background:none;border:none;padding:16px;display:flex;align-items:center;cursor:pointer;color:var(--ink);text-align:left;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Récapitulatif de temps de révision</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(v.totalTimeLabel) + ' cumulées · document personnel, non certifié</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
+    '<div style="margin:24px 24px 0;"><div class="folio-kicker">DONNÉES</div>' +
+    '<div class="ledger" style="margin-top:4px;">' +
+    '<button data-action="exportData" class="ledger-row" style="width:100%;background:none;border:none;cursor:pointer;color:var(--ink);text-align:left;padding-left:0;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Exporter ma progression</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">Télécharge un fichier de sauvegarde (.json)</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
+    '<button data-action="importDataPick" class="ledger-row" style="width:100%;background:none;border:none;cursor:pointer;color:var(--ink);text-align:left;padding-left:0;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Importer une sauvegarde</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">Restaure la progression depuis un fichier .json</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
+    '<button data-action="genAttestation" class="ledger-row" style="width:100%;background:none;border:none;cursor:pointer;color:var(--ink);text-align:left;padding-left:0;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Récapitulatif de temps de révision</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(v.totalTimeLabel) + ' cumulées · document personnel, non certifié</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
     '<input type="file" id="importFileInput" data-import-file-input accept="application/json" style="display:none" />' +
     '</div><div style="font:400 10.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;">Tout reste stocké sur cet appareil : exporte régulièrement pour ne rien perdre en cas de changement de téléphone ou de vidage du cache.</div></div>' +
-    (v.confirmImport ? '<div class="stagger" style="margin:16px 24px 0;background:var(--panel2);border:1px solid var(--acc);border-radius:18px;padding:16px;">' +
+    (v.confirmImport ? '<div class="stagger" style="margin:16px 24px 0;background:var(--panel2);border:1px solid var(--acc);border-radius:12px;padding:16px;">' +
       '<div style="font:500 13px \'Inter\',sans-serif;color:var(--ink);">Remplacer ta progression actuelle ?</div>' +
       '<div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">Fichier importé : ' + esc(v.confirmImportSummary || '') + '. Il va remplacer toutes les données actuelles sur cet appareil.</div>' +
       '<div style="display:flex;gap:10px;margin-top:14px;"><button data-action="importDataCancel" style="flex:1;background:none;border:1px solid var(--line);border-radius:999px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Annuler</button>' +
       '<button data-action="importDataConfirm" style="flex:1;background:var(--acc);border:none;border-radius:999px;padding:12px;font:600 12.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;">Remplacer</button></div></div>' : '') +
-    (v.notifOn ? '<div style="margin:16px 24px 0;background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;gap:12px;align-items:flex-start;">' +
+    (v.notifOn ? '<div style="margin:16px 24px 0;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;gap:12px;align-items:flex-start;">' +
       '<div style="width:9px;height:9px;border-radius:50%;background:var(--acc);margin-top:4px;animation:kfBreathe 2.6s ease-in-out infinite;"></div>' +
       '<div><div style="font:500 12.5px \'Inter\',sans-serif;">Dossier CGP · 19:30</div><div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + v.dueCount + ' questions arrivent à échéance. Trois minutes suffisent.</div></div></div>' : '') +
-    '<div style="margin:24px 24px 0;text-align:center;font:italic 300 17px/1.5 Fraunces,serif;color:var(--acc);">« L\'échec c\'est l\'abandon,<br>la réussite c\'est la persévérance ! »</div>' +
-    '<div style="margin:24px 24px 0;padding-top:24px;border-top:1px solid var(--line);font:400 11px/1.7 \'Inter\',sans-serif;color:var(--dim);">Prototype · banque de ' + v.totalQ + ' questions et ' + v.ficheCount + ' fiches reprises de votre fichier source. La progression est enregistrée sur cet appareil.</div>' +
+    '<div style="margin:26px 24px 0;text-align:center;font:italic 380 17px/1.5 Fraunces,serif;color:var(--acc);">« L\'échec c\'est l\'abandon,<br>la réussite c\'est la persévérance ! »</div>' +
+    '<div style="margin:24px 24px 0;padding-top:20px;border-top:1px solid var(--rule);font:400 11px/1.7 \'Inter\',sans-serif;color:var(--dim);">Prototype · banque de ' + v.totalQ + ' questions et ' + v.ficheCount + ' fiches reprises de votre fichier source. La progression est enregistrée sur cet appareil.</div>' +
     '<div style="height:26px;"></div></div>';
 }
 
+var TAB_GLYPH = { home: '◆', srs: '↻', courses: '§', progress: '◧', profile: '⚙' };
 function tplTabs(v) {
   var tabs = v.tabs.map(function (t) {
-    return t.on
-      ? '<button data-action="goTab" data-k="' + esc(t.k) + '" style="background:var(--ink);color:var(--bg);border:none;border-radius:999px;padding:9px 14px;font:600 11px \'Inter\',sans-serif;cursor:pointer;">' + esc(t.label) + '</button>'
-      : '<button data-action="goTab" data-k="' + esc(t.k) + '" style="background:none;color:var(--ink3);border:none;border-radius:999px;padding:9px 14px;font:500 11px \'Inter\',sans-serif;cursor:pointer;">' + esc(t.label) + '</button>';
+    return '<button data-action="goTab" data-k="' + esc(t.k) + '" class="tab-item' + (t.on ? ' on' : '') + '">' +
+      '<span class="ti-ico">' + (TAB_GLYPH[t.k] || '·') + '</span>' + esc(t.label) + '</button>';
   }).join('');
-  return '<div style="padding:0 20px 34px;display:flex;justify-content:center;background:var(--bg);">' +
-    '<div style="background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:8px;display:flex;gap:2px;">' + tabs + '</div></div>';
+  return '<div class="nav-rail">' + tabs + '</div>';
 }
 
 // ---- Labo : simulateurs financiers -----------------------------------------
@@ -2985,10 +3004,10 @@ function tplCulture(v) {
     return '<div class="stagger" style="animation-delay:' + (i * 0.04).toFixed(2) + 's;">' + tplFicheCard(f, i, acc, 'cultureGo') + '</div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:0 0 0;position:relative;background:linear-gradient(160deg,' + hexA('#dbb46f', 0.22) + ',transparent 65%);">' +
+    '<div style="padding:0 0 0;position:relative;background:linear-gradient(160deg,' + hexA('#a9814a', 0.22) + ',transparent 65%);">' +
     '<div style="padding:58px 24px 22px;"><button data-action="goBack" class="btn-back hv-a" style="color:' + acc + ';"><span class="bkarr">&#8249;</span> Fiches</button>' +
     '<div style="display:flex;align-items:center;gap:14px;margin-top:16px;">' +
-    '<span style="flex-shrink:0;width:50px;height:50px;border-radius:16px;background:' + hexA('#dbb46f', 0.18) + ';border:1px solid ' + hexA('#dbb46f', 0.4) + ';display:flex;align-items:center;justify-content:center;font-size:22px;">🎓</span>' +
+    '<span style="flex-shrink:0;width:50px;height:50px;border-radius:16px;background:' + hexA('#a9814a', 0.18) + ';border:1px solid ' + hexA('#a9814a', 0.4) + ';display:flex;align-items:center;justify-content:center;font-size:22px;">🎓</span>' +
     '<div><div style="font:300 28px/1.1 Fraunces,serif;letter-spacing:-.02em;">Culture générale</div>' +
     '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">' + v.cultureTestedCount + '/' + CULTURE_METIERS.length + ' TESTÉS · MAÎTRISE ' + v.cultureOverallPct + '%</div></div></div>' +
     '<div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">Les professions que tout CGP croise chez ses clients — utile pour comprendre leur situation patrimoniale. Chiffres indicatifs, très variables selon l\'expérience, la zone et la structure d\'exercice.</div></div></div>' +
@@ -3069,8 +3088,8 @@ function tplCultureTest(v) {
     var isCorrect = i === q.correct, isPick = i === v.cultureTestPick;
     var bg = 'var(--panel)', bd = 'var(--line)', col = 'var(--ink)';
     if (answered) {
-      if (isCorrect) { bg = hexA('#4fcfa8', 0.16); bd = '#4fcfa8'; col = '#4fcfa8'; }
-      else if (isPick) { bg = hexA('#e2895f', 0.16); bd = '#e2895f'; col = '#e2895f'; }
+      if (isCorrect) { bg = hexA('#5f7f66', 0.16); bd = '#5f7f66'; col = '#5f7f66'; }
+      else if (isPick) { bg = hexA('#a8432f', 0.16); bd = '#a8432f'; col = '#a8432f'; }
     }
     return '<button ' + (answered ? '' : 'data-action="cultureTestPick" data-i="' + i + '"') + ' style="width:100%;text-align:left;background:' + bg + ';border:1px solid ' + bd + ';border-radius:14px;padding:13px 14px;font:400 13px/1.5 \'Inter\',sans-serif;color:' + col + ';cursor:' + (answered ? 'default' : 'pointer') + ';margin-top:8px;">' + esc(o) + '</button>';
   }).join('');
@@ -3109,17 +3128,17 @@ function tplFormulas(v) {
         '<div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:var(--ink3);">EXEMPLE CHIFFRÉ</div>' +
         '<div style="font:400 12px/1.55 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(f.example.q) + '</div>' +
         '<div style="font:500 13px \'Inter\',sans-serif;color:var(--ink);margin-top:8px;">' + esc(f.example.calc) + ' = <span style="color:' + acc + ';">' + esc(f.example.result) + '</span></div></div>' +
-        '<div style="display:flex;gap:9px;align-items:flex-start;background:' + hexA('#e2895f', 0.1) + ';border:1px solid ' + hexA('#e2895f', 0.3) + ';border-radius:12px;padding:12px 13px;">' +
+        '<div style="display:flex;gap:9px;align-items:flex-start;background:' + hexA('#a8432f', 0.1) + ';border:1px solid ' + hexA('#a8432f', 0.3) + ';border-radius:12px;padding:12px 13px;">' +
         '<span style="flex-shrink:0;font-size:14px;">⚠️</span><div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:var(--warn);">LE PIÈGE CLASSIQUE</div>' +
         '<div style="font:400 12px/1.55 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(f.piege) + '</div></div></div>' +
         (f.theory ? '<button data-action="ficheGo" data-fiche="' + esc(f.theory) + '" class="hv-a" style="width:100%;text-align:left;background:none;border:1px solid var(--line);border-radius:12px;padding:11px 13px;font:500 11.5px \'Inter\',sans-serif;color:' + acc + ';cursor:pointer;">📘 Revoir la fiche de cours liée →</button>' : '') +
         '</div>' : '') + '</div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:32px 26px 22px;background:linear-gradient(160deg,' + hexA('#4fcfa8', 0.18) + ',transparent 70%);">' +
-    '<button data-action="goBack" class="btn-back hv-a" style="color:#4fcfa8;"><span class="bkarr">&#8249;</span> Retour</button>' +
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);"><div>MÉTHODO</div><div style="color:#4fcfa8;">' + v.formulesSeenCount + '/' + v.formulas.length + ' VUES</div></div>' +
-    '<div style="font:300 30px/1.15 Fraunces,serif;letter-spacing:-.02em;margin-top:10px;">Boîte à <span style="font-style:italic;color:#4fcfa8;">formules</span></div>' +
+    '<div style="padding:32px 26px 22px;background:linear-gradient(160deg,' + hexA('#5f7f66', 0.18) + ',transparent 70%);">' +
+    '<button data-action="goBack" class="btn-back hv-a" style="color:#5f7f66;"><span class="bkarr">&#8249;</span> Retour</button>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);"><div>MÉTHODO</div><div style="color:#5f7f66;">' + v.formulesSeenCount + '/' + v.formulas.length + ' VUES</div></div>' +
+    '<div style="font:300 30px/1.15 Fraunces,serif;letter-spacing:-.02em;margin-top:10px;">Boîte à <span style="font-style:italic;color:#5f7f66;">formules</span></div>' +
     '<div style="font:400 12.5px/1.65 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;">Toutes les méthodologies de calcul de l\'app, en un seul endroit : la formule, les étapes, un exemple chiffré, et le piège classique à éviter.</div>' +
     '<div style="margin-top:16px;display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;">' + toc + '</div></div>' +
     '<div style="padding:6px 24px 30px;">' + cards + '</div>' +
@@ -3186,7 +3205,7 @@ function tplLabo() {
     '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:16px;">FRAIS CÔTÉ CGP / ENVELOPPE (HORS DIC)</div>' +
     laboField('Frais d’entrée CGP / enveloppe', 'pxCgp', 0, 5, 0.1, 0) +
     laboField('Valeur liquidative initiale de la part', 'pxPart', 10, 1000, 10, 100) +
-    '<div style="margin-top:10px;background:var(--panel2);border:1px solid ' + hexA('#e2895f', 0.3) + ';border-radius:10px;padding:10px 12px;"><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:var(--warn);margin-bottom:4px;">ATTENTION</div><div style="font:400 11px/1.55 \'Inter\',sans-serif;color:var(--ink2);">Ces frais sont prélevés avant l’achat des parts : ils réduisent le nominal qui travaille réellement dans le produit, pas seulement le résultat final.</div></div>' +
+    '<div style="margin-top:10px;background:var(--panel2);border:1px solid ' + hexA('#a8432f', 0.3) + ';border-radius:10px;padding:10px 12px;"><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:var(--warn);margin-bottom:4px;">ATTENTION</div><div style="font:400 11px/1.55 \'Inter\',sans-serif;color:var(--ink2);">Ces frais sont prélevés avant l’achat des parts : ils réduisent le nominal qui travaille réellement dans le produit, pas seulement le résultat final.</div></div>' +
     '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:16px;">SCÉNARIO DE SORTIE</div>' +
     laboSeg3('scAuto', 'Remb. anticipé', 'scEch', 'À l’échéance', 'scVol', 'Sortie volontaire') +
     '<div id="pxScenHint" style="font:400 11px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;"></div>' +
@@ -3517,7 +3536,7 @@ function mentalAnswer(timeout) {
   var vb = document.getElementById('menValid'); if (vb) vb.style.display = 'none';
   var badge = document.createElement('div');
   badge.style.cssText = 'text-align:center;font:600 14px \'Inter\',sans-serif;border-radius:12px;padding:10px;margin-bottom:14px;' +
-    (ok ? 'background:' + hexA('#4fcfa8', 0.16) + ';color:#4fcfa8;' : 'background:' + hexA('#e2895f', 0.16) + ';color:#e2895f;');
+    (ok ? 'background:' + hexA('#5f7f66', 0.16) + ';color:#5f7f66;' : 'background:' + hexA('#a8432f', 0.16) + ';color:#a8432f;');
   badge.textContent = ok ? '✅ Correct !' : (timeout ? '⏱ Temps écoulé' : '❌ Raté');
   card.insertBefore(badge, card.firstChild);
   var qEl = document.getElementById('menQ');
