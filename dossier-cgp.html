@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>Dossier CGP</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dossier CGP">
+<meta name="theme-color" content="#0d0e10">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;height:100%;background:#070910}
+body{font-family:'Manrope',sans-serif;-webkit-font-smoothing:antialiased;overscroll-behavior-y:none}
+a{color:#00E08F}
+a:hover{color:#33e8a6}
+button{font:inherit}
+textarea{font-family:inherit}
+:root,[data-theme="dark"]{
+  /* ---- Néo-banque / fintech d'investissement ------------------------------
+     Fond noir-bleu profond, panneaux plats sans relief, un vert vif dominant
+     pour les CTA et la progression positive, et trois accents sémantiques
+     secondaires utilisés avec parcimonie pour des signaux précis :
+       --due  (ambre)  → à revoir / attention / échéance
+       --bad  (corail) → mauvaise réponse / baisse
+       --info (bleu)   → information neutre
+     Alias conservés pour compatibilité avec l'ensemble des templates :
+       --acc2 = vert (positif secondaire) · --gold = bleu info · --warn = corail
+       --rule/--rule-dim = ligne plate · --bg-hi = fond légèrement relevé */
+  --bg:#0B0E14;--bg-hi:#10141D;--panel:#12161F;--panel2:#161B26;--line:#1C2130;
+  --rule:#1C2130;--rule-dim:#1C2130;
+  --ink:#F2F4F8;--ink2:#9CA3AF;--ink3:#6B7280;--dim:#5A6472;
+  --acc:#00E08F;--acc2:#00E08F;--due:#F2A900;--bad:#FF6B6B;--info:#3DA9FC;
+  --gold:#3DA9FC;--warn:#FF6B6B;--on:#06241A;
+  /* Spacing scale — two rhythms, both used consistently across dossier-cgp.js:
+     macro (block/section gaps): --sp-4 16 · --sp-5 24 · --sp-6 32 · --sp-7 48
+     micro (intra-component gaps, 2px grid): --sp-05 2 · --sp-1 4 · --sp-2 8 · --sp-3 12 · --sp-4 16
+     Kept as real px literals in the markup (inline styles can't always take var() inside
+     shorthand reliably across the templating approach used here), but every margin/padding
+     in the templates now snaps to one of these steps instead of ad hoc 18/20/22/26/28px. */
+  --sp-05:2px;--sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:24px;--sp-6:32px;--sp-7:48px;
+  /* Typographic hierarchy — Manrope only, five named rungs:
+     HERO     — Manrope 800, 40–48px, line-height .92–1, letter-spacing -.02em
+                → front metrics (scores, %, compteurs)
+     TITLE    — Manrope 700/800, 22–32px, line-height 1.12–1.2, letter-spacing -.015em → screen/section headers
+     BODY     — Manrope 400, 13–14px, line-height 1.55–1.75, color var(--ink2)      → paragraphs, explanations
+     CAPTION  — Manrope 500, 10.5–12.5px, color var(--ink3)                    → meta, counters, helper text
+     LABEL    — Manrope 700, 10px, letter-spacing .1em (9px/.09em for the nested sub-rung),
+                uppercase, color var(--ink3) or a semantic accent → kickers, overline tags */
+}
+.panel-glass{background:var(--panel)}
+.card-hero{background:var(--panel) !important;border:1px solid var(--line) !important;box-shadow:none !important}
+.btn-cta{display:block;width:100%;box-sizing:border-box;border:none;border-radius:14px;padding:16px;font:700 14px/1 'Manrope',sans-serif;letter-spacing:.005em;color:var(--on);text-align:center;cursor:pointer;background:var(--acc)}
+.btn-cta:disabled{opacity:.4;cursor:default}
+.btn-cta-sm{display:inline-block;border:none;border-radius:12px;padding:13px 22px;font:700 13px 'Manrope',sans-serif;letter-spacing:.005em;color:var(--on);text-align:center;cursor:pointer;background:var(--acc)}
+@keyframes kfSpin{to{transform:rotate(360deg)}}
+@keyframes kfBreathe{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+@keyframes kfCalm{0%,100%{transform:scale(1)}50%{transform:scale(1.04)}}
+@keyframes kfFill{from{transform:scaleX(.15)}to{transform:scaleX(1)}}
+@keyframes kfGlow{0%,100%{box-shadow:0 0 0 0 rgba(0,224,143,0)}50%{box-shadow:0 0 0 7px rgba(0,224,143,.14)}}
+@keyframes kfIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes kfInFwd{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes kfInBack{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:none}}
+@keyframes kfPop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+@keyframes kfFall{0%{transform:translateY(-40px) rotate(0);opacity:1}100%{transform:translateY(760px) rotate(360deg);opacity:0}}
+@keyframes kfShake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-4px)}40%,60%{transform:translateX(4px)}}
+@keyframes kfRise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes kfPulseRing{0%{box-shadow:0 0 0 0 rgba(0,224,143,.25)}100%{box-shadow:0 0 0 10px rgba(0,224,143,0)}}
+@keyframes kfStamp{0%{opacity:0;transform:scale(.7)}100%{opacity:1;transform:scale(1)}}
+#app{min-height:100dvh;max-width:480px;margin:0 auto;width:100%;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;overflow:hidden;position:relative}
+@media (min-width:640px){
+  html,body{background:#050709}
+  body{padding:36px 20px;min-height:100vh}
+  #app{min-height:0;height:calc(100dvh - 72px);border-radius:22px;box-shadow:0 0 0 1px var(--line);}
+}
+@media (min-width:1024px){
+  body{padding:0;display:flex;align-items:center;justify-content:center}
+  #app{
+    max-width:1120px;height:min(880px,92vh);
+    flex-direction:row;
+  }
+  #confetti-slot{z-index:40}
+  #tabs-slot{
+    order:-1;flex-shrink:0;width:232px;height:100%;
+    background:var(--panel);border-right:1px solid var(--line);
+    box-sizing:border-box;
+  }
+  #tabs-slot .nav-rail{
+    display:flex !important;flex-direction:column !important;
+    justify-content:flex-start !important;align-items:stretch !important;
+    padding:34px 16px !important;background:none !important;border-top:none !important;
+    gap:3px !important;height:100%;box-sizing:border-box;
+  }
+  #tabs-slot .tab-item{
+    width:100% !important;display:flex !important;flex-direction:row !important;align-items:center !important;
+    gap:10px !important;text-align:left !important;justify-content:flex-start !important;
+    border-radius:3px !important;padding:12px 14px !important;border-top:none !important;
+    border-left:2px solid transparent !important;
+  }
+  #tabs-slot .tab-item .ti-ico{margin-bottom:0 !important}
+  #tabs-slot .tab-item .ti-ico svg{width:18px !important;height:18px !important}
+  #tabs-slot .tab-item.on{background:var(--panel2) !important;border-left-color:var(--acc) !important}
+  #screen{max-width:760px;width:100%;margin:0 auto;}
+}
+#confetti-slot{position:absolute;inset:0;pointer-events:none;z-index:40;overflow:hidden}
+.scr{flex:1;display:flex;flex-direction:column;min-height:0}
+.scr.kfin{animation:kfIn .38s cubic-bezier(.16,1,.3,1) both}
+.scr.kfin-fwd{animation:kfInFwd .32s cubic-bezier(.16,1,.3,1) both}
+.scr.kfin-back{animation:kfInBack .32s cubic-bezier(.16,1,.3,1) both}
+button{cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .12s ease,border-color .18s ease,background-color .18s ease,box-shadow .18s ease}
+button:active{transform:scale(.96)}
+.hv-a{transition:transform .14s ease,border-color .16s ease,background-color .16s ease}
+.hv-a:hover{border-color:var(--acc)}
+.hv-a:active{transform:scale(.98)}
+.hv-b:hover{border-color:var(--acc);background:var(--panel2)}
+.hv-c:hover{background:var(--panel2)}
+.btn-back{display:inline-flex;align-items:center;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 16px 10px 12px;font:600 13.5px 'Manrope',sans-serif;color:var(--ink2);cursor:pointer}
+.btn-back:hover{border-color:var(--acc);color:var(--ink)}
+.btn-back:active{transform:scale(.96)}
+.btn-back .bkarr{display:inline-flex;line-height:1}
+.btn-back .bkarr svg{width:15px;height:15px;display:block}
+.stagger{animation:kfRise .4s cubic-bezier(.16,1,.3,1) both}
+.shake{animation:kfShake .4s ease}
+input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:4px;border-radius:2px;background:var(--line);outline:none;margin:8px 0 0;display:block}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:var(--acc);border:2px solid var(--bg);cursor:pointer;transition:transform .12s ease}
+input[type="range"]::-webkit-slider-thumb:active{transform:scale(1.15)}
+input[type="range"]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--acc);border:2px solid var(--bg);cursor:pointer;border-width:2px}
+input[type="range"]::-moz-range-track{background:var(--line);height:4px;border-radius:2px}
+input[type="number"]{width:100%;box-sizing:border-box;font:500 16px 'Manrope',sans-serif;font-variant-numeric:tabular-nums;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--ink);outline:none;transition:border-color .18s ease}
+input[type="number"]:focus{border-color:var(--acc)}
+input[type="number"]:disabled{opacity:.6}
+.lab-seg{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:10px;font:600 11.5px 'Manrope',sans-serif;color:var(--ink2);cursor:pointer}
+.lab-seg.on{background:var(--acc);color:var(--on);border-color:var(--acc)}
+/* ==== Composants de référence (neo-bank) ================================ */
+.opt-row{display:flex;gap:12px;align-items:flex-start;text-align:left;background:none;border:1px solid var(--line);border-radius:12px;width:100%;padding:14px;font:500 13.5px/1.5 'Manrope',sans-serif;color:var(--ink);cursor:pointer;margin-bottom:8px}
+.opt-row.good{border-color:var(--acc);background:rgba(0,224,143,.1);color:var(--ink)}
+.opt-row.bad{border-color:var(--bad);background:rgba(255,107,107,.1);color:var(--ink)}
+.opt-row.mute{color:var(--ink3)}
+.opt-row.sel{background:var(--panel2);border-color:var(--ink3)}
+.opt-badge{flex-shrink:0;width:24px;height:24px;border-radius:7px;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font:700 12px 'Manrope',sans-serif;color:var(--ink3)}
+.opt-badge.on{background:var(--acc);border-color:var(--acc);color:var(--on)}
+.opt-badge.off{background:var(--bad);border-color:var(--bad);color:#2a0b0b}
+.feedback-box{border-left:3px solid var(--acc);background:var(--panel);border-radius:0 12px 12px 0;padding:14px 16px}
+.feedback-box.bad{border-left-color:var(--bad)}
+.feedback-box.due{border-left-color:var(--due)}
+.progress-thin{height:4px;border-radius:2px;background:var(--line);overflow:hidden}
+.progress-thin>span{display:block;height:4px;background:var(--acc)}
+.chip-delta{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:5px 10px 5px 8px;font:700 12px 'Manrope',sans-serif}
+.chip-delta svg{width:12px;height:12px;display:block}
+.chip-delta.up{background:rgba(0,224,143,.12);color:var(--acc)}
+.chip-delta.down{background:rgba(255,107,107,.12);color:var(--bad)}
+.chip-delta.flat{background:rgba(156,163,175,.12);color:var(--ink2)}
+.pos-ico{flex-shrink:0;width:36px;height:36px;border-radius:10px;background:var(--panel2);display:flex;align-items:center;justify-content:center}
+.pos-ico svg{width:18px;height:18px;display:block}
+.pos-ico.tinted{background:rgba(0,224,143,.14)}
+.lesson-status{flex-shrink:0;width:26px;height:26px;display:flex;align-items:center;justify-content:center}
+.lesson-status svg{display:block}
+.ring-wrap{position:relative;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+.ring-wrap svg{display:block;transform:rotate(-90deg)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+@keyframes v16draw{to{stroke-dashoffset:0}}
+@keyframes v16bar{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+.v16svg{width:100%;max-width:320px;height:auto;display:block;margin:4px auto}
+.v16draw{stroke-dasharray:360;stroke-dashoffset:360;animation:v16draw 1.6s ease forwards .2s}
+.v16bar-anim{transform-box:fill-box;transform-origin:bottom;animation:v16bar .7s ease both}
+.fold-body{overflow:hidden;transition:grid-template-rows .3s cubic-bezier(.16,1,.3,1);display:grid;grid-template-rows:1fr}
+.fold-body>div{overflow:hidden;min-height:0}
+.fold-body.fold-closed{grid-template-rows:0fr}
+
+/* ==== Motifs transverses néo-banque ======================================
+   1) .ledger / .ledger-row  — lignes de liste plates (type "positions"),
+      bordure basse fine, pour toute donnée tabulaire (stats, listes).
+   2) .binder-tabs           — onglets segmentés plats pour naviguer entre
+      pôles/catégories/examens.
+   3) .seal / .seal-wax      — badge plat rond, teinté à .14 d'opacité,
+      icône SVG centrée — remplace le sceau en relief.
+   + .folio-num              — gros chiffres hero (Manrope 800).
+   + .folio-kicker           — surtitre avec tiret vert.
+   + .paper-ruled            — neutralisé (pas de fond réglé "registre"). */
+.folio-num{font-family:'Manrope',sans-serif;font-weight:800;letter-spacing:-.02em;line-height:.95;color:var(--ink);font-variant-numeric:tabular-nums}
+.folio-kicker{display:inline-flex;align-items:center;gap:8px;font:700 10px 'Manrope',sans-serif;letter-spacing:.12em;color:var(--ink3)}
+.folio-kicker::before{content:'';width:12px;height:2px;border-radius:1px;background:var(--acc);flex-shrink:0}
+.folio-kicker.fk-r::before{display:none}
+.folio-kicker.fk-r::after{content:'';width:12px;height:2px;border-radius:1px;background:var(--acc);flex-shrink:0;order:1}
+
+.ledger{border-top:1px solid var(--line)}
+.ledger-row{position:relative;display:flex;align-items:center;gap:10px;padding:13px 2px;border-bottom:1px solid var(--line)}
+.ledger-row:last-child{border-bottom:none}
+.ledger-row.lr-tight{padding-top:10px;padding-bottom:10px}
+.ledger-total{border-top:1px solid var(--line);border-bottom:2px solid var(--line);padding:12px 2px}
+
+.paper-ruled{background-image:none}
+
+.binder-tabs{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
+.binder-tabs::-webkit-scrollbar{display:none}
+.binder-tabs .btab{flex-shrink:0;border:1px solid var(--line);background:var(--panel2);color:var(--ink3);
+  font:700 10.5px 'Manrope',sans-serif;letter-spacing:.04em;padding:9px 14px;cursor:pointer;white-space:nowrap;
+  border-radius:10px;transition:color .16s ease,background-color .16s ease,border-color .16s ease}
+.binder-tabs .btab.on{background:rgba(0,224,143,.14);color:var(--btab-acc,var(--acc));border-color:var(--btab-acc,var(--acc))}
+.binder-tabs .btab .btab-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--btab-acc,var(--acc));margin-right:6px;vertical-align:middle}
+
+.nav-rail{display:flex;gap:0;background:var(--bg);border-top:1px solid var(--line)}
+.nav-rail .tab-item{flex:1;min-width:0;background:none;border:none;border-top:2px solid transparent;color:var(--ink3);
+  font:700 9.5px 'Manrope',sans-serif;letter-spacing:.04em;padding:12px 2px 10px;cursor:pointer;text-align:center;
+  transition:color .18s ease,border-color .18s ease}
+.nav-rail .tab-item .ti-ico{display:flex;align-items:center;justify-content:center;margin-bottom:4px;line-height:1}
+.nav-rail .tab-item .ti-ico svg{width:20px;height:20px;display:block}
+.nav-rail .tab-item.on{color:var(--acc);border-top-color:var(--acc)}
+
+.seal{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0;width:52px;height:52px;border-radius:50%;
+  background:rgba(0,224,143,.14);color:var(--acc);animation:kfStamp .35s ease both}
+.seal .seal-glyph{position:relative;display:flex;align-items:center;justify-content:center}
+.seal .seal-glyph svg{width:24px;height:24px;display:block}
+.seal.seal-sm{width:36px;height:36px}
+.seal.seal-sm .seal-glyph svg{width:16px;height:16px}
+.seal.seal-wax{background:rgba(255,107,107,.14);color:var(--bad)}
+.seal.seal-ink{background:rgba(61,169,252,.14);color:var(--info)}
+
+@media (prefers-reduced-motion:reduce){*{animation-duration:.001s !important;animation-iteration-count:1 !important;transition-duration:.001s !important}}
+</style>
+</head>
+<body>
+<div id="app" data-theme="dark"></div>
+<script src="./cgp-data.js"></script>
+<script src="./dossier-cgp.js"></script>
+</body>
+</html>
