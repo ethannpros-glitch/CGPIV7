@@ -5,42 +5,113 @@ var IV = [1, 3, 7, 16, 35, 90];
 var LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 var KEY = 'cgp_proto_v2';
 var ICON_SEARCH = '<svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="8.5" cy="8.5" r="6.5" stroke="currentColor" stroke-width="1.6"></circle><line x1="13.4" y1="13.4" x2="18" y2="18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line></svg>';
+
+/* ==== Système d'icônes — line-icons SVG fines, pas d'émoji, pas de pictogramme plein ==== */
+var ICON_PATHS = {
+  home: '<path d="M4 11.5 12 4l8 7.5"/><path d="M6 10v9.5h5v-6h2v6h5V10"/>',
+  book: '<path d="M4.2 5.3c0-.8.6-1.3 1.3-1.3H11v15.6H5.5a1.3 1.3 0 0 1-1.3-1.3z"/><path d="M19.8 5.3c0-.8-.6-1.3-1.3-1.3H13v15.6h5.5a1.3 1.3 0 0 0 1.3-1.3z"/>',
+  brain: '<path d="M9.2 4.3A2.7 2.7 0 0 0 6.5 7v.6a2.8 2.8 0 0 0 0 5.4v1a2.7 2.7 0 0 0 2.7 2.7h.5V4.3z"/><path d="M14.8 4.3A2.7 2.7 0 0 1 17.5 7v.6a2.8 2.8 0 0 1 0 5.4v1a2.7 2.7 0 0 1-2.7 2.7h-.5V4.3z"/>',
+  chart: '<path d="M4.5 19.5V11"/><path d="M10.5 19.5V5.5"/><path d="M16.5 19.5v-7"/><path d="M4 19.5h16.5"/>',
+  gear: '<circle cx="12" cy="12" r="3.1"/><path d="M12 3.3v2.9M12 17.8v2.9M4.9 6.9l2.1 2.1M17 15l2.1 2.1M4.9 17.1 7 15M17 9l2.1-2.1M3.3 12h2.9M17.8 12h2.9"/>',
+  target: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.3"/><circle cx="12" cy="12" r=".6" fill="currentColor" stroke="none"/>',
+  trophy: '<path d="M8.2 4.2h7.6v4.6a3.8 3.8 0 0 1-7.6 0z"/><path d="M8.2 5.3H6a1.3 1.3 0 0 0-1.3 1.3A3.3 3.3 0 0 0 8 9.9"/><path d="M15.8 5.3H18a1.3 1.3 0 0 1 1.3 1.3A3.3 3.3 0 0 1 16 9.9"/><path d="M12 12.8v2.6"/><path d="M8.3 19.5h7.4"/><path d="M9.8 15.8l-1.5 3.7M14.2 15.8l1.5 3.7"/>',
+  check: '<path d="M4.5 12.6 9 17 19.5 6"/>',
+  cross: '<path d="M6 6l12 12M18 6 6 18"/>',
+  clock: '<circle cx="12" cy="12" r="8.3"/><path d="M12 7.5V12l3.4 2"/>',
+  lock: '<rect x="5" y="10.8" width="14" height="9" rx="2"/><path d="M8 10.8V7.6a4 4 0 0 1 8 0v3.2"/>',
+  search: '<circle cx="11" cy="11" r="6.3"/><path d="M19.8 19.8 15.6 15.6"/>',
+  'arrow-up': '<path d="M12 19V5"/><path d="M6.2 10.8 12 5l5.8 5.8"/>',
+  'arrow-down': '<path d="M12 5v14"/><path d="M17.8 13.2 12 19l-5.8-5.8"/>',
+  chevron: '<path d="M9 5l7 7-7 7"/>',
+  'chevron-left': '<path d="M15 5 8 12l7 7"/>',
+  flag: '<path d="M6.3 3.8v16.4"/><path d="M6.3 4.8h11l-2.6 3.3 2.6 3.3H6.3"/>',
+  calendar: '<rect x="4" y="5.3" width="16" height="14.7" rx="2"/><path d="M4 9.6h16"/><path d="M8 3.3v3.3M16 3.3v3.3"/>',
+  bank: '<path d="M4 9.8 12 5l8 4.8"/><path d="M5 9.8v8M9.3 9.8v8M14.7 9.8v8M19 9.8v8"/><path d="M3.3 19h17.4"/>',
+  house: '<path d="M4.3 11.3 12 4.5l7.7 6.8"/><path d="M6.2 10v9.5h11.6V10"/>',
+  family: '<circle cx="8.3" cy="7.3" r="2.2"/><circle cx="15.7" cy="7.3" r="2.2"/><path d="M4 19c0-2.9 1.9-4.9 4.3-4.9s4.3 2 4.3 4.9"/><path d="M11.4 19c0-2.9 1.9-4.9 4.3-4.9s4.3 2 4.3 4.9"/>',
+  scales: '<path d="M12 3.3v15"/><path d="M5.3 7h13.4"/><path d="M5.3 7 3 11.8a2.9 2.9 0 0 0 4.9 0z"/><path d="M18.7 7 16.4 11.8a2.9 2.9 0 0 0 4.9 0z"/><path d="M8.3 20.3h7.4"/>',
+  stairs: '<path d="M4 20v-3.8h3.9v-3.8h3.9v-3.8h3.9V4.8H20"/>',
+  calculator: '<rect x="5.3" y="3.4" width="13.4" height="17.2" rx="2"/><path d="M7.8 7.3h8.4"/><path d="M7.8 11.6h1M7.8 15h1M7.8 18.3h1M11.5 11.6h1M11.5 15h1M11.5 18.3h1M15.2 11.6h1M15.2 15h1M15.2 18.3h1"/>',
+  scroll: '<path d="M6.3 4h8.7a3 3 0 0 1 3 3v9.7"/><path d="M6.3 4a2 2 0 0 0-2 2v12.3a2 2 0 0 0 2-2"/><path d="M18 16.7a3 3 0 0 1-3 3H6.3"/>',
+  send: '<path d="M4 12 20 5l-6.5 15-3-7.3z"/><path d="M13.5 12.7 20 5"/>',
+  building: '<path d="M6 20V6l6-3 6 3v14"/><path d="M3 20h18"/><path d="M10 10.8h4M10 14.7h4"/>',
+  compass: '<circle cx="12" cy="12" r="8.3"/><path d="M14.7 9.3l-1.7 5.4-4-1.7 1.7-5.4z"/>',
+  globe: '<circle cx="12" cy="12" r="8.3"/><path d="M3.7 12h16.6"/><path d="M12 3.7c2.4 2.2 2.4 14.4 0 16.6M12 3.7c-2.4 2.2-2.4 14.4 0 16.6"/>',
+  coin: '<circle cx="12" cy="12" r="8.3"/><path d="M12 7.3v9.4"/><path d="M9.6 9.1c0-1 1-1.7 2.4-1.7s2.4.8 2.4 1.7-1 1.3-2.4 1.7-2.4.8-2.4 1.7 1 1.7 2.4 1.7 2.4-.8 2.4-1.7"/>',
+  shield: '<path d="M12 3.3 18.7 6v5.8c0 4.8-2.9 7.7-6.7 8.7-3.8-1-6.7-3.9-6.7-8.7V6z"/>',
+  tooth: '<path d="M8.4 4.3c-2 0-3.5 1.7-3.5 3.9 0 1.9.6 2.9 1 4.8.3 1.6.6 3.9 1.5 3.9.9 0 1-2.9 1.9-2.9s1 2.9 1.9 2.9c.9 0 1.1-2.3 1.5-3.9.4-1.9 1-2.9 1-4.8 0-2.2-1.5-3.9-3.5-3.9-.6 0-1.2.2-1.9.6-.6-.4-1.2-.6-1.9-.6z"/>',
+  eye: '<path d="M2.7 12s3.3-5.7 9.3-5.7S21.3 12 21.3 12s-3.3 5.7-9.3 5.7S2.7 12 2.7 12z"/><circle cx="12" cy="12" r="2.4"/>',
+  ear: '<path d="M8.3 13.3a4.7 4.7 0 0 1 4.7-6.6 5.2 5.2 0 0 1 5.2 5.2c0 1.9-1 2.9-1 4.3a1.9 1.9 0 0 1-3.8 0v-1.4"/>',
+  stethoscope: '<path d="M6.3 4v4.7a3.7 3.7 0 0 0 7.4 0V4"/><path d="M10 12.3v1.9a4.7 4.7 0 0 0 9.4 0v-1.9"/><circle cx="19.4" cy="10.6" r="1.5"/>',
+  bulb: '<path d="M9.2 18.3h5.6"/><path d="M10 21h4"/><path d="M12 3.3a5.7 5.7 0 0 0-2.8 10.6c.5.4.9.9.9 1.7h3.8c0-.8.4-1.3.9-1.7A5.7 5.7 0 0 0 12 3.3z"/>',
+  warning: '<path d="M12 4 21 19.5H3z"/><path d="M12 10v3.6"/><path d="M12 16.6v.1"/>',
+  bolt: '<path d="M13.3 3 6.5 13.5h5l-.9 7.5 7.8-11h-5z"/>',
+  info: '<circle cx="12" cy="12" r="8.3"/><path d="M12 11v5"/><path d="M12 8v.1"/>',
+  trending_down: '<path d="M4.5 7 10.5 13l3.5-3.5 5.5 5.5"/><path d="M19.5 10v5h-5"/>',
+  'trending-up': '<path d="M4.5 16 10.5 10l3.5 3.5 5.5-5.5"/><path d="M19.5 13V8h-5"/>',
+  dot: '<circle cx="12" cy="12" r="2.5" fill="currentColor" stroke="none"/>',
+  ring: '<circle cx="12" cy="12" r="8"/>',
+  refresh: '<path d="M4.5 12a7.5 7.5 0 0 1 12.6-5.5M19.5 12a7.5 7.5 0 0 1-12.6 5.5"/><path d="M17.5 3.5v3.6H14M6.5 20.5v-3.6H10"/>',
+  export: '<path d="M12 15V4"/><path d="M8 7.5 12 3.6l4 3.9"/><path d="M4.5 14v4.8A1.7 1.7 0 0 0 6.2 20.5h11.6a1.7 1.7 0 0 0 1.7-1.7V14"/>',
+  flask: '<path d="M9.3 3.8h5.4"/><path d="M10.1 3.8v6.9l-4.5 7.9a2 2 0 0 0 1.8 3h9.2a2 2 0 0 0 1.8-3l-4.5-7.9V3.8"/><path d="M8.3 15.5h7.4"/>',
+  sliders: '<path d="M5 6.3h8M17 6.3h2M5 12h2M11 12h8M5 17.7h11M19 17.7h0"/><circle cx="9" cy="6.3" r="2"/><circle cx="7" cy="12" r="2"/><circle cx="15" cy="17.7" r="2"/>'
+};
+function icoSvg(key, size, color, sw) {
+  size = size || 18; sw = sw || 2;
+  var p = ICON_PATHS[key] || ICON_PATHS.dot;
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="' + (color || 'currentColor') + '" stroke-width="' + sw + '" stroke-linecap="round" stroke-linejoin="round" style="display:block;flex-shrink:0;">' + p + '</svg>';
+}
+/* mappe les anciens glyphes / émojis encore présents dans quelques points
+   d'appel vers une clé d'icône — filet de sécurité, pas la voie principale */
+var EMOJI_TO_ICON = {
+  '🏠': 'home', '🎓': 'book', '📘': 'book', '🧠': 'brain', '📊': 'chart', '📈': 'trending-up', '📉': 'trending_down',
+  '⚙': 'gear', '⚙️': 'gear', '🎯': 'target', '🏆': 'trophy', '✅': 'check', '✓': 'check', '❌': 'cross', '✗': 'cross', '✕': 'cross',
+  '⏱': 'clock', '🕰️': 'clock', '🕰': 'clock', '🔒': 'lock', '🔍': 'search', '🔎': 'search', '📅': 'calendar', '🏦': 'bank',
+  '🏠🏦': 'bank', '🏡': 'house', '🏠🏡': 'house', '👪': 'family', '⚖': 'scales', '⚖️': 'scales', '🪜': 'stairs',
+  '🧮': 'calculator', '📜': 'scroll', '📤': 'send', '🏢': 'building', '🏗️': 'building', '🏗': 'building', '🧭': 'compass',
+  '🌐': 'globe', '💸': 'coin', '🪙': 'coin', '🛡️': 'shield', '🛡': 'shield', '🦷': 'tooth', '👓': 'eye', '👂': 'ear',
+  '🩺': 'stethoscope', '💡': 'bulb', '⚠️': 'warning', '⚠': 'warning', '⚡': 'bolt', 'ℹ️': 'info', 'ℹ': 'info',
+  '◆': 'home', '◈': 'compass', '§': 'book', '∑': 'flask', '◧': 'chart', '↻': 'refresh', '🎉': 'trophy', '🎁': 'trophy',
+  '📄': 'scroll', '📜️': 'scroll', '🏘️': 'house', '🏛️': 'building', '🏨': 'building', '🏬': 'building', '🌊': 'trending-up',
+  '🌱': 'flask', '🧾': 'flask', '🧩': 'target', '🧱': 'building'
+};
+function emo(ch, size, color, sw) { return icoSvg(EMOJI_TO_ICON[ch] || 'dot', size, color, sw); }
 function getUserName() { return (store && store.name) || 'Camille'; }
 var today = function () { return Math.floor(Date.now() / 86400000); };
 
 var PROGRAM = [
-  { n: 1, title: 'Les bases du marché', poles: ['Culture financière'], accent: '#7d6b96',
+  { n: 1, title: 'Les bases du marché', poles: ['Culture financière'], accent: '#00E08F',
     theory: ['th_mc_interets', 'th_mc_capi', 'th_mc_diversif', 'th_mc_risque', 'th_mc_oblig', 'th_mc_options', 'th_mc_macro', 'th_crypto'],
     quiz: ['mc_interets', 'mc_oblig', 'mc_action', 'mc_risque', 'mc_options', 'mc_macro', 'mc_portefeuille', 'mc_produits', 'mc_analyse', 'mc_corpo', 'mc_cas', 'crypto_q'],
     validation: 'Maîtrise du pôle Culture financière ≥ 70 %, toutes les fiches ouvertes au moins une fois.' },
-  { n: 2, title: 'Assurance-vie & capitalisation', poles: ['Les enveloppes'], accent: '#cda96c',
+  { n: 2, title: 'Assurance-vie & capitalisation', poles: ['Les enveloppes'], accent: '#00E08F',
     theory: ['th_av', 'th_av_methodo', 'th_av_appro', 'th_capi', 'th_lux'],
     quiz: ['av_fondamentaux', 'av_rachat', 'lecture_contrat', 'av_appro', 'av_expert', 'capi_fond', 'lux_fond'],
     validation: '"Fondamentaux de l\'AV" et "Rachats & fiscalité" ≥ 75 %. Tu dois savoir citer de tête la règle des 8 ans.' },
-  { n: 3, title: 'PER, PEA, compte-titres', poles: ['Les enveloppes'], accent: '#cda96c',
+  { n: 3, title: 'PER, PEA, compte-titres', poles: ['Les enveloppes'], accent: '#00E08F',
     theory: ['th_per', 'th_per_methodo', 'th_per_appro', 'th_pee', 'th_bourse'],
     quiz: ['per_fondamentaux', 'per_fiscalite', 'per_deblocage', 'per_percol', 'per_prefon', 'per_reseau', 'per_appro', 'pee_perco', 'bourse_pea', 'bourse_cto'],
     validation: 'Session personnalisée "PER" seul, niveau Expert, 15 questions ≥ 75 %.' },
-  { n: 4, title: 'Le pôle le plus dense', poles: ['Supports & actifs'], accent: '#5f7f66',
+  { n: 4, title: 'Le pôle le plus dense', poles: ['Supports & actifs'], accent: '#00E08F',
     theory: ['th_fonds', 'th_lire_etf', 'th_etf_actif', 'th_struct_gen', 'th_struct', 'th_lire_structure', 'th_frais_struct', 'th_lire_dic', 'th_immo_levier', 'th_immo', 'th_scpi', 'th_pe', 'th_pe2'],
     quiz: ['fonds_choix', 'fonds_etf', 'etf_actif', 'struct_dic', 'struct_action', 'struct_lecture', 'frais_struct', 'immo_patrimoine', 'scpi_pierre', 'soc_sci_struct', 'pe_fondamentaux', 'pe_structuration', 'pe_fiscalite', 'pe_strategie'],
     validation: 'Maîtrise du pôle ≥ 65 % (le plus dur, repris en semaine 8). Sais expliquer une barrière de protection.' },
-  { n: 5, title: 'IR, IFI, succession, démembrement', poles: ['Fiscalité & transmission'], accent: '#5b7290',
+  { n: 5, title: 'IR, IFI, succession, démembrement', poles: ['Fiscalité & transmission'], accent: '#00E08F',
     theory: ['th_fisc', 'th_fisc_part_appro', 'th_fisc_patri_appro', 'th_succession', 'th_dutreil', 'th_dem', 'th_mat', 'th_quotient', 'th_ir_escalier', 'th_pvimmo_duree', 'th_av_horssucc'],
     quiz: ['fisc_ir', 'fisc_part_appro', 'fisc_patri_appro', 'fisc_expert', 'succession', 'ing_donation', 'ing_dutreuil', 'dem_fondamentaux', 'dem_expert', 'mat_regimes'],
     validation: '"Démembrement" et "Succession" ≥ 75 %. Sais citer de tête 2 tranches du barème art. 669.' },
-  { n: 6, title: 'Retraite, prévoyance, crédit', poles: ['Retraite & protection', 'Financement & levier'], accent: '#9c6b74',
+  { n: 6, title: 'Retraite, prévoyance, crédit', poles: ['Retraite & protection', 'Financement & levier'], accent: '#F2A900',
     theory: ['th_retraite', 'th_retraite_etages', 'th_prev', 'th_prevoyance', 'th_prev_trou', 'th_lombard', 'th_hypo'],
     quiz: ['retraite_base', 'retraite_compl', 'prev_fondamentaux', 'prev_madelin', 'protection_sociale', 'credit_lombard', 'credit_hypo', 'ing_lombard', 'prev_emprunteur'],
     validation: '"Crédit Lombard" ≥ 75 %. Sais expliquer un appel de marge sans relire le cours.' },
-  { n: 7, title: 'Ingénierie & réglementation', poles: ['Entreprise & ingénierie', 'Métier & méthode'], accent: '#788a52',
+  { n: 7, title: 'Ingénierie & réglementation', poles: ['Entreprise & ingénierie', 'Métier & méthode'], accent: '#00E08F',
     theory: ['th_soc', 'th_gerance_appro', 'th_entreprise_appro', 'th_ing', 'th_holding_sci', 'th_holding_flux', 'th_reg', 'th_amf', 'th_grille_methode', 'th_grille_per', 'th_grille_struct', 'th_arbitrage', 'th_vocab', 'th_esg'],
     quiz: ['soc_ei_micro', 'soc_sarl', 'soc_sas', 'soc_sel', 'gerance_appro', 'entreprise_appro', 'ing_expert', 'soc_holding', 'soc_holding_v8', 'soc_mbo', 'soc_holding_sci', 'ing_150bter', 'reg_mif', 'reg_lcb', 'amf', 'arbitrage', 'reg_esg'],
     validation: '"Certification AMF" ≥ 80 %. "Holding" ≥ 70 %.' },
-  { n: 8, title: 'Rattrapage ciblé', poles: [], accent: '#a8432f', consolidation: true,
+  { n: 8, title: 'Rattrapage ciblé', poles: [], accent: '#FF6B6B', consolidation: true,
     theory: [], quiz: [],
     validation: 'Examen blanc Niveau 1 ≥ 85 %, Niveau 2 ≥ 75 %, aucun pôle sous 70 % dans Stats.' },
-  { n: 9, title: 'Conditions réelles', poles: [], accent: '#a9814a', consolidation: true,
+  { n: 9, title: 'Conditions réelles', poles: [], accent: '#3DA9FC', consolidation: true,
     theory: [], quiz: [],
     validation: 'Niveau 3 · Technique ≥ 80 % sur 2 tentatives. Mise à niveau générale ≥ 85 %.' }
 ];
@@ -947,12 +1018,12 @@ function computeVals() {
   v.coursePoles = v.fichesByPole.map(function (g) {
     var avgPct = g.fiches.length ? pctOf(g.label) : 0;
     var readCount = g.fiches.filter(function (f) { return !!(S.fichesSeen && S.fichesSeen[f.key]); }).length;
-    return { label: g.label, count: g.fiches.length, accent: poleAccent(g.label), glyph: poleGlyph(g.label), pct: avgPct, readCount: readCount };
+    return { label: g.label, count: g.fiches.length, accent: poleAccent(g.label), glyph: poleGlyph(g.label, 64), pct: avgPct, readCount: readCount };
   });
   v.isCoursePole = scr === 'coursePole';
   v.coursePoleLabel = st.coursePoleSel || '';
   v.coursePoleAccent = poleAccent(st.coursePoleSel || '');
-  v.coursePoleGlyph = poleGlyph(st.coursePoleSel || '');
+  v.coursePoleGlyph = poleGlyph(st.coursePoleSel || '', 22);
   var selGroup = v.fichesByPole.find(function (g) { return g.label === st.coursePoleSel; });
   v.coursePoleFichesList = selGroup ? selGroup.fiches : [];
   v.coursePolePct = selGroup ? pctOf(selGroup.label) : 0;
@@ -1308,6 +1379,7 @@ function computeVals() {
   }
   var fmtDay2 = function (d) { var dt = new Date(d * 86400000); return ('0' + dt.getDate()).slice(-2) + '/' + ('0' + (dt.getMonth() + 1)).slice(-2); };
   v.masteryHistory = (S.history || []).map(function (h) { return { d: h.d, mastery: h.mastery, label: fmtDay2(h.d) }; });
+  v.masteryDelta = v.masteryHistory.length >= 2 ? (v.masteryHistory[v.masteryHistory.length - 1].mastery - v.masteryHistory[0].mastery) : 0;
   v.parcoursStartedFlag = !!(S.programStart != null);
   v.parcoursWeekLabel = S.programStart != null ? 'Semaine ' + v.parcoursCurrentWeek + ' / 9' : 'Pas encore commencé';
 
@@ -1347,22 +1419,24 @@ function scoreKwPoints(rawTxt, points) {
 }
 function hexA(hex, a) {
   var h = (hex || '').replace('#', '');
-  if (h.length !== 6) return 'rgba(169,129,74,' + a + ')';
+  if (h.length !== 6) return 'rgba(0,224,143,' + a + ')';
   var r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16);
   return 'rgba(' + r + ',' + g + ',' + b + ',' + a + ')';
 }
 var poleStyle = {
-  'Les enveloppes': { accent: '#cda96c', glyph: '🛡️' },
-  'Supports & actifs': { accent: '#5f7f66', glyph: '📈' },
-  'Financement & levier': { accent: '#a8432f', glyph: '⚖️' },
-  'Retraite & protection': { accent: '#9c6b74', glyph: '🕰️' },
-  'Fiscalité & transmission': { accent: '#5b7290', glyph: '📜' },
-  'Entreprise & ingénierie': { accent: '#788a52', glyph: '🏢' },
-  'Métier & méthode': { accent: '#a9814a', glyph: '🎯' },
-  'Culture financière': { accent: '#7d6b96', glyph: '🌐' }
+  /* Système sobre : le vert domine ; l'ambre ne marque que le pôle à risque
+     de levier (crédit), seul signal "attention" parmi les pôles. */
+  'Les enveloppes': { accent: '#00E08F', glyph: 'shield' },
+  'Supports & actifs': { accent: '#00E08F', glyph: 'trending-up' },
+  'Financement & levier': { accent: '#F2A900', glyph: 'scales' },
+  'Retraite & protection': { accent: '#00E08F', glyph: 'clock' },
+  'Fiscalité & transmission': { accent: '#00E08F', glyph: 'scroll' },
+  'Entreprise & ingénierie': { accent: '#00E08F', glyph: 'building' },
+  'Métier & méthode': { accent: '#00E08F', glyph: 'target' },
+  'Culture financière': { accent: '#00E08F', glyph: 'globe' }
 };
 function poleAccent(p) { return (poleStyle[p] && poleStyle[p].accent) || 'var(--acc)'; }
-function poleGlyph(p) { return (poleStyle[p] && poleStyle[p].glyph) || '📘'; }
+function poleGlyph(p, size) { return icoSvg((poleStyle[p] && poleStyle[p].glyph) || 'book', size || 16); }
 function splitCalcExplain(explain, correct) {
   if (!explain) return { formula: '', narrative: '' };
   if (/^Formule\b/.test(explain)) {
@@ -1407,34 +1481,35 @@ function esc(s) {
 
 function tplOption(o) {
   var out = '', delay = (o.i * 0.05).toFixed(2) + 's';
-  var badge = function (col, fill, glyph) {
-    return '<span style="flex-shrink:0;width:25px;height:25px;border-radius:50%;' + (fill ? 'background:' + col + ';color:var(--on);' : 'border:1px solid ' + col + ';color:' + col + ';') + 'display:flex;align-items:center;justify-content:center;font:500 12px Fraunces,serif;">' + (glyph || o.letter) + '</span>';
+  var badge = function (cls, glyph) {
+    return '<span class="opt-badge ' + cls + '">' + (glyph || o.letter) + '</span>';
   };
-  if (o.pending) out += '<button data-action="answerQcm" data-i="' + o.i + '" class="hv-b stagger" style="animation-delay:' + delay + ';display:flex;gap:14px;align-items:flex-start;text-align:left;background:none;border:none;border-bottom:1px solid var(--rule);width:100%;padding:15px 2px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">' + badge('var(--ink3)') + '<span style="padding-top:2px;">' + esc(o.text) + '</span></button>';
-  if (o.good) out += '<div class="stagger" style="animation-delay:' + delay + ';display:flex;gap:14px;align-items:flex-start;border-bottom:1px solid var(--rule);padding:15px 2px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--ink);background:' + hexA('#5f7f66', 0.14) + ';animation:kfPop .3s ease both;">' + badge('var(--acc2)', true, '✓') + '<span style="padding-top:2px;">' + esc(o.text) + '</span></div>';
-  if (o.bad) out += '<div class="shake" style="display:flex;gap:14px;align-items:flex-start;border-bottom:1px solid var(--rule);padding:15px 2px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--warn);background:' + hexA('#a8432f', 0.1) + ';">' + badge('var(--warn)', true, '✕') + '<span style="padding-top:2px;">' + esc(o.text) + '</span></div>';
-  if (o.mute) out += '<div class="stagger" style="animation-delay:' + delay + ';display:flex;gap:14px;align-items:flex-start;border-bottom:1px solid var(--rule);padding:15px 2px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--ink3);">' + badge('var(--line)') + '<span style="padding-top:2px;">' + esc(o.text) + '</span></div>';
-  if (o.sel) out += '<div class="shake" style="display:flex;gap:14px;align-items:flex-start;border-bottom:1px solid var(--rule);padding:15px 2px;font:400 13px/1.55 \'Inter\',sans-serif;color:var(--ink);background:var(--panel2);">' + badge('var(--ink3)') + '<span style="padding-top:2px;">' + esc(o.text) + '</span></div>';
+  if (o.pending) out += '<button data-action="answerQcm" data-i="' + o.i + '" class="hv-b stagger opt-row" style="animation-delay:' + delay + ';">' + badge('') + '<span style="padding-top:1px;">' + esc(o.text) + '</span></button>';
+  if (o.good) out += '<div class="stagger opt-row good" style="animation-delay:' + delay + ';animation:kfPop .3s ease both;">' + badge('on', icoSvg('check', 13, 'var(--on)')) + '<span style="padding-top:1px;">' + esc(o.text) + '</span></div>';
+  if (o.bad) out += '<div class="shake opt-row bad">' + badge('off', icoSvg('cross', 13, '#2a0b0b')) + '<span style="padding-top:1px;">' + esc(o.text) + '</span></div>';
+  if (o.mute) out += '<div class="stagger opt-row mute" style="animation-delay:' + delay + ';">' + badge('') + '<span style="padding-top:1px;">' + esc(o.text) + '</span></div>';
+  if (o.sel) out += '<div class="shake opt-row sel">' + badge('') + '<span style="padding-top:1px;">' + esc(o.text) + '</span></div>';
   return out;
 }
 function tplVf(b) {
   var out = '', delay = (b.i * 0.06).toFixed(2) + 's';
-  if (b.pending) out += '<button data-action="answerVf" data-i="' + b.i + '" class="hv-b stagger" style="animation-delay:' + delay + ';flex:1;background:none;border:1px solid var(--line);padding:24px 0;font:400 23px Fraunces,serif;color:var(--ink);cursor:pointer;">' + esc(b.label) + '</button>';
-  if (b.good) out += '<div style="flex:1;border:1px solid var(--acc2);background:' + hexA('#5f7f66', 0.16) + ';padding:24px 0;text-align:center;font:400 23px Fraunces,serif;color:var(--ink);animation:kfPop .3s ease both;">✓ ' + esc(b.label) + '</div>';
-  if (b.bad) out += '<div class="shake" style="flex:1;border:1px solid var(--warn);background:' + hexA('#a8432f', 0.1) + ';padding:24px 0;text-align:center;font:400 23px Fraunces,serif;color:var(--warn);">✕ ' + esc(b.label) + '</div>';
-  if (b.mute) out += '<div style="flex:1;border:1px solid var(--line);padding:24px 0;text-align:center;font:400 23px Fraunces,serif;color:var(--dim);">' + esc(b.label) + '</div>';
-  if (b.sel) out += '<div class="shake" style="flex:1;border:1px solid var(--ink3);background:var(--panel2);padding:24px 0;text-align:center;font:400 23px Fraunces,serif;color:var(--ink);">' + esc(b.label) + '</div>';
+  var base = 'flex:1;border-radius:12px;padding:22px 0;text-align:center;font:700 18px \'Manrope\',sans-serif;display:flex;flex-direction:column;align-items:center;gap:8px;';
+  if (b.pending) out += '<button data-action="answerVf" data-i="' + b.i + '" class="hv-b stagger" style="animation-delay:' + delay + ';' + base + 'background:none;border:1px solid var(--line);color:var(--ink);cursor:pointer;">' + esc(b.label) + '</button>';
+  if (b.good) out += '<div style="' + base + 'border:1px solid var(--acc);background:rgba(0,224,143,.12);color:var(--ink);animation:kfPop .3s ease both;">' + icoSvg('check', 18, 'var(--acc)') + esc(b.label) + '</div>';
+  if (b.bad) out += '<div class="shake" style="' + base + 'border:1px solid var(--bad);background:rgba(255,107,107,.1);color:var(--bad);">' + icoSvg('cross', 18, 'var(--bad)') + esc(b.label) + '</div>';
+  if (b.mute) out += '<div style="' + base + 'border:1px solid var(--line);color:var(--dim);">' + esc(b.label) + '</div>';
+  if (b.sel) out += '<div class="shake" style="' + base + 'border:1px solid var(--ink3);background:var(--panel2);color:var(--ink);">' + esc(b.label) + '</div>';
   return out;
 }
 function tplCalc(v) {
   var keys = v.keys.map(function (k) {
-    return '<button data-action="calcKey" data-k="' + esc(k) + '" class="hv-a" style="background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 0;font:500 17px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">' + esc(k) + '</button>';
+    return '<button data-action="calcKey" data-k="' + esc(k) + '" class="hv-a" style="background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px 0;font:500 17px \'Manrope\',sans-serif;color:var(--ink);cursor:pointer;">' + esc(k) + '</button>';
   }).join('');
   return '<div style="margin-top:24px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;">' +
-    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">VOTRE RÉPONSE</div>' +
+    '<div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);">VOTRE RÉPONSE</div>' +
     '<div style="display:flex;align-items:baseline;gap:10px;margin-top:10px;border-bottom:2px solid var(--acc);padding-bottom:8px;">' +
-    '<div style="flex:1;font:500 30px \'Inter\',sans-serif;letter-spacing:-.02em;">' + esc(v.calcDisplay) + '</div>' +
-    '<div style="font:500 15px \'Inter\',sans-serif;color:var(--ink3);">' + esc(v.qUnit) + '</div></div>' +
+    '<div style="flex:1;font:500 30px \'Manrope\',sans-serif;letter-spacing:-.02em;">' + esc(v.calcDisplay) + '</div>' +
+    '<div style="font:500 15px \'Manrope\',sans-serif;color:var(--ink3);">' + esc(v.qUnit) + '</div></div>' +
     (v.calcOpen ? '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:16px;">' + keys + '</div>' : '') +
     '</div>';
 }
@@ -1442,19 +1517,19 @@ function tplTexte(v) {
   var out = '<div style="margin-top:16px;">';
   var placeholder = 'Tapez les mots-clés de votre réponse, séparés par des virgules (quelques mots par idée suffisent)…';
   if (v.texteOpen) {
-    out += '<textarea data-texte-input placeholder="' + placeholder + '" style="width:100%;box-sizing:border-box;min-height:110px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;font:400 13px/1.65 \'Inter\',sans-serif;color:var(--ink);resize:none;">' + esc(v.texteVal) + '</textarea>' +
-      '<div style="font:400 11px \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;">Validé automatiquement : pas besoin de phrases, les mots-clés attendus suffisent.</div>';
+    out += '<textarea data-texte-input placeholder="' + placeholder + '" style="width:100%;box-sizing:border-box;min-height:110px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;font:400 13px/1.65 \'Manrope\',sans-serif;color:var(--ink);resize:none;">' + esc(v.texteVal) + '</textarea>' +
+      '<div style="font:400 11px \'Manrope\',sans-serif;color:var(--ink3);margin-top:8px;">Validé automatiquement : pas besoin de phrases, les mots-clés attendus suffisent.</div>';
   }
   if (v.texteDone) {
-    out += '<div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;font:400 12.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);">' + (v.texteVal ? esc(v.texteVal) : '<i>(réponse vide)</i>') + '</div>';
+    out += '<div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;font:400 12.5px/1.7 \'Manrope\',sans-serif;color:var(--ink2);">' + (v.texteVal ? esc(v.texteVal) : '<i>(réponse vide)</i>') + '</div>';
     if (v.openPoints) {
-      out += '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin:18px 0 8px;">MOTS-CLÉS ATTENDUS</div>' +
+      out += '<div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin:18px 0 8px;">MOTS-CLÉS ATTENDUS</div>' +
         '<div style="display:flex;flex-direction:column;gap:6px;">' + v.openPoints.map(function (p) {
-          return '<div style="display:flex;gap:9px;align-items:flex-start;font:400 12.5px/1.5 \'Inter\',sans-serif;color:' + (p.got ? 'var(--ink)' : 'var(--ink3)') + ';"><span style="color:' + (p.got ? 'var(--acc)' : 'var(--dim)') + ';flex-shrink:0;">' + (p.got ? '✓' : '○') + '</span><span>' + esc(p.k) + '</span></div>';
+          return '<div style="display:flex;gap:9px;align-items:flex-start;font:400 12.5px/1.5 \'Manrope\',sans-serif;color:' + (p.got ? 'var(--ink)' : 'var(--ink3)') + ';"><span style="color:' + (p.got ? 'var(--acc)' : 'var(--dim)') + ';flex-shrink:0;">' + (p.got ? icoSvg('check', 12) : icoSvg('ring', 12)) + '</span><span>' + esc(p.k) + '</span></div>';
         }).join('') + '</div>';
     }
-    out += '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--acc);margin:18px 0 8px;">RÉPONSE MODÈLE</div>' +
-      '<div style="font:400 13px/1.75 \'Inter\',sans-serif;color:var(--ink);">' + esc(v.qModele) + '</div>';
+    out += '<div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--acc);margin:18px 0 8px;">RÉPONSE MODÈLE</div>' +
+      '<div style="font:400 13px/1.75 \'Manrope\',sans-serif;color:var(--ink);">' + esc(v.qModele) + '</div>';
   }
   out += '</div>';
   return out;
@@ -1463,18 +1538,18 @@ function tplTexte(v) {
 function tplOrder(v) {
   var items = v.orderItems.map(function (it) {
     return '<div data-order-row data-idx="' + it.idx + '" style="display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 13px;">' +
-      '<span style="flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font:600 12px \'Inter\',sans-serif;color:var(--ink2);">' + (it.pos + 1) + '</span>' +
-      '<span style="flex:1;font:400 12.5px/1.4 \'Inter\',sans-serif;">' + esc(it.text) + '</span>' +
+      '<span style="flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font:600 12px \'Manrope\',sans-serif;color:var(--ink2);">' + (it.pos + 1) + '</span>' +
+      '<span style="flex:1;font:400 12.5px/1.4 \'Manrope\',sans-serif;">' + esc(it.text) + '</span>' +
       (v.showValidate ? '<span style="display:flex;flex-direction:column;gap:5px;flex-shrink:0;">' +
         '<button data-action="orderUp" data-pos="' + it.pos + '"' + (it.isFirst ? ' disabled' : '') + ' aria-label="Monter" style="width:34px;height:26px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--ink);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;' + (it.isFirst ? 'opacity:.3;' : '') + '">▲</button>' +
         '<button data-action="orderDown" data-pos="' + it.pos + '"' + (it.isLast ? ' disabled' : '') + ' aria-label="Descendre" style="width:34px;height:26px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--ink);cursor:pointer;font-size:13px;display:flex;align-items:center;justify-content:center;' + (it.isLast ? 'opacity:.3;' : '') + '">▼</button></span>' : '') +
       '</div>';
   }).join('');
-  var out = '<div style="margin-top:14px;font:400 12px/1.5 \'Inter\',sans-serif;color:var(--ink2);">' + esc(v.orderConsigne) + '</div>' +
+  var out = '<div style="margin-top:14px;font:400 12px/1.5 \'Manrope\',sans-serif;color:var(--ink2);">' + esc(v.orderConsigne) + '</div>' +
     '<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">' + items + '</div>';
   if (!v.showValidate && v.orderCorrectList && v.orderCorrectList.length) {
-    out += '<div style="margin-top:16px;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">ORDRE ATTENDU</div>' +
-      '<ol style="margin:8px 0 0;padding-left:20px;font:400 12.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);">' + v.orderCorrectList.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ol></div>';
+    out += '<div style="margin-top:16px;"><div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);">ORDRE ATTENDU</div>' +
+      '<ol style="margin:8px 0 0;padding-left:20px;font:400 12.5px/1.7 \'Manrope\',sans-serif;color:var(--ink2);">' + v.orderCorrectList.map(function (t) { return '<li>' + esc(t) + '</li>'; }).join('') + '</ol></div>';
   }
   return out;
 }
@@ -1482,34 +1557,34 @@ function tplOrder(v) {
 function tplMemviz(v) {
   if (v.memvizPhase === 'announce') {
     return '<div style="margin-top:24px;padding:24px;background:var(--panel);border:1px solid var(--line);border-radius:18px;text-align:center;">' +
-      '<div style="font-size:30px;">🧠</div>' +
-      '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.14em;color:var(--gold);margin-top:12px;">QUESTION DE MÉMORISATION</div>' +
-      '<div style="font:400 13px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;">Le visuel va s\'afficher ' + v.memvizNextTime + ' secondes. Mémorise bien les éléments en surbrillance : ils seront ensuite masqués et à retrouver.</div>' +
+      '<div style="color:var(--info);display:flex;justify-content:center;">' + icoSvg('brain', 30) + '</div>' +
+      '<div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.14em;color:var(--info);margin-top:12px;">QUESTION DE MÉMORISATION</div>' +
+      '<div style="font:400 13px/1.6 \'Manrope\',sans-serif;color:var(--ink2);margin-top:10px;">Le visuel va s\'afficher ' + v.memvizNextTime + ' secondes. Mémorise bien les éléments en surbrillance : ils seront ensuite masqués et à retrouver.</div>' +
       '<button data-action="memvizStart" class="btn-cta-sm" style="margin-top:16px;">Je suis prêt·e, afficher</button>' +
       '</div>';
   }
   if (v.memvizPhase === 'memorize') {
     var pct = Math.max(0, Math.min(100, v.memvizTimeLeft / v.memvizTimeTotal * 100));
     return '<div style="margin-top:16px;display:flex;align-items:center;gap:12px;">' +
-      '<div style="flex:1;height:4px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="height:4px;width:' + pct + '%;background:linear-gradient(90deg,var(--acc2),var(--gold));transition:width 1s linear;"></div></div>' +
-      '<div style="font:600 13px \'Inter\',sans-serif;color:' + (v.memvizTimeLeft <= 3 ? 'var(--warn)' : 'var(--gold)') + ';flex-shrink:0;">' + v.memvizTimeLeft + ' s</div></div>' +
+      '<div style="flex:1;height:4px;border-radius:3px;background:var(--line);overflow:hidden;"><div style="height:4px;width:' + pct + '%;background:' + (v.memvizTimeLeft <= 3 ? 'var(--bad)' : 'var(--due)') + ';transition:width 1s linear;"></div></div>' +
+      '<div style="font:600 13px \'Manrope\',sans-serif;color:' + (v.memvizTimeLeft <= 3 ? 'var(--bad)' : 'var(--due)') + ';flex-shrink:0;">' + v.memvizTimeLeft + ' s</div></div>' +
       '<div style="margin-top:14px;border-radius:16px;overflow:hidden;background:#f5efe1;">' + v.memvizFullSvg + '</div>' +
-      '<div style="text-align:center;margin-top:14px;"><button data-action="memvizSkipToRecall" style="background:none;border:none;color:var(--ink3);font:400 11.5px \'Inter\',sans-serif;cursor:pointer;text-decoration:underline;">J\'ai fini de mémoriser →</button></div>';
+      '<div style="text-align:center;margin-top:14px;"><button data-action="memvizSkipToRecall" style="background:none;border:none;color:var(--ink3);font:400 11.5px \'Manrope\',sans-serif;cursor:pointer;text-decoration:underline;">J\'ai fini de mémoriser →</button></div>';
   }
   var svg = v.memvizResult ? v.memvizFullSvg : v.memvizBlankSvg;
   var out = '<div style="margin-top:14px;border-radius:16px;overflow:hidden;background:#f5efe1;">' + svg + '</div>';
   if (v.memvizResult) {
     out += '<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">' + v.memvizResult.map(function (r) {
-      var col = r.ok ? 'var(--acc2)' : 'var(--warn)';
+      var col = r.ok ? 'var(--acc2)' : 'var(--bad)';
       return '<div style="display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px;">' +
-        '<span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:' + hexA(col, 0.18) + ';border:1px solid ' + hexA(col, 0.4) + ';display:flex;align-items:center;justify-content:center;font:600 10px \'Inter\',sans-serif;color:' + col + ';">' + (r.ok ? '✓' : '✕') + '</span>' +
-        '<span style="flex:1;font:400 12px/1.5 \'Inter\',sans-serif;color:var(--ink2);">' + (r.given ? 'Votre réponse : <b style="color:var(--ink);">' + esc(r.given) + '</b>' : '<i style="color:var(--dim);">Pas de réponse</i>') + (!r.ok ? ' — Bonne réponse : <b style="color:' + col + ';">' + esc(r.text) + '</b>' : '') + '</span>' +
+        '<span style="flex-shrink:0;width:20px;height:20px;border-radius:50%;background:' + hexA(col, 0.18) + ';border:1px solid ' + hexA(col, 0.4) + ';display:flex;align-items:center;justify-content:center;color:' + col + ';">' + icoSvg(r.ok ? 'check' : 'cross', 11) + '</span>' +
+        '<span style="flex:1;font:400 12px/1.5 \'Manrope\',sans-serif;color:var(--ink2);">' + (r.given ? 'Votre réponse : <b style="color:var(--ink);">' + esc(r.given) + '</b>' : '<i style="color:var(--dim);">Pas de réponse</i>') + (!r.ok ? ' — Bonne réponse : <b style="color:' + col + ';">' + esc(r.text) + '</b>' : '') + '</span>' +
         '</div>';
     }).join('') + '</div>';
   } else {
     out += '<div style="display:flex;flex-direction:column;gap:10px;margin-top:14px;">' + v.memvizInputs.map(function (inp) {
-      return '<div><label style="display:block;font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-bottom:5px;">ÉLÉMENT MASQUÉ ' + inp.n + '</label>' +
-        '<input data-memviz-input data-i="' + inp.i + '" value="' + esc(inp.value) + '" placeholder="Votre réponse" style="width:100%;box-sizing:border-box;font:500 14px \'Inter\',sans-serif;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--ink);outline:none;" /></div>';
+      return '<div><label style="display:block;font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-bottom:5px;">ÉLÉMENT MASQUÉ ' + inp.n + '</label>' +
+        '<input data-memviz-input data-i="' + inp.i + '" value="' + esc(inp.value) + '" placeholder="Votre réponse" style="width:100%;box-sizing:border-box;font:500 14px \'Manrope\',sans-serif;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--ink);outline:none;" /></div>';
     }).join('') + '</div>';
   }
   return out;
@@ -1517,70 +1592,110 @@ function tplMemviz(v) {
 
 function confettiHtml() {
   var pieces = [
-    ['8%', '0', '7px', '12px', '2px', '#cda96c', '2.4s', '.05s'],
-    ['18%', '0', '6px', '10px', '2px', '#a9814a', '2.8s', '.3s'],
-    ['28%', '0', '8px', '8px', '50%', '#5f7f66', '2.2s', '.18s'],
-    ['37%', '0', '6px', '13px', '2px', '#c97b52', '3s', '.5s'],
-    ['46%', '0', '7px', '11px', '2px', '#cda96c', '2.6s', '.1s'],
-    ['55%', '0', '9px', '9px', '50%', '#a9814a', '2.9s', '.42s'],
-    ['64%', '0', '6px', '12px', '2px', '#5f7f66', '2.3s', '.24s'],
-    ['73%', '0', '7px', '10px', '2px', '#cda96c', '3.1s', '.6s'],
-    ['82%', '0', '8px', '8px', '50%', '#c97b52', '2.5s', '.34s'],
-    ['91%', '0', '6px', '12px', '2px', '#a9814a', '2.7s', '.14s']
+    ['8%', '0', '7px', '12px', '2px', '#00E08F', '2.4s', '.05s'],
+    ['18%', '0', '6px', '10px', '2px', '#3DA9FC', '2.8s', '.3s'],
+    ['28%', '0', '8px', '8px', '50%', '#00E08F', '2.2s', '.18s'],
+    ['37%', '0', '6px', '13px', '2px', '#F2A900', '3s', '.5s'],
+    ['46%', '0', '7px', '11px', '2px', '#00E08F', '2.6s', '.1s'],
+    ['55%', '0', '9px', '9px', '50%', '#3DA9FC', '2.9s', '.42s'],
+    ['64%', '0', '6px', '12px', '2px', '#00E08F', '2.3s', '.24s'],
+    ['73%', '0', '7px', '10px', '2px', '#00E08F', '3.1s', '.6s'],
+    ['82%', '0', '8px', '8px', '50%', '#F2A900', '2.5s', '.34s'],
+    ['91%', '0', '6px', '12px', '2px', '#00E08F', '2.7s', '.14s']
   ];
   return pieces.map(function (p) {
     return '<span style="position:absolute;left:' + p[0] + ';top:' + p[1] + ';width:' + p[2] + ';height:' + p[3] + ';border-radius:' + p[4] + ';background:' + p[5] + ';animation:kfFall ' + p[6] + ' linear ' + p[7] + ' both;"></span>';
   }).join('');
 }
 
+/* ==== Illustrations line-art — compositions originales, même langage que
+   les sparklines (traits fins, vert dominant, fond sombre). Pas de mascotte,
+   pas de confettis génériques : des courbes et points de données. ============ */
+function illuOnboarding() {
+  return '<svg viewBox="0 0 280 170" style="width:100%;max-width:280px;height:auto;display:block;margin:0 auto;">' +
+    '<defs><linearGradient id="illuG1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00E08F" stop-opacity=".35"/><stop offset="100%" stop-color="#00E08F" stop-opacity="0"/></linearGradient></defs>' +
+    '<g opacity=".5"><circle cx="30" cy="30" r="1.4" fill="#2A3142"/><circle cx="70" cy="30" r="1.4" fill="#2A3142"/><circle cx="110" cy="30" r="1.4" fill="#2A3142"/><circle cx="150" cy="30" r="1.4" fill="#2A3142"/><circle cx="190" cy="30" r="1.4" fill="#2A3142"/><circle cx="230" cy="30" r="1.4" fill="#2A3142"/>' +
+    '<circle cx="30" cy="70" r="1.4" fill="#2A3142"/><circle cx="70" cy="70" r="1.4" fill="#2A3142"/><circle cx="110" cy="70" r="1.4" fill="#2A3142"/><circle cx="150" cy="70" r="1.4" fill="#2A3142"/><circle cx="190" cy="70" r="1.4" fill="#2A3142"/><circle cx="230" cy="70" r="1.4" fill="#2A3142"/>' +
+    '<circle cx="30" cy="110" r="1.4" fill="#2A3142"/><circle cx="70" cy="110" r="1.4" fill="#2A3142"/><circle cx="110" cy="110" r="1.4" fill="#2A3142"/><circle cx="150" cy="110" r="1.4" fill="#2A3142"/><circle cx="190" cy="110" r="1.4" fill="#2A3142"/><circle cx="230" cy="110" r="1.4" fill="#2A3142"/></g>' +
+    '<path d="M20,138 L20,142 L260,142" stroke="#1C2130" stroke-width="1.5"/>' +
+    '<path d="M20,132 C55,132 70,118 95,98 C120,78 135,50 165,42 C195,34 215,56 260,24" fill="none" stroke="#00E08F" stroke-width="2.5" stroke-linecap="round"/>' +
+    '<path d="M20,132 C55,132 70,118 95,98 C120,78 135,50 165,42 C195,34 215,56 260,24 L260,142 L20,142 Z" fill="url(#illuG1)" stroke="none"/>' +
+    '<circle cx="95" cy="98" r="3.4" fill="#0B0E14" stroke="#00E08F" stroke-width="2"/>' +
+    '<circle cx="165" cy="42" r="3.4" fill="#0B0E14" stroke="#00E08F" stroke-width="2"/>' +
+    '<circle cx="260" cy="24" r="4.2" fill="#00E08F"/>' +
+    '<g transform="translate(205,8)"><rect x="0" y="0" width="46" height="20" rx="10" fill="rgba(0,224,143,.14)"/><path d="M9 14 L9 7 M6 10 L9 7 L12 10" stroke="#00E08F" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><text x="34" y="14" text-anchor="middle" font-family="Manrope,sans-serif" font-weight="700" font-size="10" fill="#00E08F">+24%</text></g>' +
+    '</svg>';
+}
+function illuEmpty(label) {
+  return '<svg viewBox="0 0 220 140" style="width:100%;max-width:200px;height:auto;display:block;margin:0 auto;">' +
+    '<path d="M20,96 C55,96 60,80 90,80 C120,80 125,96 160,96 C180,96 190,90 200,96" fill="none" stroke="#1C2130" stroke-width="2" stroke-dasharray="1 7" stroke-linecap="round"/>' +
+    '<circle cx="110" cy="58" r="30" fill="rgba(0,224,143,.08)" stroke="#1C2130" stroke-width="1.5"/>' +
+    '<path d="M96 58 L106 68 L126 46" fill="none" stroke="#00E08F" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<circle cx="54" cy="40" r="2" fill="#2A3142"/><circle cx="168" cy="36" r="2" fill="#2A3142"/><circle cx="180" cy="82" r="2" fill="#2A3142"/>' +
+    '</svg>';
+}
+function illuSuccess() {
+  return '<svg viewBox="0 0 240 160" style="width:100%;max-width:240px;height:auto;display:block;margin:0 auto;">' +
+    '<defs><linearGradient id="illuG2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#00E08F" stop-opacity=".3"/><stop offset="100%" stop-color="#00E08F" stop-opacity="0"/></linearGradient></defs>' +
+    '<circle cx="190" cy="34" r="30" fill="none" stroke="rgba(0,224,143,.18)" stroke-width="1.5"/>' +
+    '<circle cx="190" cy="34" r="42" fill="none" stroke="rgba(0,224,143,.1)" stroke-width="1.5"/>' +
+    '<path d="M16,128 C50,128 66,110 86,96 C106,82 120,60 142,48 C164,36 174,40 190,20" fill="none" stroke="#00E08F" stroke-width="2.6" stroke-linecap="round"/>' +
+    '<path d="M16,128 C50,128 66,110 86,96 C106,82 120,60 142,48 C164,36 174,40 190,20 L190,140 L16,140 Z" fill="url(#illuG2)" stroke="none"/>' +
+    '<circle cx="86" cy="96" r="3" fill="#0B0E14" stroke="#00E08F" stroke-width="2"/>' +
+    '<circle cx="142" cy="48" r="3" fill="#0B0E14" stroke="#00E08F" stroke-width="2"/>' +
+    '<g transform="translate(176,6)"><circle cx="14" cy="14" r="14" fill="#00E08F"/><path d="M8 14.5 12 18.5 20 9.5" fill="none" stroke="#06241A" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></g>' +
+    '</svg>';
+}
+
 function tplOnb(v) {
   var out = '<div style="flex:1;display:flex;flex-direction:column;padding:60px 26px 40px;overflow:auto;position:relative;">' +
     '<div style="display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--rule);padding-bottom:12px;">' +
-    '<span style="font:600 10px \'Inter\',sans-serif;letter-spacing:.16em;color:var(--acc);">DOSSIER N° CGP·26</span>' +
-    '<span style="font:500 10px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--ink3);">' + esc(v.onbStepLabel) + '</span></div>';
+    '<span style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.16em;color:var(--acc);">DOSSIER N° CGP·26</span>' +
+    '<span style="font:500 10px \'Manrope\',sans-serif;letter-spacing:.1em;color:var(--ink3);">' + esc(v.onbStepLabel) + '</span></div>';
   if (v.onbName) {
     out += '<div class="folio-num" style="font-size:40px;margin-top:26px;">Comment doit-on<br><span style="font-style:italic;color:var(--acc);">vous appeler</span> ?</div>' +
-      '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:18px;">Pour personnaliser vos rappels, votre tableau de bord et vos statistiques.</div>' +
-      '<input data-name-input value="' + esc(v.nameInput || '') + '" placeholder="Votre prénom" maxlength="24" style="margin-top:24px;background:var(--panel);border:1px solid var(--line);border-bottom:2px solid var(--acc);border-radius:4px;padding:17px 18px;font:500 16px \'Inter\',sans-serif;color:var(--ink);outline:none;" />' +
+      '<div style="font:400 13.5px/1.7 \'Manrope\',sans-serif;color:var(--ink2);margin-top:18px;">Pour personnaliser vos rappels, votre tableau de bord et vos statistiques.</div>' +
+      '<input data-name-input value="' + esc(v.nameInput || '') + '" placeholder="Votre prénom" maxlength="24" style="margin-top:24px;background:var(--panel);border:1px solid var(--line);border-bottom:2px solid var(--acc);border-radius:4px;padding:17px 18px;font:500 16px \'Manrope\',sans-serif;color:var(--ink);outline:none;" />' +
       '<div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">' +
       '<button data-action="onbNameNext" class="btn-cta">Continuer</button>' +
-      '<button data-action="onbNameSkip" style="background:none;border:none;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink3);cursor:pointer;">Passer</button></div>';
+      '<button data-action="onbNameSkip" style="background:none;border:none;padding:12px;font:500 12.5px \'Manrope\',sans-serif;color:var(--ink3);cursor:pointer;">Passer</button></div>';
   }
   if (v.onb0) {
-    out += '<div class="folio-num" style="font-size:46px;margin-top:26px;">Préparez la<br><span style="font-style:italic;color:var(--acc);">certification</span><br>en dix minutes par jour.</div>' +
-      '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:18px;">' + v.totalQ + ' questions, ' + v.ficheCount + ' fiches, ' + v.poleChips.length + ' pôles. L\'application choisit à votre place ce qu\'il faut revoir.</div>' +
+    out += '<div style="margin-top:10px;">' + illuOnboarding() + '</div>' +
+      '<div class="folio-num" style="font-size:40px;margin-top:22px;">Préparez la <span style="color:var(--acc);">certification</span><br>en dix minutes par jour.</div>' +
+      '<div style="font:400 13.5px/1.7 \'Manrope\',sans-serif;color:var(--ink2);margin-top:18px;">' + v.totalQ + ' questions, ' + v.ficheCount + ' fiches, ' + v.poleChips.length + ' pôles. L\'application choisit à votre place ce qu\'il faut revoir.</div>' +
       '<div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">' +
       '<button data-action="onbNext" class="btn-cta">Commencer</button>' +
-      '<button data-action="goHome" style="background:none;border:none;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink3);cursor:pointer;">Passer</button></div>';
+      '<button data-action="goHome" style="background:none;border:none;padding:12px;font:500 12.5px \'Manrope\',sans-serif;color:var(--ink3);cursor:pointer;">Passer</button></div>';
   }
   if (v.onb1) {
     var lvs = v.levels.map(function (lv, i) {
       return '<button data-action="pickLevel" data-idx="' + i + '" class="hv-a ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);">' +
         '<span class="folio-num" style="font-size:24px;width:30px;flex-shrink:0;color:' + (lv.on ? 'var(--acc)' : 'var(--dim)') + ';">' + lv.n + '</span>' +
-        '<span style="flex:1;"><span style="display:block;font:500 14px \'Inter\',sans-serif;">' + esc(lv.title) + '</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(lv.sub) + '</span></span>' +
-        (lv.on ? '<span class="seal seal-sm" style="width:26px;height:26px;flex-shrink:0;"><span class="seal-glyph" style="font-size:13px;">✓</span></span>' : '') + '</button>';
+        '<span style="flex:1;"><span style="display:block;font:500 14px \'Manrope\',sans-serif;">' + esc(lv.title) + '</span><span style="display:block;font:400 11.5px \'Manrope\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(lv.sub) + '</span></span>' +
+        (lv.on ? '<span class="seal seal-sm" style="width:26px;height:26px;flex-shrink:0;"><span class="seal-glyph">' + icoSvg('check', 13) + '</span></span>' : '') + '</button>';
     }).join('');
     out += '<div class="folio-num" style="font-size:32px;margin-top:26px;">Où en êtes-vous ?</div>' +
       '<div class="ledger" style="margin-top:22px;">' + lvs + '</div>' +
-      '<div style="margin-top:24px;"><label style="display:block;font:500 11px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-bottom:8px;">DATE D\'EXAMEN (FACULTATIF)</label>' +
-      '<input type="date" data-exam-date-input value="' + esc(v.examDate || '') + '" style="width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px 16px;font:500 14px \'Inter\',sans-serif;color:var(--ink);outline:none;" />' +
-      '<div style="font:400 11px \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;">Pour suivre un compte à rebours et adapter le rythme. Modifiable à tout moment dans Paramètres.</div></div>' +
+      '<div style="margin-top:24px;"><label style="display:block;font:500 11px \'Manrope\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-bottom:8px;">DATE D\'EXAMEN (FACULTATIF)</label>' +
+      '<input type="date" data-exam-date-input value="' + esc(v.examDate || '') + '" style="width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px 16px;font:500 14px \'Manrope\',sans-serif;color:var(--ink);outline:none;" />' +
+      '<div style="font:400 11px \'Manrope\',sans-serif;color:var(--ink3);margin-top:8px;">Pour suivre un compte à rebours et adapter le rythme. Modifiable à tout moment dans Paramètres.</div></div>' +
       '<div style="margin-top:auto;padding-top:22px;"><button data-action="onbNext" class="btn-cta" style="width:100%;">Continuer</button></div>';
   }
   if (v.onb2) {
     var feats = [
-      { icon: '◈', title: 'Mon parcours', sub: 'Un programme guidé, semaine après semaine, à ton rythme.' },
-      { icon: '§', title: 'Fiches de cours', sub: v.ficheCount + ' fiches illustrées, chacune avec son test de validation.' },
-      { icon: '⏱', title: 'Calcul mental', sub: 'Des réflexes de calcul chronométrés, avec la méthode expliquée.' },
-      { icon: '∑', title: 'Labo', sub: 'Des simulateurs pour visualiser intérêts, frais, crédit et PER.' }
+      { icon: 'compass', title: 'Mon parcours', sub: 'Un programme guidé, semaine après semaine, à ton rythme.' },
+      { icon: 'book', title: 'Fiches de cours', sub: v.ficheCount + ' fiches illustrées, chacune avec son test de validation.' },
+      { icon: 'clock', title: 'Calcul mental', sub: 'Des réflexes de calcul chronométrés, avec la méthode expliquée.' },
+      { icon: 'flask', title: 'Labo', sub: 'Des simulateurs pour visualiser intérêts, frais, crédit et PER.' }
     ];
     var featRows = feats.map(function (f) {
       return '<div class="ledger-row">' +
-        '<span class="folio-num" style="font-size:22px;width:30px;flex-shrink:0;color:var(--acc);">' + f.icon + '</span>' +
-        '<span style="flex:1;min-width:0;"><span style="display:block;font:500 13.5px \'Inter\',sans-serif;">' + esc(f.title) + '</span><span style="display:block;font:400 11.5px/1.4 \'Inter\',sans-serif;color:var(--ink2);margin-top:2px;">' + esc(f.sub) + '</span></span></div>';
+        '<span class="pos-ico tinted" style="color:var(--acc);">' + icoSvg(f.icon, 17) + '</span>' +
+        '<span style="flex:1;min-width:0;"><span style="display:block;font:500 13.5px \'Manrope\',sans-serif;">' + esc(f.title) + '</span><span style="display:block;font:400 11.5px/1.4 \'Manrope\',sans-serif;color:var(--ink2);margin-top:2px;">' + esc(f.sub) + '</span></span></div>';
     }).join('');
     out += '<div class="folio-num" style="font-size:32px;margin-top:26px;">Un tour rapide de l\'application.</div>' +
-      '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:16px;">' + v.totalQ + ' questions vérifiées, ' + v.ficheCount + ' fiches de cours, ' + v.poleChips.length + ' pôles. Voici l\'essentiel :</div>' +
+      '<div style="font:400 13.5px/1.7 \'Manrope\',sans-serif;color:var(--ink2);margin-top:16px;">' + v.totalQ + ' questions vérifiées, ' + v.ficheCount + ' fiches de cours, ' + v.poleChips.length + ' pôles. Voici l\'essentiel :</div>' +
       '<div class="ledger" style="margin:20px 0 0;">' + featRows + '</div>' +
       '<div style="margin-top:auto;padding-top:24px;"><button data-action="goHome" class="btn-cta" style="width:100%;">C\'est parti</button></div>';
   }
@@ -1589,25 +1704,25 @@ function tplOnb(v) {
 }
 
 function parcoursChip(action, v, label, selected) {
-  return '<button data-action="' + action + '" data-v="' + v + '" style="flex:1;border:1px solid ' + (selected ? 'var(--acc)' : 'var(--line)') + ';background:' + (selected ? 'var(--acc)' : 'none') + ';color:' + (selected ? 'var(--on)' : 'var(--ink)') + ';border-radius:999px;padding:10px 6px;font:600 12px \'Inter\',sans-serif;cursor:pointer;text-align:center;">' + label + '</button>';
+  return '<button data-action="' + action + '" data-v="' + v + '" style="flex:1;border:1px solid ' + (selected ? 'var(--acc)' : 'var(--line)') + ';background:' + (selected ? 'var(--acc)' : 'none') + ';color:' + (selected ? 'var(--on)' : 'var(--ink)') + ';border-radius:12px;padding:10px 6px;font:600 12px \'Manrope\',sans-serif;cursor:pointer;text-align:center;">' + label + '</button>';
 }
 function parcoursTaskRow(t, isToday, acc, locked) {
   if (locked) {
     var subL = t.type === 'quiz' ? (t.count + ' questions') : 'Fiche de cours';
     return '<div style="width:100%;text-align:left;background:none;border:1px solid transparent;border-radius:12px;padding:9px 10px;display:flex;align-items:center;gap:11px;color:var(--ink3);margin-top:4px;box-sizing:border-box;opacity:.5;">' +
-      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font:600 10px \'Inter\',sans-serif;color:var(--ink3);">🔒</span>' +
-      '<span style="flex:1;min-width:0;"><span style="display:block;font:500 12.5px \'Inter\',sans-serif;">' + esc(t.type === 'quiz' ? t.label : t.title) + '</span>' +
-      '<span style="display:block;font:400 10.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:2px;">' + subL + '</span></span></div>';
+      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;color:var(--ink3);opacity:.5;">' + icoSvg('lock', 12) + '</span>' +
+      '<span style="flex:1;min-width:0;"><span style="display:block;font:500 12.5px \'Manrope\',sans-serif;">' + esc(t.type === 'quiz' ? t.label : t.title) + '</span>' +
+      '<span style="display:block;font:400 10.5px \'Manrope\',sans-serif;color:var(--ink3);margin-top:2px;">' + subL + '</span></span></div>';
   }
-  var icon = t.done ? '✓' : (isToday ? '▶' : '');
+  var icon = t.done ? icoSvg('check', 12) : (isToday ? '<svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M6 4l15 8-15 8z"/></svg>' : '');
   var iconBg = t.done ? acc : (isToday ? acc : 'var(--panel2)');
   var iconColor = t.done || isToday ? 'var(--on)' : 'var(--ink3)';
   var sub = t.type === 'quiz' ? (t.count + ' questions · ' + t.pct + '% déjà vues') : 'Fiche de cours';
   var action = t.type === 'fiche' ? 'data-action="ficheGo" data-fiche="' + esc(t.id) + '"' : 'data-action="parcoursStartQuiz" data-sub="' + esc(t.id) + '" data-n="' + t.target + '"';
   return '<button ' + action + ' class="hv-a" style="width:100%;text-align:left;background:' + (isToday ? hexA(acc, 0.14) : 'none') + ';border:1px solid ' + (isToday ? hexA(acc, 0.35) : 'transparent') + ';border-radius:12px;padding:9px 10px;display:flex;align-items:center;gap:11px;cursor:pointer;color:var(--ink);margin-top:4px;box-sizing:border-box;">' +
-    '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + iconBg + ';display:flex;align-items:center;justify-content:center;font:600 11px \'Inter\',sans-serif;color:' + iconColor + ';">' + icon + '</span>' +
-    '<span style="flex:1;min-width:0;"><span style="display:block;font:500 12.5px \'Inter\',sans-serif;' + (t.done ? 'color:var(--ink2);' : '') + '">' + esc(t.type === 'quiz' ? t.label : t.title) + '</span>' +
-    '<span style="display:block;font:400 10.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:2px;">' + sub + '</span></span></button>';
+    '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + iconBg + ';display:flex;align-items:center;justify-content:center;color:' + iconColor + ';">' + icon + '</span>' +
+    '<span style="flex:1;min-width:0;"><span style="display:block;font:500 12.5px \'Manrope\',sans-serif;' + (t.done ? 'color:var(--ink2);' : '') + '">' + esc(t.type === 'quiz' ? t.label : t.title) + '</span>' +
+    '<span style="display:block;font:400 10.5px \'Manrope\',sans-serif;color:var(--ink3);margin-top:2px;">' + sub + '</span></span></button>';
 }
 function tplParcours(v) {
   if (!v.parcoursStarted) {
@@ -1619,22 +1734,22 @@ function tplParcours(v) {
     var objLabel = objLabelMap[v.parcoursSetupObjective] || 'ton rythme';
     var poleChips = v.poleOptions.map(function (p) {
       var sel = v.parcoursSetupPriority.indexOf(p) >= 0;
-      return '<button data-action="parcoursTogglePriority" data-pole="' + esc(p) + '" style="width:100%;box-sizing:border-box;border:1px solid ' + (sel ? poleAccent(p) : 'var(--line)') + ';background:' + (sel ? hexA(poleAccent(p), 0.16) : 'var(--panel)') + ';color:' + (sel ? 'var(--ink)' : 'var(--ink2)') + ';border-radius:12px;padding:10px 12px;font:500 11.5px \'Inter\',sans-serif;cursor:pointer;text-align:left;display:flex;align-items:center;gap:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
+      return '<button data-action="parcoursTogglePriority" data-pole="' + esc(p) + '" style="width:100%;box-sizing:border-box;border:1px solid ' + (sel ? poleAccent(p) : 'var(--line)') + ';background:' + (sel ? hexA(poleAccent(p), 0.16) : 'var(--panel)') + ';color:' + (sel ? 'var(--ink)' : 'var(--ink2)') + ';border-radius:12px;padding:10px 12px;font:500 11.5px \'Manrope\',sans-serif;cursor:pointer;text-align:left;display:flex;align-items:center;gap:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
         '<span style="flex-shrink:0;">' + poleGlyph(p) + '</span><span style="overflow:hidden;text-overflow:ellipsis;">' + esc(p) + '</span></button>';
     }).join('');
     return '<div style="flex:1;overflow:auto;min-height:0;">' +
-      '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
+      '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">' + icoSvg('chevron-left', 15) + '</span>Retour</button>' +
       '<div class="folio-kicker" style="margin-top:16px;">MON PARCOURS</div>' +
       '<div class="folio-num" style="font-size:30px;margin-top:14px;">Prêt en <span style="font-style:italic;color:var(--acc);">' + esc(objLabel) + '</span>, à ta façon.</div>' +
-      '<div style="font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">Un programme construit sur les ' + v.ficheCount + ' fiches et ' + v.totalQ + ' questions de l\'app, réparti en 9 étapes. Chaque jour, une seule chose à faire. Chaque étape se débloque quand la précédente est validée — pas d\'avance sans avoir vraiment travaillé le sujet. Choisis ci-dessous le rythme et la durée qui te conviennent.</div></div>' +
-      '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">COMBIEN DE TEMPS PAR JOUR ?</div>' +
+      '<div style="font:400 13.5px/1.7 \'Manrope\',sans-serif;color:var(--ink2);margin-top:14px;">Un programme construit sur les ' + v.ficheCount + ' fiches et ' + v.totalQ + ' questions de l\'app, réparti en 9 étapes. Chaque jour, une seule chose à faire. Chaque étape se débloque quand la précédente est validée — pas d\'avance sans avoir vraiment travaillé le sujet. Choisis ci-dessous le rythme et la durée qui te conviennent.</div></div>' +
+      '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);">COMBIEN DE TEMPS PAR JOUR ?</div>' +
       '<div style="display:flex;gap:8px;margin-top:10px;">' + mChip(15) + mChip(30) + mChip(45) + mChip(60) + '</div></div>' +
-      '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">TON OBJECTIF</div>' +
+      '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);">TON OBJECTIF</div>' +
       '<div style="display:flex;gap:8px;margin-top:10px;">' + oChip(30, '1 mois') + oChip(60, '2 mois') + oChip(90, '3 mois') + oChip(63, 'À mon rythme') + '</div></div>' +
-      '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">THÉMATIQUES PRIORITAIRES <span style="color:var(--ink3);text-transform:none;letter-spacing:0;">(jusqu\'à 3, optionnel)</span></div>' +
-      '<div style="font:400 11.5px/1.6 \'Inter\',sans-serif;color:var(--ink3);margin-top:6px;">Les semaines liées à ces thèmes passent en premier et reçoivent 50% de questions en plus par jour.</div>' +
+      '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);">THÉMATIQUES PRIORITAIRES <span style="color:var(--ink3);text-transform:none;letter-spacing:0;">(jusqu\'à 3, optionnel)</span></div>' +
+      '<div style="font:400 11.5px/1.6 \'Manrope\',sans-serif;color:var(--ink3);margin-top:6px;">Les semaines liées à ces thèmes passent en premier et reçoivent 50% de questions en plus par jour.</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">' + poleChips + '</div></div>' +
-      '<div style="margin:24px 24px 0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;font:400 12px/1.7 \'Inter\',sans-serif;color:var(--ink2);">≈ <b style="color:var(--ink);">' + previewQpd + ' questions/jour</b> et des semaines d\'environ <b style="color:var(--ink);">' + previewWeekLen + ' jours</b>, soit <b style="color:var(--ink);">' + (previewWeekLen * 9) + ' jours au total</b> pour les 9 étapes.</div>' +
+      '<div style="margin:24px 24px 0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;font:400 12px/1.7 \'Manrope\',sans-serif;color:var(--ink2);">≈ <b style="color:var(--ink);">' + previewQpd + ' questions/jour</b> et des semaines d\'environ <b style="color:var(--ink);">' + previewWeekLen + ' jours</b>, soit <b style="color:var(--ink);">' + (previewWeekLen * 9) + ' jours au total</b> pour les 9 étapes.</div>' +
       '<div style="margin:24px 24px 0;"><button data-action="startParcours" class="btn-cta" style="width:100%;">Commencer mon parcours</button></div>' +
       '<div style="height:26px;"></div></div>';
   }
@@ -1642,20 +1757,20 @@ function tplParcours(v) {
     var acc = w.accent;
     if (w.locked) {
       return '<div style="margin-top:12px;border:1px solid var(--line);border-radius:16px;padding:15px 16px;background:var(--panel);opacity:.55;display:flex;align-items:center;gap:12px;">' +
-        '<span style="flex-shrink:0;width:38px;height:38px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;font:500 15px \'Inter\',sans-serif;color:var(--ink3);">🔒</span>' +
-        '<span style="flex:1;min-width:0;"><span style="display:block;font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:var(--ink3);">SEMAINE ' + w.n + ' · VERROUILLÉE' + (w.priority ? ' · priorisée' : '') + '</span>' +
-        '<span style="display:block;font:500 13.5px \'Inter\',sans-serif;margin-top:4px;color:var(--ink2);">' + esc(w.title) + '</span></span></div>';
+        '<span style="flex-shrink:0;width:38px;height:38px;border-radius:50%;background:var(--panel2);display:flex;align-items:center;justify-content:center;color:var(--ink3);opacity:.5;">' + icoSvg('lock', 17) + '</span>' +
+        '<span style="flex:1;min-width:0;"><span style="display:block;font:600 9px \'Manrope\',sans-serif;letter-spacing:.09em;color:var(--ink3);">SEMAINE ' + w.n + ' · VERROUILLÉE' + (w.priority ? ' · priorisée' : '') + '</span>' +
+        '<span style="display:block;font:500 13.5px \'Manrope\',sans-serif;margin-top:4px;color:var(--ink2);">' + esc(w.title) + '</span></span></div>';
     }
-    var statusTag = w.validated ? ' · validée ✓' : (w.current ? ' · en cours' : '');
+    var statusTag = w.validated ? ' · validée' : (w.current ? ' · en cours' : '');
     var body;
     if (w.consolidation) {
       body = '<div style="display:flex;flex-direction:column;gap:9px;">' +
-        '<button data-action="examGo" data-key="facile" data-label="Niveau 1 · Fondamentaux" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Examen blanc · Niveau 1 Fondamentaux</button>' +
-        '<button data-action="examGo" data-key="avance" data-label="Niveau 2 · Avancé" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Examen blanc · Niveau 2 Avancé</button>' +
-        '<button data-action="examGo" data-key="technique" data-label="Niveau 3 · Technique" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Examen blanc · Niveau 3 Technique</button>' +
-        '<button data-action="examGo" data-key="niveau_general" data-label="Mise à niveau générale" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Mise à niveau générale</button>' +
-        '<button data-action="goTab" data-k="progress" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Voir Stats — repérer les pôles faibles</button>' +
-        '<button data-action="startSrs" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">Réviser — vider les questions à revoir</button></div>';
+        '<button data-action="examGo" data-key="facile" data-label="Niveau 1 · Fondamentaux" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Manrope\',sans-serif;color:var(--ink);cursor:pointer;">Examen blanc · Niveau 1 Fondamentaux</button>' +
+        '<button data-action="examGo" data-key="avance" data-label="Niveau 2 · Avancé" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Manrope\',sans-serif;color:var(--ink);cursor:pointer;">Examen blanc · Niveau 2 Avancé</button>' +
+        '<button data-action="examGo" data-key="technique" data-label="Niveau 3 · Technique" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Manrope\',sans-serif;color:var(--ink);cursor:pointer;">Examen blanc · Niveau 3 Technique</button>' +
+        '<button data-action="examGo" data-key="niveau_general" data-label="Mise à niveau générale" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Manrope\',sans-serif;color:var(--ink);cursor:pointer;">Mise à niveau générale</button>' +
+        '<button data-action="goTab" data-k="progress" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Manrope\',sans-serif;color:var(--ink);cursor:pointer;">Voir Stats — repérer les pôles faibles</button>' +
+        '<button data-action="startSrs" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Manrope\',sans-serif;color:var(--ink);cursor:pointer;">Réviser — vider les questions à revoir</button></div>';
     } else {
       var todayCard = '';
       if (w.current) {
@@ -1664,11 +1779,11 @@ function tplParcours(v) {
           var ctaLabel = tt.type === 'fiche' ? 'Lire la fiche' : ('Faire ' + tt.target + ' questions');
           var ctaAction = tt.type === 'fiche' ? 'data-action="ficheGo" data-fiche="' + esc(tt.id) + '"' : 'data-action="parcoursStartQuiz" data-sub="' + esc(tt.id) + '" data-n="' + tt.target + '"';
           todayCard = '<div style="background:' + hexA(acc, 0.12) + ';border:1px solid ' + hexA(acc, 0.35) + ';border-radius:14px;padding:14px;margin-bottom:12px;">' +
-            '<div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:' + acc + ';">AUJOURD\'HUI · JOUR ' + v.parcoursDayInWeek + '/' + v.parcoursWeekLenDays + '</div>' +
-            '<div style="font:500 14px \'Inter\',sans-serif;margin-top:8px;">' + esc(tt.type === 'quiz' ? tt.label : tt.title) + '</div>' +
-            '<button ' + ctaAction + ' style="margin-top:12px;width:100%;border:none;border-radius:999px;padding:12px;font:600 12.5px \'Inter\',sans-serif;color:var(--on);background:' + acc + ';cursor:pointer;">' + ctaLabel + '</button></div>';
+            '<div style="font:600 9px \'Manrope\',sans-serif;letter-spacing:.09em;color:' + acc + ';">AUJOURD\'HUI · JOUR ' + v.parcoursDayInWeek + '/' + v.parcoursWeekLenDays + '</div>' +
+            '<div style="font:500 14px \'Manrope\',sans-serif;margin-top:8px;">' + esc(tt.type === 'quiz' ? tt.label : tt.title) + '</div>' +
+            '<button ' + ctaAction + ' style="margin-top:12px;width:100%;border:none;border-radius:12px;padding:12px;font:600 12.5px \'Manrope\',sans-serif;color:var(--on);background:' + acc + ';cursor:pointer;">' + ctaLabel + '</button></div>';
         } else {
-          todayCard = '<div style="background:' + hexA(acc, 0.12) + ';border:1px solid ' + hexA(acc, 0.35) + ';border-radius:14px;padding:14px;margin-bottom:12px;font:400 12px/1.5 \'Inter\',sans-serif;color:var(--ink2);">🎉 Semaine terminée — elle va se valider et débloquer la suivante.</div>';
+          todayCard = '<div style="background:' + hexA(acc, 0.12) + ';border:1px solid ' + hexA(acc, 0.35) + ';border-radius:14px;padding:14px;margin-bottom:12px;display:flex;align-items:center;gap:10px;font:400 12px/1.5 \'Manrope\',sans-serif;color:var(--ink2);"><span style="flex-shrink:0;color:' + acc + ';">' + icoSvg('trophy', 16) + '</span>Semaine terminée — elle va se valider et débloquer la suivante.</div>';
         }
       }
       var todayIdx = w.todayTask ? w.tasks.indexOf(w.todayTask) : -1;
@@ -1681,30 +1796,30 @@ function tplParcours(v) {
     return '<div style="margin-top:12px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--panel);">' +
       '<button data-action="parcoursToggleWeek" data-n="' + w.n + '" style="width:100%;background:none;border:none;padding:15px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;">' +
       '<span style="flex-shrink:0;position:relative;width:38px;height:38px;border-radius:50%;background:conic-gradient(' + acc + ' ' + (w.pct * 3.6) + 'deg,var(--line) ' + (w.pct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
-      '<span style="width:32px;height:32px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font:600 12px \'Inter\',sans-serif;color:' + acc + ';">' + (w.validated ? '✓' : w.n) + '</span></span>' +
-      '<span style="flex:1;min-width:0;"><span style="display:block;font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:' + acc + ';">SEMAINE ' + w.n + (w.range ? ' · ' + esc(w.range) : '') + (w.priority ? ' · priorisée' : '') + esc(statusTag) + '</span>' +
-      '<span style="display:block;font:500 13.5px \'Inter\',sans-serif;margin-top:4px;">' + esc(w.title) + '</span></span>' +
-      '<span style="flex-shrink:0;font:400 15px Fraunces,serif;color:' + acc + ';transition:transform .25s;transform:rotate(' + (w.open ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
-      (w.open ? '<div style="padding:0 16px 16px;">' + body + '<div style="margin-top:14px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px 13px;"><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:var(--acc2);margin-bottom:4px;">VALIDATION</div><div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);">' + esc(w.validation) + '</div></div></div>' : '') +
+      '<span style="width:32px;height:32px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font:600 12px \'Manrope\',sans-serif;color:' + acc + ';">' + (w.validated ? icoSvg('check', 14) : w.n) + '</span></span>' +
+      '<span style="flex:1;min-width:0;"><span style="display:block;font:600 9px \'Manrope\',sans-serif;letter-spacing:.09em;color:' + acc + ';">SEMAINE ' + w.n + (w.range ? ' · ' + esc(w.range) : '') + (w.priority ? ' · priorisée' : '') + esc(statusTag) + '</span>' +
+      '<span style="display:block;font:500 13.5px \'Manrope\',sans-serif;margin-top:4px;">' + esc(w.title) + '</span></span>' +
+      '<span style="flex-shrink:0;color:' + acc + ';transition:transform .25s;transform:rotate(' + (w.open ? '90deg' : '0deg') + ');">' + icoSvg('chevron', 15) + '</span></button>' +
+      (w.open ? '<div style="padding:0 16px 16px;">' + body + '<div style="margin-top:14px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px 13px;"><div style="font:600 9px \'Manrope\',sans-serif;letter-spacing:.09em;color:var(--acc2);margin-bottom:4px;">VALIDATION</div><div style="font:400 12px/1.6 \'Manrope\',sans-serif;color:var(--ink2);">' + esc(w.validation) + '</div></div></div>' : '') +
       '</div>';
   }).join('');
   var ongoing = v.parcoursOngoing.map(function (o) {
-    return '<button data-action="subGo" data-sub="' + esc(o.id) + '" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:8px 13px;font:500 11.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">' + esc(o.label) + '</button>';
+    return '<button data-action="subGo" data-sub="' + esc(o.id) + '" class="hv-a" style="text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:8px 13px;font:500 11.5px \'Manrope\',sans-serif;color:var(--ink2);cursor:pointer;">' + esc(o.label) + '</button>';
   }).join('');
-  var paceColor = v.parcoursPaceStatus === 'avance' ? 'var(--acc2)' : v.parcoursPaceStatus === 'retard' ? 'var(--warn)' : 'var(--ink2)';
+  var paceColor = v.parcoursPaceStatus === 'avance' ? 'var(--acc2)' : v.parcoursPaceStatus === 'retard' ? 'var(--due)' : 'var(--ink2)';
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">' + icoSvg('chevron-left', 15) + '</span>Retour</button>' +
     '<div class="folio-kicker" style="margin-top:16px;">MON PARCOURS</div>' +
     '<div style="display:flex;align-items:center;gap:16px;margin-top:14px;">' +
     '<div style="flex-shrink:0;position:relative;width:64px;height:64px;border-radius:50%;background:conic-gradient(var(--acc) ' + (v.parcoursOverallPct * 3.6) + 'deg,var(--line) ' + (v.parcoursOverallPct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
-    '<span style="width:54px;height:54px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:600 13px \'Inter\',sans-serif;color:var(--acc);">' + v.parcoursOverallPct + '%</span></div>' +
+    '<span style="width:54px;height:54px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:600 13px \'Manrope\',sans-serif;color:var(--acc);">' + v.parcoursOverallPct + '%</span></div>' +
     '<div><div class="folio-num" style="font-size:24px;">Semaine ' + v.parcoursCurrentWeek + ' <span style="font-style:italic;color:var(--ink3);font-size:16px;">/ 9</span></div>' +
-    '<div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:4px;">Jour ' + v.parcoursDayInWeek + '/' + v.parcoursWeekLenDays + ' de cette semaine</div></div></div>' +
+    '<div style="font:400 11.5px \'Manrope\',sans-serif;color:var(--ink3);margin-top:4px;">Jour ' + v.parcoursDayInWeek + '/' + v.parcoursWeekLenDays + ' de cette semaine</div></div></div>' +
     '<div style="margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel);border:1px solid var(--line);border-left:3px solid ' + paceColor + ';border-radius:4px;padding:12px 14px;">' +
-    '<span style="font:500 12px \'Inter\',sans-serif;color:' + paceColor + ';">' + esc(v.parcoursPaceLabel || '') + '</span>' +
-    '<span style="font:400 11px \'Inter\',sans-serif;color:var(--ink3);flex-shrink:0;">Objectif · ' + esc(v.parcoursDeadlineLabel || '') + '</span></div></div>' +
+    '<span style="font:500 12px \'Manrope\',sans-serif;color:' + paceColor + ';">' + esc(v.parcoursPaceLabel || '') + '</span>' +
+    '<span style="font:400 11px \'Manrope\',sans-serif;color:var(--ink3);flex-shrink:0;">Objectif · ' + esc(v.parcoursDeadlineLabel || '') + '</span></div></div>' +
     '<div style="margin:24px 24px 0;">' + weeks + '</div>' +
-    '<div style="margin:24px 24px 0;padding-top:24px;border-top:1px solid var(--line);"><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:var(--ink3);">ENTRAÎNEMENT CONTINU · TOUTE L\'ANNÉE</div>' +
+    '<div style="margin:24px 24px 0;padding-top:24px;border-top:1px solid var(--line);"><div style="font:600 9px \'Manrope\',sans-serif;letter-spacing:.09em;color:var(--ink3);">ENTRAÎNEMENT CONTINU · TOUTE L\'ANNÉE</div>' +
     '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;">' + ongoing + '</div></div>' +
     '<div style="height:26px;"></div></div>';
 }
@@ -1715,25 +1830,25 @@ function tplSearch(v) {
   var list;
   if (results.length) {
     list = results.map(function (r, i) {
-      var icon = r.kind === 'fiche' ? '📘' : r.kind === 'culture' ? '🎓' : '✏️';
+      var icon = r.kind === 'fiche' ? 'book' : r.kind === 'culture' ? 'compass' : 'calculator';
       return '<button data-action="searchGo" data-kind="' + esc(r.kind) + '" data-id="' + esc(r.id) + '" class="hv-a stagger" style="animation-delay:' + (i * 0.03).toFixed(2) + 's;width:100%;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);box-sizing:border-box;">' +
-        '<span style="font-size:18px;flex-shrink:0;">' + icon + '</span>' +
-        '<span style="flex:1;min-width:0;"><span style="display:block;font:500 9.5px \'Inter\',sans-serif;letter-spacing:.05em;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(r.path) + '</span>' +
-        '<span style="display:block;font:500 13.5px \'Inter\',sans-serif;margin-top:4px;">' + esc(r.title) + '</span></span>' +
-        '<span style="font:500 9.5px \'Inter\',sans-serif;color:var(--dim);flex-shrink:0;text-align:right;">' + esc(r.meta) + '</span></button>';
+        '<span class="pos-ico tinted" style="color:var(--acc);">' + icoSvg(icon, 16) + '</span>' +
+        '<span style="flex:1;min-width:0;"><span style="display:block;font:500 9.5px \'Manrope\',sans-serif;letter-spacing:.05em;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + esc(r.path) + '</span>' +
+        '<span style="display:block;font:500 13.5px \'Manrope\',sans-serif;margin-top:4px;">' + esc(r.title) + '</span></span>' +
+        '<span style="font:500 9.5px \'Manrope\',sans-serif;color:var(--dim);flex-shrink:0;text-align:right;">' + esc(r.meta) + '</span></button>';
     }).join('');
   } else if (qTrim.length >= 2) {
-    list = '<div class="stagger" style="text-align:center;padding:44px 20px;color:var(--ink3);font:400 13px \'Inter\',sans-serif;">Aucun résultat pour « ' + esc(qTrim) + ' ».</div>';
+    list = '<div class="stagger" style="text-align:center;padding:30px 20px;">' + illuEmpty() + '<div style="color:var(--ink2);font:500 13px \'Manrope\',sans-serif;margin-top:12px;">Aucun résultat pour « ' + esc(qTrim) + ' ».</div></div>';
   } else if (qTrim.length === 1) {
-    list = '<div style="text-align:center;padding:44px 20px;color:var(--ink3);font:400 13px \'Inter\',sans-serif;">Continuez à taper…</div>';
+    list = '<div style="text-align:center;padding:44px 20px;color:var(--ink3);font:400 13px \'Manrope\',sans-serif;">Continuez à taper…</div>';
   } else {
-    list = '<div style="text-align:center;padding:44px 20px;color:var(--ink3);font:400 13px \'Inter\',sans-serif;">Cherchez un cours, une notion ou une catégorie de questions — par exemple « crypto », « lombard » ou « succession ».</div>';
+    list = '<div style="text-align:center;padding:44px 20px;color:var(--ink3);font:400 13px \'Manrope\',sans-serif;">Cherchez un cours, une notion ou une catégorie de questions — par exemple « crypto », « lombard » ou « succession ».</div>';
   }
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
-    '<div style="font:300 30px/1.15 Fraunces,serif;letter-spacing:-.02em;margin-top:16px;">Rechercher</div></div>' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">' + icoSvg('chevron-left', 15) + '</span>Retour</button>' +
+    '<div style="font:300 30px/1.15 Manrope,sans-serif;letter-spacing:-.02em;margin-top:16px;">Rechercher</div></div>' +
     '<div style="margin:24px 24px 0;">' +
-    '<input id="searchInput" data-search-input value="' + esc(q) + '" placeholder="Crypto, PER, succession…" style="width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font:500 14px \'Inter\',sans-serif;color:var(--ink);outline:none;" /></div>' +
+    '<input id="searchInput" data-search-input value="' + esc(q) + '" placeholder="Crypto, PER, succession…" style="width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font:500 14px \'Manrope\',sans-serif;color:var(--ink);outline:none;" /></div>' +
     '<div style="margin:16px 24px 0;display:flex;flex-direction:column;gap:9px;">' + list + '</div>' +
     '<div style="height:26px;"></div></div>';
 }
@@ -1741,61 +1856,64 @@ function tplSearch(v) {
 function tplHome(v) {
   var weakRows = v.weakChips.map(function (w) {
     return '<button data-action="weakGo" data-pole="' + esc(w.label) + '" class="ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);">' +
-      '<span style="flex:1;font:400 12.5px \'Inter\',sans-serif;">' + esc(w.label) + '</span>' +
-      '<span style="font:500 12px \'Inter\',sans-serif;color:var(--warn);flex-shrink:0;">' + w.pct + ' %</span>' +
-      '<span style="font:400 13px Fraunces,serif;color:var(--dim);flex-shrink:0;">&rsaquo;</span></button>';
+      '<span style="flex:1;font:400 12.5px \'Manrope\',sans-serif;">' + esc(w.label) + '</span>' +
+      '<span style="font:500 12px \'Manrope\',sans-serif;color:var(--due);flex-shrink:0;">' + w.pct + ' %</span>' +
+      '<span style="font:400 13px Manrope,sans-serif;color:var(--dim);flex-shrink:0;">&rsaquo;</span></button>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:54px 24px 14px;display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--rule);">' +
-    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.18em;color:var(--acc);">DOSSIER CGP</div>' +
+    '<div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.18em;color:var(--acc);">DOSSIER CGP</div>' +
     '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:none;color:var(--ink3);cursor:pointer;padding:4px;">' + ICON_SEARCH + '</button></div>' +
     '<div style="padding:22px 24px 0;"><div class="folio-num" style="font-size:38px;">' + esc(v.greeting) + '<br><span style="font-style:italic;color:var(--acc);">' + esc(v.userName) + '</span></div></div>' +
     (v.examDate ? '<div class="ledger-row" style="margin:18px 24px 0;padding-left:0;">' +
-      '<span class="folio-num" style="font-size:22px;color:var(--warn);flex-shrink:0;">' + (v.examDaysLeft > 0 ? 'J-' + v.examDaysLeft : (v.examDaysLeft === 0 ? 'J-0' : '—')) + '</span>' +
-      '<span style="font:400 11.5px/1.4 \'Inter\',sans-serif;color:var(--ink2);flex:1;">avant l\'examen · ' + v.examCoveragePct + '% du programme vu au moins une fois</span></div>' : '') +
+      '<span class="folio-num" style="font-size:22px;color:var(--due);flex-shrink:0;">' + (v.examDaysLeft > 0 ? 'J-' + v.examDaysLeft : (v.examDaysLeft === 0 ? 'J-0' : '—')) + '</span>' +
+      '<span style="font:400 11.5px/1.4 \'Manrope\',sans-serif;color:var(--ink2);flex:1;">avant l\'examen · ' + v.examCoveragePct + '% du programme vu au moins une fois</span></div>' : '') +
     '<div style="margin:0 24px;"><button data-action="goParcours" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);padding-left:0;">' +
     (v.parcoursStartedFlag
-      ? '<span style="flex-shrink:0;position:relative;width:34px;height:34px;border-radius:50%;background:conic-gradient(var(--acc) ' + (v.parcoursOverallPct * 3.6) + 'deg,var(--line) ' + (v.parcoursOverallPct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;"><span style="width:28px;height:28px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:600 10.5px \'Inter\',sans-serif;color:var(--acc);">' + v.parcoursOverallPct + '%</span></span>'
-      : '<span style="font:400 20px Fraunces,serif;color:var(--acc);flex-shrink:0;">◈</span>') +
-    '<span style="flex:1;"><span style="display:block;font:500 13.5px \'Inter\',sans-serif;">Mon parcours</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(v.parcoursWeekLabel) + '</span></span>' +
-    '<span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button></div>' +
-    '<div class="card-hero" style="margin:22px 24px 0;border-radius:16px;padding:22px;background:var(--panel);border:1px solid ' + hexA('#a9814a', 0.3) + ';border-left:3px solid var(--acc);display:flex;flex-direction:column;gap:16px;">' +
+      ? '<span style="flex-shrink:0;position:relative;width:34px;height:34px;border-radius:50%;background:conic-gradient(var(--acc) ' + (v.parcoursOverallPct * 3.6) + 'deg,var(--line) ' + (v.parcoursOverallPct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;"><span style="width:28px;height:28px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:600 10.5px \'Manrope\',sans-serif;color:var(--acc);">' + v.parcoursOverallPct + '%</span></span>'
+      : '<span class="pos-ico tinted" style="color:var(--acc);">' + icoSvg('compass', 16) + '</span>') +
+    '<span style="flex:1;"><span style="display:block;font:500 13.5px \'Manrope\',sans-serif;">Mon parcours</span><span style="display:block;font:400 11.5px \'Manrope\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(v.parcoursWeekLabel) + '</span></span>' +
+    '<span style="color:var(--ink3);">' + icoSvg('chevron', 15) + '</span></button></div>' +
+    '<div class="card-hero" style="margin:22px 24px 0;border-radius:16px;padding:22px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--acc);display:flex;flex-direction:column;gap:16px;">' +
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;"><div>' +
     '<div class="folio-kicker">DÉFI DU JOUR</div>' +
-    '<div class="folio-num" style="font-size:44px;margin-top:8px;">5<span style="font-size:14px;font-family:\'Inter\',sans-serif;font-weight:500;letter-spacing:0;color:var(--ink2);"> questions sur</span></div>' +
-    '<div style="font:500 13px/1.5 \'Inter\',sans-serif;color:var(--acc);margin-top:4px;">' + esc(v.dailyTopics.join(' · ') || 'toutes les thématiques') + '</div></div>' +
-    '<div style="width:50px;height:50px;border-radius:50%;background:conic-gradient(var(--acc) 0turn ' + v.dailyTurn + ',var(--line) ' + v.dailyTurn + ' 1turn);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:40px;height:40px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font:500 11px \'Inter\',sans-serif;">' + v.dailyPct + '%</div></div></div>' +
-    '<div style="height:3px;background:var(--line);overflow:hidden;"><div style="width:' + v.dailyPct + '%;height:3px;background:linear-gradient(90deg,var(--acc2),var(--acc));transform-origin:left;animation:kfFill 1.1s cubic-bezier(.16,1,.3,1) both;"></div></div>' +
-    '<button data-action="startDaily" style="border:none;background:var(--acc);color:var(--on);border-radius:999px;padding:14px;text-align:center;font:600 13.5px \'Inter\',sans-serif;cursor:pointer;animation:kfGlow 3.2s ease-in-out infinite;">Je me lance · 3 min</button>' +
-    '<div style="font:400 10.5px \'Inter\',sans-serif;color:var(--ink3);text-align:center;margin-top:-8px;">Se tromper aussi, ça fait progresser.</div></div>' +
-    '<div class="ledger-total" style="margin:24px 24px 0;display:flex;align-items:flex-end;gap:24px;">' +
-    '<div><div class="folio-num" style="font-size:48px;"><span data-countup="' + v.mastery + '" data-countup-suffix="%">0%</span></div><div class="folio-kicker" style="margin-top:6px;">MAÎTRISE</div></div>' +
-    '<button data-action="goSrs" style="background:none;border:none;border-left:1px solid var(--rule);padding:0 0 0 22px;text-align:left;cursor:pointer;"><div class="folio-num" style="font-size:48px;color:var(--warn);"><span data-countup="' + v.dueCount + '">0</span></div><div class="folio-kicker" style="margin-top:6px;">À REVOIR</div></button></div>' +
-    '<div style="margin:8px 24px 0;font:400 10.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);">Ce sont deux choses différentes : <b style="color:var(--ink2);">maîtrise</b> = % de bonnes réponses (moyenne tous pôles) · <b style="color:var(--ink2);">à revoir</b> = nombre de questions dont la répétition espacée arrive à échéance aujourd\'hui, quel que soit ton niveau dessus.</div>' +
+    '<div class="folio-num" style="font-size:44px;margin-top:8px;">5<span style="font-size:14px;font-family:\'Manrope\',sans-serif;font-weight:500;letter-spacing:0;color:var(--ink2);"> questions sur</span></div>' +
+    '<div style="font:500 13px/1.5 \'Manrope\',sans-serif;color:var(--acc);margin-top:4px;">' + esc(v.dailyTopics.join(' · ') || 'toutes les thématiques') + '</div></div>' +
+    '<div style="width:50px;height:50px;border-radius:50%;background:conic-gradient(var(--acc) 0turn ' + v.dailyTurn + ',var(--line) ' + v.dailyTurn + ' 1turn);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><div style="width:40px;height:40px;border-radius:50%;background:var(--panel);display:flex;align-items:center;justify-content:center;font:500 11px \'Manrope\',sans-serif;">' + v.dailyPct + '%</div></div></div>' +
+    '<div class="progress-thin"><span style="width:' + v.dailyPct + '%;transform-origin:left;animation:kfFill 1.1s cubic-bezier(.16,1,.3,1) both;"></span></div>' +
+    '<button data-action="startDaily" class="btn-cta" style="animation:kfGlow 3.2s ease-in-out infinite;">Je me lance · 3 min</button>' +
+    '<div style="font:400 10.5px \'Manrope\',sans-serif;color:var(--ink3);text-align:center;margin-top:-8px;">Se tromper aussi, ça fait progresser.</div></div>' +
+    '<div class="ledger-total" style="margin:24px 24px 0;display:flex;flex-direction:column;gap:14px;">' +
+    '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">' +
+    '<div><div class="folio-kicker">MAÎTRISE</div><div style="display:flex;align-items:baseline;gap:10px;margin-top:6px;"><div class="folio-num" style="font-size:46px;"><span data-countup="' + v.mastery + '" data-countup-suffix="%">0%</span></div>' + chipDelta(v.masteryDelta || 0) + '</div></div>' +
+    '<button data-action="goSrs" style="background:none;border:none;text-align:right;cursor:pointer;color:var(--due);"><div class="folio-num" style="font-size:30px;color:var(--due);"><span data-countup="' + v.dueCount + '">0</span></div><div class="folio-kicker" style="margin-top:4px;justify-content:flex-end;color:var(--due);">À REVOIR</div></button></div>' +
+    miniSpark(v.masteryHistory, 280, 46, 'var(--acc)') +
+    '</div>' +
+    '<div style="margin:8px 24px 0;font:400 10.5px/1.5 \'Manrope\',sans-serif;color:var(--ink3);">Ce sont deux choses différentes : <b style="color:var(--ink2);">maîtrise</b> = % de bonnes réponses (moyenne tous pôles) · <b style="color:var(--ink2);">à revoir</b> = nombre de questions dont la répétition espacée arrive à échéance aujourd\'hui, quel que soit ton niveau dessus.</div>' +
     (v.weakChips.length ? '<div style="margin:26px 24px 0;"><div class="folio-kicker">POINTS FAIBLES</div>' +
     '<div class="ledger" style="margin-top:6px;">' + weakRows + '</div></div>' : '') +
-    (v.flaggedTopics.length ? '<div style="margin:26px 24px 0;"><div class="folio-kicker" style="color:var(--warn);">À RETRAVAILLER</div>' +
+    (v.flaggedTopics.length ? '<div style="margin:26px 24px 0;"><div class="folio-kicker" style="color:var(--due);">À RETRAVAILLER</div>' +
       '<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px;">' + v.flaggedTopics.map(function (t) {
-        return '<div style="background:var(--panel);border:1px solid var(--line);border-left:2px solid var(--warn);border-radius:4px;padding:13px 14px;">' +
+        return '<div class="feedback-box due">' +
           '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
-          '<span style="font:500 12.5px \'Inter\',sans-serif;flex:1;min-width:0;">' + esc(t.label) + '</span>' +
-          '<button data-action="flagTopic" data-cat="' + esc(t.catId) + '" style="flex-shrink:0;background:none;border:none;padding:2px 4px;font:400 13px \'Inter\',sans-serif;color:var(--ink3);cursor:pointer;">✕</button></div>' +
+          '<span style="font:500 12.5px \'Manrope\',sans-serif;flex:1;min-width:0;">' + esc(t.label) + '</span>' +
+          '<button data-action="flagTopic" data-cat="' + esc(t.catId) + '" style="flex-shrink:0;background:none;border:none;padding:2px 4px;color:var(--ink3);cursor:pointer;">' + icoSvg('cross', 13) + '</button></div>' +
           '<div style="display:flex;gap:8px;margin-top:10px;">' +
-          (t.theoryId ? '<button data-action="subGo" data-theory="' + esc(t.theoryId) + '" style="flex:1;background:none;border:1px solid var(--line);border-radius:999px;padding:8px;font:500 11.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Revoir le cours</button>' : '') +
-          '<button data-action="subGo" data-sub="' + esc(t.catId) + '" style="flex:1;background:var(--warn);border:none;border-radius:999px;padding:8px;font:600 11.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;">S\'entraîner</button>' +
+          (t.theoryId ? '<button data-action="subGo" data-theory="' + esc(t.theoryId) + '" style="flex:1;background:none;border:1px solid var(--line);border-radius:12px;padding:8px;font:500 11.5px \'Manrope\',sans-serif;color:var(--ink2);cursor:pointer;">Revoir le cours</button>' : '') +
+          '<button data-action="subGo" data-sub="' + esc(t.catId) + '" style="flex:1;background:var(--due);border:none;border-radius:12px;padding:8px;font:600 11.5px \'Manrope\',sans-serif;color:var(--on);cursor:pointer;">S\'entraîner</button>' +
           '</div></div>';
       }).join('') + '</div></div>' : '') +
     '<div style="margin:26px 24px 0;padding-top:20px;border-top:1px solid var(--rule);"><div class="folio-kicker">EXPLORER</div>' +
     '<div class="ledger" style="margin-top:6px;">' +
-    '<button data-action="goBrowse" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);padding-left:0;"><span class="folio-num" style="font-size:26px;width:44px;flex-shrink:0;">' + v.catCount + '</span><span style="flex:1;font:400 12.5px \'Inter\',sans-serif;color:var(--ink2);">Catégories</span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
-    '<button data-action="goExamPick" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);padding-left:0;"><span class="folio-num" style="font-size:26px;width:44px;flex-shrink:0;">' + v.examFormatCount + '</span><span style="flex:1;font:400 12.5px \'Inter\',sans-serif;color:var(--ink2);">Examens blancs</span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button></div></div>' +
+    '<button data-action="goBrowse" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);padding-left:0;"><span class="folio-num" style="font-size:26px;width:44px;flex-shrink:0;">' + v.catCount + '</span><span style="flex:1;font:400 12.5px \'Manrope\',sans-serif;color:var(--ink2);">Catégories</span><span style="color:var(--ink3);">' + icoSvg('chevron', 15) + '</span></button>' +
+    '<button data-action="goExamPick" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);padding-left:0;"><span class="folio-num" style="font-size:26px;width:44px;flex-shrink:0;">' + v.examFormatCount + '</span><span style="flex:1;font:400 12.5px \'Manrope\',sans-serif;color:var(--ink2);">Examens blancs</span><span style="color:var(--ink3);">' + icoSvg('chevron', 15) + '</span></button></div></div>' +
     '<div style="margin:26px 24px 0;"><div class="folio-kicker">OUTILS</div>' +
     '<div class="ledger" style="margin-top:6px;">' +
     '<button data-action="goBuilder" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);padding-left:0;">' +
-    '<span style="font:400 20px Fraunces,serif;color:var(--acc);width:30px;flex-shrink:0;">◎</span><span style="flex:1;"><span style="display:block;font:500 13.5px \'Inter\',sans-serif;">Créer ma session</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">Domaines, formats et niveau au choix</span></span>' +
-    '<span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
-    '<button data-action="goLabo" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);padding-left:0;"><span style="font:400 20px Fraunces,serif;color:var(--acc);width:30px;flex-shrink:0;">∑</span><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Labo</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:2px;">5 simulateurs</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
-    '<button data-action="goMental" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);padding-left:0;"><span style="font:400 20px Fraunces,serif;color:var(--gold);width:30px;flex-shrink:0;">⏱</span><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Calcul mental</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:2px;">10 questions chrono</span></span><span style="font:400 15px Fraunces,serif;color:var(--gold);">&#8250;</span></button></div></div>' +
+    '<span class="pos-ico tinted" style="color:var(--acc);">' + icoSvg('sliders', 16) + '</span><span style="flex:1;"><span style="display:block;font:500 13.5px \'Manrope\',sans-serif;">Créer ma session</span><span style="display:block;font:400 11.5px \'Manrope\',sans-serif;color:var(--ink2);margin-top:4px;">Domaines, formats et niveau au choix</span></span>' +
+    '<span style="color:var(--ink3);">' + icoSvg('chevron', 15) + '</span></button>' +
+    '<button data-action="goLabo" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);padding-left:0;"><span class="pos-ico tinted" style="color:var(--acc);">' + icoSvg('flask', 16) + '</span><span style="flex:1;"><span style="display:block;font:500 13px \'Manrope\',sans-serif;">Labo</span><span style="display:block;font:400 11px \'Manrope\',sans-serif;color:var(--ink2);margin-top:2px;">5 simulateurs</span></span><span style="color:var(--ink3);">' + icoSvg('chevron', 15) + '</span></button>' +
+    '<button data-action="goMental" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);padding-left:0;"><span class="pos-ico" style="background:rgba(61,169,252,.14);color:var(--info);">' + icoSvg('clock', 16) + '</span><span style="flex:1;"><span style="display:block;font:500 13px \'Manrope\',sans-serif;">Calcul mental</span><span style="display:block;font:400 11px \'Manrope\',sans-serif;color:var(--ink2);margin-top:2px;">10 questions chrono</span></span><span style="color:var(--ink3);">' + icoSvg('chevron', 15) + '</span></button></div></div>' +
     '<div style="height:26px;"></div></div>';
 }
 
@@ -1809,9 +1927,9 @@ function tplBrowse(v) {
   var activeAcc = active ? poleAccent(active.label) : 'var(--acc)';
   var cats = active ? active.cats.map(function (c) {
     return '<button data-action="catGo" data-cat="' + esc(c.id) + '" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);">' +
-      '<span style="flex:1;font:400 13px/1.4 \'Inter\',sans-serif;">' + esc(c.label) + '</span>' +
-      '<span style="font:500 10px \'Inter\',sans-serif;color:var(--dim);letter-spacing:.06em;flex-shrink:0;">' + esc(c.badge) + '</span>' +
-      '<span style="font:400 14px Fraunces,serif;color:' + activeAcc + ';flex-shrink:0;">&rsaquo;</span></button>';
+      '<span style="flex:1;font:400 13px/1.4 \'Manrope\',sans-serif;">' + esc(c.label) + '</span>' +
+      '<span style="font:500 10px \'Manrope\',sans-serif;color:var(--dim);letter-spacing:.06em;flex-shrink:0;">' + esc(c.badge) + '</span>' +
+      '<span style="font:400 14px Manrope,sans-serif;color:' + activeAcc + ';flex-shrink:0;">&rsaquo;</span></button>';
   }).join('') : '';
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:54px 24px 0;display:flex;justify-content:space-between;align-items:flex-start;">' +
@@ -1821,15 +1939,15 @@ function tplBrowse(v) {
     '<div class="binder-tabs" style="margin:20px 0 0;padding-left:24px;">' + rail + '<span style="flex-shrink:0;width:8px;"></span></div>' +
     '<div style="border-top:1px solid var(--rule);">' +
     (active ? '<div style="padding:16px 24px 0;display:flex;align-items:center;justify-content:space-between;gap:10px;">' +
-      '<span style="font:500 9px \'Inter\',sans-serif;color:var(--dim);letter-spacing:.06em;">' + esc(active.ratio) + ' bonnes réponses</span>' +
-      '<span style="display:flex;align-items:center;gap:8px;"><span style="width:44px;height:3px;background:var(--line);overflow:hidden;display:inline-block;"><span style="display:block;width:' + active.pct + '%;height:3px;background:' + activeAcc + ';transition:width .5s cubic-bezier(.16,1,.3,1);"></span></span><span style="font:500 10.5px \'Inter\',sans-serif;color:' + activeAcc + ';">' + active.pct + '%</span></span></div>' : '') +
+      '<span style="font:500 9px \'Manrope\',sans-serif;color:var(--dim);letter-spacing:.06em;">' + esc(active.ratio) + ' bonnes réponses</span>' +
+      '<span style="display:flex;align-items:center;gap:8px;"><span style="width:44px;height:3px;background:var(--line);overflow:hidden;display:inline-block;"><span style="display:block;width:' + active.pct + '%;height:3px;background:' + activeAcc + ';transition:width .5s cubic-bezier(.16,1,.3,1);"></span></span><span style="font:500 10.5px \'Manrope\',sans-serif;color:' + activeAcc + ';">' + active.pct + '%</span></span></div>' : '') +
     '<div class="ledger" style="margin:8px 24px 0;">' + cats + '</div></div>' +
     '<div style="height:26px;"></div></div>';
 }
 
 function tplCat(v) {
   var subBtn = function (s) {
-    return '<button data-action="subGo" data-sub="' + esc(s.id) + '"' + (s.theory ? ' data-theory="' + esc(s.theory) + '"' : '') + (s.simu ? ' data-simu="' + esc(s.simu) + '"' : '') + ' class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);"><span style="flex:1;font:500 13px/1.4 \'Inter\',sans-serif;">' + esc(s.label) + '</span><span style="font:500 10px \'Inter\',sans-serif;color:var(--dim);letter-spacing:.08em;flex-shrink:0;">' + esc(s.badge) + '</span></button>';
+    return '<button data-action="subGo" data-sub="' + esc(s.id) + '"' + (s.theory ? ' data-theory="' + esc(s.theory) + '"' : '') + (s.simu ? ' data-simu="' + esc(s.simu) + '"' : '') + ' class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);"><span style="flex:1;font:500 13px/1.4 \'Manrope\',sans-serif;">' + esc(s.label) + '</span><span style="font:500 10px \'Manrope\',sans-serif;color:var(--dim);letter-spacing:.08em;flex-shrink:0;">' + esc(s.badge) + '</span></button>';
   };
   // Group by role (cours / outil / entraînement) rather than mixing them flatly,
   // so the sequence matches how one actually works through a topic: learn, then
@@ -1849,43 +1967,43 @@ function tplCat(v) {
     subsHtml = '<div class="ledger">' + v.subs.map(subBtn).join('') + '</div>';
   }
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:54px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> ' + esc(v.catPole) + '</button>' +
+    '<div style="padding:54px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">' + icoSvg('chevron-left', 15) + '</span>' + esc(v.catPole) + '</button>' +
     '<div class="folio-num" style="font-size:30px;margin-top:18px;padding-bottom:16px;border-bottom:1px solid var(--rule);">' + esc(v.catLabel) + '</div></div>' +
     '<div style="margin:0 24px;">' + subsHtml + '</div>' +
     '<div style="height:26px;"></div></div>';
 }
 
 function tplQuiz(v) {
-  var mid = '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:16px;font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);"><div>' + esc(v.qCat) + (v.qIsReview ? ' <span style="color:var(--gold);">· RÉVISION</span>' : '') + '</div><div style="color:var(--acc);">' + esc(v.qTypeLabel) + '</div></div>' +
+  var mid = '<div style="display:flex;justify-content:space-between;align-items:center;padding-top:16px;font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);"><div>' + esc(v.qCat) + (v.qIsReview ? ' <span style="color:var(--info);">· RÉVISION</span>' : '') + '</div><div style="color:var(--acc);">' + esc(v.qTypeLabel) + '</div></div>' +
     '<div style="display:flex;gap:14px;align-items:flex-start;margin-top:14px;">' +
     '<span class="folio-num" style="font-size:22px;color:var(--dim);flex-shrink:0;">' + esc(v.quizPos.split(' ')[0] || v.quizPos) + '</span>' +
-    '<div style="font:400 22px/1.32 Fraunces,serif;letter-spacing:-.008em;text-wrap:pretty;flex:1;">' + esc(v.qText) + '</div></div>';
+    '<div style="font:400 22px/1.32 Manrope,sans-serif;letter-spacing:-.008em;text-wrap:pretty;flex:1;">' + esc(v.qText) + '</div></div>';
   if (v.qHasSvg) mid += '<div style="margin-top:16px;border-radius:16px;overflow:hidden;background:#f5efe1;">' + v.qSvg + '</div>';
-  if (v.isScenario) mid += '<div style="margin-top:16px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:13px 15px;"><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:var(--acc);margin-bottom:5px;">SCÉNARIO</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);">' + esc(v.qContexte) + '</div></div>';
-  if (v.isSpot) mid += '<div style="margin-top:14px;font:400 12px/1.5 \'Inter\',sans-serif;color:var(--warn);">Une seule affirmation est fausse. Repère-la.</div>';
-  if (v.isDoc) mid += '<div style="margin-top:16px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;font:400 12px/1.7 \'Inter\',sans-serif;color:var(--ink2);white-space:pre-line;">' + esc(v.qDoc) + '</div>';
+  if (v.isScenario) mid += '<div style="margin-top:16px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:13px 15px;"><div style="font:600 9px \'Manrope\',sans-serif;letter-spacing:.09em;color:var(--acc);margin-bottom:5px;">SCÉNARIO</div><div style="font:400 12.5px/1.6 \'Manrope\',sans-serif;color:var(--ink2);">' + esc(v.qContexte) + '</div></div>';
+  if (v.isSpot) mid += '<div style="margin-top:14px;font:400 12px/1.5 \'Manrope\',sans-serif;color:var(--due);">Une seule affirmation est fausse. Repère-la.</div>';
+  if (v.isDoc) mid += '<div style="margin-top:16px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:14px;font:400 12px/1.7 \'Manrope\',sans-serif;color:var(--ink2);white-space:pre-line;">' + esc(v.qDoc) + '</div>';
   if (v.hasOptions) mid += '<div style="display:flex;flex-direction:column;gap:9px;margin-top:24px;">' + v.options.map(tplOption).join('') + '</div>';
   if (v.isVf) mid += '<div style="display:flex;gap:12px;margin-top:24px;">' + v.vfBtns.map(tplVf).join('') + '</div>';
   if (v.isCalc) mid += tplCalc(v);
   if (v.isTexte || v.isOpen) mid += tplTexte(v);
   if (v.isMemviz) mid += tplMemviz(v);
   if (v.isOrder) mid += tplOrder(v);
-  if (v.examAnswered) mid += '<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line);animation:kfIn .3s ease both;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">RÉPONSE ENREGISTRÉE · CORRECTION À LA FIN DE L\'ÉPREUVE</div></div>';
+  if (v.examAnswered) mid += '<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--line);animation:kfIn .3s ease both;"><div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);">RÉPONSE ENREGISTRÉE · CORRECTION À LA FIN DE L\'ÉPREUVE</div></div>';
   if (v.answered) {
-    mid += '<div style="margin-top:24px;padding-top:18px;border-top:1px solid var(--rule);animation:kfIn .3s ease both;">';
-    if (v.wasOk) mid += '<div style="display:flex;align-items:center;gap:12px;"><span class="seal seal-ink seal-sm"><span class="seal-glyph">✓</span></span><div class="folio-num" style="font-size:24px;color:var(--acc2);">Exact.<span style="font:500 12px \'Inter\',sans-serif;letter-spacing:0;color:var(--ink3);"> +10 XP</span></div></div>';
-    if (v.wasKo) mid += '<div style="display:flex;align-items:center;gap:12px;"><span class="seal seal-wax seal-sm"><span class="seal-glyph">✕</span></span><div class="folio-num" style="font-size:24px;color:var(--warn);">Raté.<span style="font:500 12px \'Inter\',sans-serif;letter-spacing:0;color:var(--ink3);"> ' + esc(v.koNote) + '</span></div></div>';
-    mid += (v.qFormula
-      ? '<div style="margin-top:12px;padding:12px 14px;background:' + hexA(v.wasOk ? '#5f7f66' : '#a8432f', 0.12) + ';border:1px solid ' + hexA(v.wasOk ? '#5f7f66' : '#a8432f', 0.35) + ';border-radius:12px;">' +
-        '<div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:' + (v.wasOk ? 'var(--acc2)' : 'var(--warn)') + ';margin-bottom:5px;">LE CALCUL</div>' +
-        '<div style="font:500 13.5px/1.6 \'Inter\',sans-serif;color:var(--ink);white-space:pre-line;">' + esc(v.qFormula) + '</div>' +
-        (v.qExponentNote ? '<div style="font:400 11.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;padding-top:8px;border-top:1px solid ' + hexA(v.wasOk ? '#5f7f66' : '#a8432f', 0.25) + ';">' + esc(v.qExponentNote) + '</div>' : '') +
-        '</div>' +
-        (v.qNarrative ? '<div style="font:400 13px/1.75 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;text-wrap:pretty;white-space:pre-line;">' + esc(v.qNarrative) + '</div>' : '')
-      : '<div style="font:400 13px/1.75 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;text-wrap:pretty;white-space:pre-line;">' + esc(v.qExplain) + '</div>') +
+    mid += '<div style="margin-top:24px;animation:kfIn .3s ease both;">';
+    if (v.wasOk) mid += '<div style="display:flex;align-items:center;gap:12px;"><span class="seal seal-sm"><span class="seal-glyph">' + icoSvg('check', 16) + '</span></span><div class="folio-num" style="font-size:24px;color:var(--acc);">Exact.<span style="font:500 12px \'Manrope\',sans-serif;letter-spacing:0;color:var(--ink3);"> +10 XP</span></div></div>';
+    if (v.wasKo) mid += '<div style="display:flex;align-items:center;gap:12px;"><span class="seal seal-wax seal-sm"><span class="seal-glyph">' + icoSvg('cross', 16) + '</span></span><div class="folio-num" style="font-size:24px;color:var(--bad);">Raté.<span style="font:500 12px \'Manrope\',sans-serif;letter-spacing:0;color:var(--ink3);"> ' + esc(v.koNote) + '</span></div></div>';
+    mid += '<div class="feedback-box' + (v.wasOk ? '' : ' bad') + '" style="margin-top:14px;">' +
+      (v.qFormula
+      ? '<div style="font:600 9px \'Manrope\',sans-serif;letter-spacing:.09em;color:' + (v.wasOk ? 'var(--acc)' : 'var(--bad)') + ';margin-bottom:5px;">LE CALCUL</div>' +
+        '<div style="font:500 13.5px/1.6 \'Manrope\',sans-serif;color:var(--ink);white-space:pre-line;">' + esc(v.qFormula) + '</div>' +
+        (v.qExponentNote ? '<div style="font:400 11.5px/1.5 \'Manrope\',sans-serif;color:var(--ink3);margin-top:8px;padding-top:8px;border-top:1px solid var(--line);">' + esc(v.qExponentNote) + '</div>' : '') +
+        (v.qNarrative ? '<div style="font:400 13px/1.75 \'Manrope\',sans-serif;color:var(--ink2);margin-top:10px;text-wrap:pretty;white-space:pre-line;">' + esc(v.qNarrative) + '</div>' : '')
+      : '<div style="font:400 13px/1.75 \'Manrope\',sans-serif;color:var(--ink2);text-wrap:pretty;white-space:pre-line;">' + esc(v.qExplain) + '</div>') +
+      '</div>' +
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;">' +
-      '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">REVOIR DANS ' + v.nextIn + ' J</div>' +
-      (v.qCatId ? '<button data-action="flagTopic" data-cat="' + esc(v.qCatId) + '" style="background:none;border:1px solid ' + (v.qFlagged ? 'var(--warn)' : 'var(--line)') + ';border-radius:999px;padding:6px 11px;font:500 10.5px \'Inter\',sans-serif;color:' + (v.qFlagged ? 'var(--warn)' : 'var(--ink3)') + ';cursor:pointer;white-space:nowrap;">' + (v.qFlagged ? 'Sujet marqué' : 'Retravailler ce sujet') + '</button>' : '') +
+      '<div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);">REVOIR DANS ' + v.nextIn + ' J</div>' +
+      (v.qCatId ? '<button data-action="flagTopic" data-cat="' + esc(v.qCatId) + '" style="background:none;border:1px solid ' + (v.qFlagged ? 'var(--due)' : 'var(--line)') + ';border-radius:12px;padding:6px 11px;font:500 10.5px \'Manrope\',sans-serif;color:' + (v.qFlagged ? 'var(--due)' : 'var(--ink3)') + ';cursor:pointer;white-space:nowrap;">' + (v.qFlagged ? 'Sujet marqué' : 'Retravailler ce sujet') + '</button>' : '') +
       '</div></div>';
   }
   mid += '<div style="height:20px;"></div>';
@@ -1893,26 +2011,27 @@ function tplQuiz(v) {
   var footer = '<div style="padding:12px 24px 36px;border-top:1px solid var(--rule);background:var(--bg);">';
   if (v.showValidate) footer += '<button data-action="validate" class="btn-cta" style="width:100%;">' + esc(v.validateLabel) + '</button>';
   if (v.showNext) footer += '<button data-action="next" class="btn-cta" style="width:100%;">' + esc(v.nextLabel) + '</button>';
-  if (v.showHint) footer += '<div style="text-align:center;font:400 11px \'Inter\',sans-serif;color:var(--ink3);padding:4px 0;">Touchez une réponse.</div>';
+  if (v.showHint) footer += '<div style="text-align:center;font:400 11px \'Manrope\',sans-serif;color:var(--ink3);padding:4px 0;">Touchez une réponse.</div>';
   footer += '</div>';
 
   return '<div style="flex:1;display:flex;flex-direction:column;min-height:0;background:var(--bg-hi);">' +
     '<div style="padding:52px 24px 0;background:var(--bg);"><div style="display:flex;align-items:center;gap:12px;">' +
-    '<button data-action="quitQuiz" style="background:none;border:none;padding:0;font:500 12.5px \'Inter\',sans-serif;color:var(--ink3);cursor:pointer;">Fermer</button>' +
-    '<div style="flex:1;text-align:center;font:600 10px \'Inter\',sans-serif;letter-spacing:.1em;color:var(--ink3);">' + esc(v.quizTitle.toUpperCase()) + '</div>' +
-    (v.examTimerLabel ? '<div style="font:600 11px \'Inter\',sans-serif;color:' + (v.examTimerLow ? 'var(--warn)' : 'var(--acc)') + ';margin-right:10px;">⏱ ' + esc(v.examTimerLabel) + '</div>' : '') +
-    '<div style="font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);">' + esc(v.quizPos) + '</div></div>' +
-    '<div style="margin-top:14px;height:2px;background:var(--rule);overflow:hidden;"><div style="width:' + v.quizPct + '%;height:2px;background:var(--acc);transition:width .35s cubic-bezier(.16,1,.3,1);"></div></div></div>' +
-    '<div class="paper-ruled" style="flex:1;overflow:auto;min-height:0;padding:0 24px;">' + mid + '</div>' +
+    '<button data-action="quitQuiz" style="background:none;border:none;padding:0;font:500 12.5px \'Manrope\',sans-serif;color:var(--ink3);cursor:pointer;">Fermer</button>' +
+    '<div style="flex:1;text-align:center;font:600 10px \'Manrope\',sans-serif;letter-spacing:.1em;color:var(--ink3);">' + esc(v.quizTitle.toUpperCase()) + '</div>' +
+    (v.examTimerLabel ? '<div style="display:flex;align-items:center;gap:4px;font:600 11px \'Manrope\',sans-serif;color:' + (v.examTimerLow ? 'var(--bad)' : 'var(--acc)') + ';margin-right:10px;">' + icoSvg('clock', 13) + esc(v.examTimerLabel) + '</div>' : '') +
+    '<div style="font:500 10.5px \'Manrope\',sans-serif;color:var(--ink3);">' + esc(v.quizPos) + '</div></div>' +
+    '<div class="progress-thin" style="margin-top:14px;"><span style="width:' + v.quizPct + '%;transition:width .35s cubic-bezier(.16,1,.3,1);"></span></div></div>' +
+    '<div style="flex:1;overflow:auto;min-height:0;padding:0 24px;">' + mid + '</div>' +
     footer + '</div>';
 }
 
 function tplDone(v) {
-  var sealClass = v.donePct >= 70 ? 'seal-ink' : '';
+  var sealClass = v.donePct >= 70 ? '' : 'seal-wax';
   return '<div style="flex:1;display:flex;flex-direction:column;padding:60px 26px 40px;overflow:auto;">' +
     '<div class="folio-kicker">' + esc(v.doneKicker) + '</div>' +
     '<div class="folio-num" style="font-size:34px;margin-top:14px;">' + esc(v.doneTitle) + '</div>' +
-    '<div style="margin:30px auto 0;display:flex;flex-direction:column;align-items:center;gap:14px;">' +
+    (v.donePct >= 70 ? '<div style="margin-top:10px;">' + illuSuccess() + '</div>' : '') +
+    '<div style="margin:' + (v.donePct >= 70 ? '14px' : '30px') + ' auto 0;display:flex;flex-direction:column;align-items:center;gap:14px;">' +
     '<span class="seal ' + sealClass + '" style="width:128px;height:128px;">' +
     '<span class="seal-glyph" style="font-size:38px;line-height:1;display:flex;flex-direction:column;align-items:center;">' + v.donePct + '<span style="font-size:11px;letter-spacing:.1em;margin-top:2px;">% · ' + esc(v.doneRatio) + '</span></span></span></div>' +
     '<div class="ledger-total" style="margin-top:28px;display:flex;justify-content:space-between;">' +
@@ -1920,13 +2039,13 @@ function tplDone(v) {
     '<div><div class="folio-num" style="font-size:26px;">' + v.doneKo + '</div><div class="folio-kicker" style="margin-top:6px;">À REVOIR</div></div>' +
     '<div><div class="folio-num" style="font-size:26px;">' + v.streak + '</div><div class="folio-kicker" style="margin-top:6px;">JOURS</div></div></div>' +
     (v.streakMilestone ? '<div class="stagger" style="margin-top:16px;display:flex;align-items:center;gap:14px;border-top:1px solid var(--rule);padding-top:16px;">' +
-      '<span class="seal seal-sm"><span class="seal-glyph">' + v.streakMilestone + '</span></span><span style="font:500 12.5px/1.4 \'Inter\',sans-serif;color:var(--ink);"><b>' + v.streakMilestone + ' jours d\'affilée.</b><br><span style="color:var(--ink2);font-weight:400;">Une régularité qui paie, continue comme ça.</span></span></div>' : '') +
-    '<div style="font:400 13px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:24px;">' + esc(v.doneNote) + '</div>' +
+      '<span class="seal seal-sm"><span class="seal-glyph" style="font:700 15px \'Manrope\',sans-serif;">' + v.streakMilestone + '</span></span><span style="font:500 12.5px/1.4 \'Manrope\',sans-serif;color:var(--ink);"><b>' + v.streakMilestone + ' jours d\'affilée.</b><br><span style="color:var(--ink2);font-weight:400;">Une régularité qui paie, continue comme ça.</span></span></div>' : '') +
+    '<div style="font:400 13px/1.7 \'Manrope\',sans-serif;color:var(--ink2);margin-top:24px;">' + esc(v.doneNote) + '</div>' +
     '<div style="margin-top:auto;display:flex;flex-direction:column;gap:10px;">' +
     '<button data-action="doneAgain" class="btn-cta">' + esc(v.doneCta) + '</button>' +
-    (v.doneShowFicheReview ? '<button data-action="goFicheReviewFromDone" style="background:none;border:1px solid var(--line);border-radius:999px;padding:16px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Revoir mes réponses</button>' : '') +
-    (v.doneShowParcours ? '<button data-action="goParcoursFromDone" style="background:none;border:1px solid var(--acc);border-radius:999px;padding:16px;font:600 12.5px \'Inter\',sans-serif;color:var(--acc);cursor:pointer;">Retour au parcours</button>' : '') +
-    '<button data-action="goHome" style="background:none;border:1px solid var(--line);border-radius:999px;padding:16px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Retour à l\'accueil</button></div></div>';
+    (v.doneShowFicheReview ? '<button data-action="goFicheReviewFromDone" style="background:none;border:1px solid var(--line);border-radius:12px;padding:16px;font:500 12.5px \'Manrope\',sans-serif;color:var(--ink2);cursor:pointer;">Revoir mes réponses</button>' : '') +
+    (v.doneShowParcours ? '<button data-action="goParcoursFromDone" style="background:none;border:1px solid var(--acc);border-radius:12px;padding:16px;font:600 12.5px \'Manrope\',sans-serif;color:var(--acc);cursor:pointer;">Retour au parcours</button>' : '') +
+    '<button data-action="goHome" style="background:none;border:1px solid var(--line);border-radius:12px;padding:16px;font:500 12.5px \'Manrope\',sans-serif;color:var(--ink2);cursor:pointer;">Retour à l\'accueil</button></div></div>';
 }
 
 function tplBuilder(v) {
@@ -1934,25 +2053,25 @@ function tplBuilder(v) {
     return '<button data-action="buildLevel" data-lv="' + l.key + '" class="lab-seg' + (l.on ? ' on' : '') + '" style="flex:1;">' + l.label + '</button>';
   }).join('');
   var doms = v.buildDoms.map(function (d) {
-    return '<button data-action="buildDom" data-dom="' + esc(d.id) + '" class="hv-c" style="background:' + (d.on ? 'var(--ink)' : 'var(--panel)') + ';color:' + (d.on ? 'var(--bg)' : 'var(--ink)') + ';border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:500 12px \'Inter\',sans-serif;cursor:pointer;text-align:left;">' + (d.on ? '✓ ' : '') + esc(d.label) + '</button>';
+    return '<button data-action="buildDom" data-dom="' + esc(d.id) + '" class="hv-c" style="background:' + (d.on ? 'var(--acc)' : 'var(--panel)') + ';color:' + (d.on ? 'var(--on)' : 'var(--ink)') + ';border:1px solid ' + (d.on ? 'var(--acc)' : 'var(--line)') + ';border-radius:12px;padding:10px 12px;font:500 12px \'Manrope\',sans-serif;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px;">' + (d.on ? icoSvg('check', 13) : '') + esc(d.label) + '</button>';
   }).join('');
   var types = v.buildTypeOpts.map(function (t) {
-    return '<button data-action="buildType" data-t="' + t.id + '" class="hv-c" style="background:' + (t.on ? 'var(--ink)' : 'var(--panel)') + ';color:' + (t.on ? 'var(--bg)' : 'var(--ink)') + ';border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:500 12px \'Inter\',sans-serif;cursor:pointer;text-align:left;">' + (t.on ? '✓ ' : '') + esc(t.label) + ' <span style="opacity:.6;font-family:\'Inter\',sans-serif;font-size:10px;">(' + t.count + ')</span></button>';
+    return '<button data-action="buildType" data-t="' + t.id + '" class="hv-c" style="background:' + (t.on ? 'var(--acc)' : 'var(--panel)') + ';color:' + (t.on ? 'var(--on)' : 'var(--ink)') + ';border:1px solid ' + (t.on ? 'var(--acc)' : 'var(--line)') + ';border-radius:12px;padding:10px 12px;font:500 12px \'Manrope\',sans-serif;cursor:pointer;text-align:left;display:flex;align-items:center;gap:6px;">' + (t.on ? icoSvg('check', 13) : '') + esc(t.label) + ' <span style="opacity:.6;font-family:\'Manrope\',sans-serif;font-size:10px;">(' + t.count + ')</span></button>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
-    '<div style="font:300 32px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:16px;">Créer <span style="font-style:italic;">ma session</span></div>' +
-    '<div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;">Choisis tes domaines, tes formats, ton niveau et le nombre de questions. On pioche au hasard dans toute la banque.</div></div>' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">' + icoSvg('chevron-left', 15) + '</span>Retour</button>' +
+    '<div style="font:300 32px/1.1 Manrope,sans-serif;letter-spacing:-.025em;margin-top:16px;">Créer <span style="font-style:italic;">ma session</span></div>' +
+    '<div style="font:400 12.5px/1.6 \'Manrope\',sans-serif;color:var(--ink2);margin-top:10px;">Choisis tes domaines, tes formats, ton niveau et le nombre de questions. On pioche au hasard dans toute la banque.</div></div>' +
     '<div style="margin:24px 24px 0;">' +
-    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">NIVEAU</div>' +
+    '<div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);">NIVEAU</div>' +
     '<div style="display:flex;gap:8px;margin-top:10px;">' + levels + '</div>' +
-    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:24px;">DOMAINES</div>' +
+    '<div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:24px;">DOMAINES</div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">' + doms + '</div>' +
-    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:24px;">FORMATS</div>' +
+    '<div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:24px;">FORMATS</div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">' + types + '</div>' +
-    '<div style="margin-top:24px;"><div style="display:flex;justify-content:space-between;font:500 12px \'Inter\',sans-serif;color:var(--ink2);"><span>Nombre de questions</span><b id="bldNV" style="color:var(--ink);font-family:\'Inter\',sans-serif;">' + v.buildN + '</b></div>' +
+    '<div style="margin-top:24px;"><div style="display:flex;justify-content:space-between;font:500 12px \'Manrope\',sans-serif;color:var(--ink2);"><span>Nombre de questions</span><b id="bldNV" style="color:var(--ink);font-family:\'Manrope\',sans-serif;">' + v.buildN + '</b></div>' +
     '<input type="range" id="bldN" min="1" max="' + v.buildMaxN + '" step="1" value="' + v.buildN + '"></div>' +
-    '<div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:10px;">' + v.buildAvail + ' question' + (v.buildAvail > 1 ? 's' : '') + ' disponible' + (v.buildAvail > 1 ? 's' : '') + ' avec cette sélection' + (v.buildAvail === 0 ? ' — élargis tes critères.' : '.') + '</div>' +
+    '<div style="font:400 11.5px \'Manrope\',sans-serif;color:var(--ink3);margin-top:10px;">' + v.buildAvail + ' question' + (v.buildAvail > 1 ? 's' : '') + ' disponible' + (v.buildAvail > 1 ? 's' : '') + ' avec cette sélection' + (v.buildAvail === 0 ? ' — élargis tes critères.' : '.') + '</div>' +
     '<button data-action="startBuilder"' + (v.buildAvail < 1 ? ' disabled style="opacity:.4;"' : '') + ' class="btn-cta" style="width:100%;margin-top:16px;">Lancer ma session →</button>' +
     '</div><div style="height:32px;"></div></div>';
 }
@@ -1960,28 +2079,28 @@ function tplBuilder(v) {
 function tplExamPick(v) {
   var g = v.niveauGeneral;
   var o = v.examOfficiel;
-  var niveauBtn = '<button data-action="examGo" data-key="' + esc(g.key) + '" data-label="' + esc(g.label) + '" class="hv-a stagger" style="background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--gold);border-radius:4px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;">' +
-    '<span style="font:400 24px Fraunces,serif;color:var(--gold);flex-shrink:0;">⚡</span>' +
-    '<span style="flex:1;"><span style="display:block;font:500 14px \'Inter\',sans-serif;">' + esc(g.label) + '</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(g.sub) + '</span></span>' +
-    '<span style="font:500 10px \'Inter\',sans-serif;color:var(--gold);flex-shrink:0;">' + esc(g.best) + '</span></button>';
-  var officielBtn = '<button data-action="examGo" data-key="' + esc(o.key) + '" data-label="' + esc(o.label) + '" class="hv-a stagger card-hero" style="background:linear-gradient(135deg,' + hexA('#a9814a', 0.14) + ',var(--panel));border:1px solid var(--acc);border-radius:14px;padding:18px;display:flex;align-items:center;gap:16px;cursor:pointer;color:var(--ink);text-align:left;">' +
-    '<span class="seal seal-sm" style="width:46px;height:46px;flex-shrink:0;"><span class="seal-glyph" style="font-size:18px;">⏱</span></span>' +
-    '<span style="flex:1;"><span style="display:block;font:500 14px \'Inter\',sans-serif;">' + esc(o.label) + '</span><span style="display:block;font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(o.sub) + '</span></span>' +
-    '<span style="font:500 10px \'Inter\',sans-serif;color:var(--acc);flex-shrink:0;">' + esc(o.best) + '</span></button>';
+  var niveauBtn = '<button data-action="examGo" data-key="' + esc(g.key) + '" data-label="' + esc(g.label) + '" class="hv-a stagger" style="background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--info);border-radius:4px;padding:16px;display:flex;align-items:center;gap:14px;cursor:pointer;color:var(--ink);text-align:left;">' +
+    '<span class="pos-ico" style="background:rgba(61,169,252,.14);color:var(--info);flex-shrink:0;">' + icoSvg('bolt', 16) + '</span>' +
+    '<span style="flex:1;"><span style="display:block;font:500 14px \'Manrope\',sans-serif;">' + esc(g.label) + '</span><span style="display:block;font:400 11.5px \'Manrope\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(g.sub) + '</span></span>' +
+    '<span style="font:500 10px \'Manrope\',sans-serif;color:var(--info);flex-shrink:0;">' + esc(g.best) + '</span></button>';
+  var officielBtn = '<button data-action="examGo" data-key="' + esc(o.key) + '" data-label="' + esc(o.label) + '" class="hv-a stagger card-hero" style="border:1px solid var(--acc);border-radius:14px;padding:18px;display:flex;align-items:center;gap:16px;cursor:pointer;color:var(--ink);text-align:left;">' +
+    '<span class="seal seal-sm" style="width:46px;height:46px;flex-shrink:0;"><span class="seal-glyph">' + icoSvg('clock', 20) + '</span></span>' +
+    '<span style="flex:1;"><span style="display:block;font:500 14px \'Manrope\',sans-serif;">' + esc(o.label) + '</span><span style="display:block;font:400 11.5px \'Manrope\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(o.sub) + '</span></span>' +
+    '<span style="font:500 10px \'Manrope\',sans-serif;color:var(--acc);flex-shrink:0;">' + esc(o.best) + '</span></button>';
   var lvs = v.examLevels.map(function (e) {
     return '<button data-action="examGo" data-key="' + esc(e.key) + '" data-label="' + esc(e.label) + '" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);">' +
       '<span class="folio-num" style="font-size:24px;width:30px;flex-shrink:0;color:var(--acc);">' + e.n + '</span>' +
-      '<span style="flex:1;"><span style="display:block;font:500 13.5px \'Inter\',sans-serif;">' + esc(e.label) + '</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(e.sub) + '</span></span>' +
-      '<span style="font:500 10px \'Inter\',sans-serif;color:var(--ink3);flex-shrink:0;">' + esc(e.best) + '</span></button>';
+      '<span style="flex:1;"><span style="display:block;font:500 13.5px \'Manrope\',sans-serif;">' + esc(e.label) + '</span><span style="display:block;font:400 11px \'Manrope\',sans-serif;color:var(--ink2);margin-top:3px;">' + esc(e.sub) + '</span></span>' +
+      '<span style="font:500 10px \'Manrope\',sans-serif;color:var(--ink3);flex-shrink:0;">' + esc(e.best) + '</span></button>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;padding:54px 24px 0;">' +
-    '<button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
+    '<button data-action="goBack" class="btn-back hv-a"><span class="bkarr">' + icoSvg('chevron-left', 15) + '</span>Retour</button>' +
     '<div class="folio-kicker" style="margin-top:16px;">EXAMEN BLANC</div>' +
     '<div class="folio-num" style="font-size:32px;margin-top:12px;padding-bottom:16px;border-bottom:1px solid var(--rule);">Cinq <span style="font-style:italic;color:var(--acc);">formats</span></div>' +
-    '<div style="font:400 13px/1.7 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">Questions tirées au sort, sans correction avant la fin. Seuil de réussite : 60 % en entraînement, 50 % sur l\'examen officiel chronométré.</div>' +
+    '<div style="font:400 13px/1.7 \'Manrope\',sans-serif;color:var(--ink2);margin-top:14px;">Questions tirées au sort, sans correction avant la fin. Seuil de réussite : 60 % en entraînement, 50 % sur l\'examen officiel chronométré.</div>' +
     '<div class="folio-kicker" style="margin-top:24px;color:var(--acc);">FORMAT OFFICIEL</div>' +
     '<div style="margin-top:10px;">' + officielBtn + '</div>' +
-    '<div class="folio-kicker" style="margin-top:24px;color:var(--gold);">CHECK RAPIDE</div>' +
+    '<div class="folio-kicker" style="margin-top:24px;color:var(--info);">CHECK RAPIDE</div>' +
     '<div style="margin-top:10px;">' + niveauBtn + '</div>' +
     '<div class="folio-kicker" style="margin-top:24px;">PROGRESSION PAR NIVEAU</div>' +
     '<div class="ledger" style="margin-top:6px;">' + lvs + '</div>' +
@@ -1991,14 +2110,15 @@ function tplExamPick(v) {
 function tplExamResult(v) {
   var passed = v.examVerdict === 'Admis.';
   var poles = v.examByPole.map(function (p) {
-    return '<div class="ledger-row" style="padding-left:0;"><div style="flex:1;font:400 12.5px \'Inter\',sans-serif;">' + esc(p.label) + '</div>' +
+    return '<div class="ledger-row" style="padding-left:0;"><div style="flex:1;font:400 12.5px \'Manrope\',sans-serif;">' + esc(p.label) + '</div>' +
       '<div style="width:70px;height:3px;background:var(--line);overflow:hidden;flex-shrink:0;"><div style="width:' + p.pct + '%;height:3px;background:var(--acc);transform-origin:left;animation:kfFill 1s cubic-bezier(.16,1,.3,1) both;"></div></div>' +
-      '<div style="width:40px;text-align:right;font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);flex-shrink:0;">' + esc(p.ratio) + '</div></div>';
+      '<div style="width:40px;text-align:right;font:500 10.5px \'Manrope\',sans-serif;color:var(--ink3);flex-shrink:0;">' + esc(p.ratio) + '</div></div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;padding:54px 24px 0;">' +
     '<div class="folio-kicker">RÉSULTAT · ' + esc(v.examLabel) + '</div>' +
+    (passed ? '<div style="margin-top:6px;">' + illuSuccess() + '</div>' : '') +
     '<div style="display:flex;align-items:center;gap:16px;margin-top:16px;">' +
-    '<span class="seal' + (passed ? ' seal-ink' : ' seal-wax') + '" style="width:64px;height:64px;flex-shrink:0;"><span class="seal-glyph" style="font-size:22px;">' + (passed ? '✓' : '✕') + '</span></span>' +
+    '<span class="seal' + (passed ? '' : ' seal-wax') + '" style="width:64px;height:64px;flex-shrink:0;"><span class="seal-glyph">' + icoSvg(passed ? 'check' : 'cross', 26) + '</span></span>' +
     '<div class="folio-num" style="font-size:30px;">' + esc(v.examVerdict) + '</div></div>' +
     '<div class="ledger-total" style="margin-top:26px;display:flex;align-items:flex-end;gap:20px;">' +
     '<div><div class="folio-num" style="font-size:50px;color:var(--acc);">' + v.donePct + '<span style="font-size:18px;">%</span></div><div class="folio-kicker" style="margin-top:6px;">SCORE</div></div>' +
@@ -2007,40 +2127,40 @@ function tplExamResult(v) {
     '<div class="ledger" style="margin-top:8px;">' + poles + '</div>' +
     '<div style="margin:26px 0 0;display:flex;flex-direction:column;gap:10px;">' +
     '<button data-action="reviewExam" class="btn-cta">Revoir mes ' + v.doneKo + ' erreurs</button>' +
-    (v.doneShowParcours ? '<button data-action="goParcoursFromDone" style="background:none;border:1px solid var(--acc);border-radius:999px;padding:16px;font:600 12.5px \'Inter\',sans-serif;color:var(--acc);cursor:pointer;">Retour au parcours</button>' : '') +
-    '<button data-action="goHome" style="background:none;border:1px solid var(--line);border-radius:999px;padding:16px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Retour à l\'accueil</button></div>' +
+    (v.doneShowParcours ? '<button data-action="goParcoursFromDone" style="background:none;border:1px solid var(--acc);border-radius:12px;padding:16px;font:600 12.5px \'Manrope\',sans-serif;color:var(--acc);cursor:pointer;">Retour au parcours</button>' : '') +
+    '<button data-action="goHome" style="background:none;border:1px solid var(--line);border-radius:12px;padding:16px;font:500 12.5px \'Manrope\',sans-serif;color:var(--ink2);cursor:pointer;">Retour à l\'accueil</button></div>' +
     '<div style="height:26px;"></div></div>';
 }
 
 function tplSrs(v) {
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">MÉMOIRE</div>' +
-    '<div style="font:300 38px/1.08 Fraunces,serif;letter-spacing:-.025em;margin-top:14px;"><span style="font-style:italic;">' + v.dueCount + '</span> questions<br>arrivent à échéance.</div>' +
-    '<div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;">Ce chiffre suit la répétition espacée (1, 3, 7, 16, 35, 90 jours) : il compte toutes les questions déjà vues dont la date de révision tombe aujourd\'hui, indépendamment de ton % de maîtrise sur leur pôle.</div></div>' +
+    '<div style="padding:58px 24px 0;"><div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);">MÉMOIRE</div>' +
+    '<div style="font:300 38px/1.08 Manrope,sans-serif;letter-spacing:-.025em;margin-top:14px;"><span style="font-style:italic;">' + v.dueCount + '</span> questions<br>arrivent à échéance.</div>' +
+    '<div style="font:400 12px/1.6 \'Manrope\',sans-serif;color:var(--ink2);margin-top:12px;">Ce chiffre suit la répétition espacée (1, 3, 7, 16, 35, 90 jours) : il compte toutes les questions déjà vues dont la date de révision tombe aujourd\'hui, indépendamment de ton % de maîtrise sur leur pôle.</div></div>' +
     '<div style="margin:28px auto 0;position:relative;width:200px;height:200px;">' +
-    '<div style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--acc2),var(--acc),var(--gold),var(--acc2));animation:kfSpin 22s linear infinite;"></div>' +
+    '<div style="position:absolute;inset:0;border-radius:50%;background:conic-gradient(var(--acc),var(--due),var(--acc));animation:kfSpin 22s linear infinite;"></div>' +
     '<div style="position:absolute;inset:11px;border-radius:50%;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;">' +
-    '<div style="font:300 58px/1 Fraunces,serif;letter-spacing:-.03em;">' + v.dueCount + '</div>' +
-    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:8px;">DUES AUJOURD\'HUI</div></div></div>' +
+    '<div style="font:300 58px/1 Manrope,sans-serif;letter-spacing:-.03em;">' + v.dueCount + '</div>' +
+    '<div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:8px;">DUES AUJOURD\'HUI</div></div></div>' +
     '<button data-action="startSrs" class="btn-cta" style="margin:32px 24px 0;width:calc(100% - 48px);">Commencer</button>' +
     '<div style="margin:32px 24px 0;display:flex;justify-content:space-between;">' +
-    '<div><div style="font:300 30px/1 Fraunces,serif;">' + v.learnCount + '</div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">EN COURS</div></div>' +
-    '<div><div style="font:300 30px/1 Fraunces,serif;color:var(--acc);">' + v.masteredCount + '</div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">MAÎTRISÉES</div></div>' +
-    '<div><div style="font:300 30px/1 Fraunces,serif;color:var(--dim);">' + v.unseenCount + '</div><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">JAMAIS VUES</div></div></div>' +
-    '<div style="margin:24px 24px 0;padding-top:24px;border-top:1px solid var(--line);font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">1 · 3 · 7 · 16 · 35 · 90 JOURS</div>' +
-    (v.flaggedTopics.length ? '<div style="margin:24px 24px 0;padding-top:24px;border-top:1px solid var(--line);"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--warn);">À RETRAVAILLER</div>' +
-      '<div style="font:400 11.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:6px;">Sujets que tu as marqués depuis un cours ou une question — reliés ici au cours et à un entraînement ciblé.</div>' +
+    '<div><div style="font:300 30px/1 Manrope,sans-serif;">' + v.learnCount + '</div><div style="font:500 9.5px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">EN COURS</div></div>' +
+    '<div><div style="font:300 30px/1 Manrope,sans-serif;color:var(--acc);">' + v.masteredCount + '</div><div style="font:500 9.5px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">MAÎTRISÉES</div></div>' +
+    '<div><div style="font:300 30px/1 Manrope,sans-serif;color:var(--dim);">' + v.unseenCount + '</div><div style="font:500 9.5px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">JAMAIS VUES</div></div></div>' +
+    '<div style="margin:24px 24px 0;padding-top:24px;border-top:1px solid var(--line);font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);">1 · 3 · 7 · 16 · 35 · 90 JOURS</div>' +
+    (v.flaggedTopics.length ? '<div style="margin:24px 24px 0;padding-top:24px;border-top:1px solid var(--line);"><div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--due);">À RETRAVAILLER</div>' +
+      '<div style="font:400 11.5px/1.5 \'Manrope\',sans-serif;color:var(--ink3);margin-top:6px;">Sujets que tu as marqués depuis un cours ou une question — reliés ici au cours et à un entraînement ciblé.</div>' +
       '<div style="display:flex;flex-direction:column;gap:8px;margin-top:14px;">' + v.flaggedTopics.map(function (t) {
         return '<div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:13px 14px;">' +
           '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
-          '<span style="font:500 12.5px \'Inter\',sans-serif;flex:1;min-width:0;">' + esc(t.label) + '</span>' +
-          '<span style="flex-shrink:0;font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);">' + t.pct + '%</span>' +
-          '<button data-action="flagTopic" data-cat="' + esc(t.catId) + '" style="flex-shrink:0;background:none;border:none;padding:2px 4px;font:400 13px \'Inter\',sans-serif;color:var(--ink3);cursor:pointer;">✕</button></div>' +
+          '<span style="font:500 12.5px \'Manrope\',sans-serif;flex:1;min-width:0;">' + esc(t.label) + '</span>' +
+          '<span style="flex-shrink:0;font:500 10.5px \'Manrope\',sans-serif;color:var(--ink3);">' + t.pct + '%</span>' +
+          '<button data-action="flagTopic" data-cat="' + esc(t.catId) + '" style="flex-shrink:0;background:none;border:none;padding:2px 4px;color:var(--ink3);cursor:pointer;">' + icoSvg('cross', 13) + '</button></div>' +
           '<div style="display:flex;gap:8px;margin-top:10px;">' +
-          (t.theoryId ? '<button data-action="subGo" data-theory="' + esc(t.theoryId) + '" style="flex:1;background:none;border:1px solid var(--line);border-radius:999px;padding:8px;font:500 11.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Revoir le cours</button>' : '') +
-          '<button data-action="subGo" data-sub="' + esc(t.catId) + '" style="flex:1;background:var(--warn);border:none;border-radius:999px;padding:8px;font:600 11.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;">S\'entraîner</button>' +
+          (t.theoryId ? '<button data-action="subGo" data-theory="' + esc(t.theoryId) + '" style="flex:1;background:none;border:1px solid var(--line);border-radius:12px;padding:8px;font:500 11.5px \'Manrope\',sans-serif;color:var(--ink2);cursor:pointer;">Revoir le cours</button>' : '') +
+          '<button data-action="subGo" data-sub="' + esc(t.catId) + '" style="flex:1;background:var(--due);border:none;border-radius:12px;padding:8px;font:600 11.5px \'Manrope\',sans-serif;color:var(--on);cursor:pointer;">S\'entraîner</button>' +
           '</div></div>';
-      }).join('') + '</div></div>' : '') +
+      }).join('') + '</div></div>' : (v.dueCount === 0 ? '<div style="margin:30px 24px 0;text-align:center;">' + illuEmpty() + '<div style="font:500 13px \'Manrope\',sans-serif;color:var(--ink2);margin-top:12px;">Rien à revoir pour l\'instant.</div></div>' : '')) +
     '<div style="height:26px;"></div></div>';
 }
 
@@ -2049,17 +2169,17 @@ function tplFicheCard(f, idx, accent, action) {
   var acc = accent || 'var(--acc)';
   var ringColor = pr >= 80 ? 'var(--acc2)' : pr > 0 ? acc : 'var(--line)';
   var badge = pr >= 80
-    ? '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--acc2);margin-top:4px;">✓ MAÎTRISÉE</span>'
+    ? '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'Manrope\',sans-serif;letter-spacing:.08em;color:var(--acc2);margin-top:4px;">' + icoSvg('check', 10) + 'MAÎTRISÉE</span>'
     : pr > 0
-      ? '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'Inter\',sans-serif;letter-spacing:.08em;color:' + acc + ';margin-top:4px;">' + pr + '% EN COURS</span>'
-      : '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--dim);margin-top:4px;">' + esc(f.meta) + '</span>';
+      ? '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'Manrope\',sans-serif;letter-spacing:.08em;color:' + acc + ';margin-top:4px;">' + pr + '% EN COURS</span>'
+      : '<span style="display:inline-flex;align-items:center;gap:4px;font:500 9px \'Manrope\',sans-serif;letter-spacing:.08em;color:var(--dim);margin-top:4px;">' + esc(f.meta) + '</span>';
   var numTag = idx != null ? ((idx < 9 ? '0' : '') + (idx + 1)) : '§';
   return '<button data-action="' + (action || 'ficheGo') + '" data-fiche="' + esc(f.key) + '" class="hv-c ledger-row" style="width:100%;text-align:left;background:none;border:none;cursor:pointer;color:var(--ink);">' +
     '<span class="folio-num" style="font-size:19px;width:26px;flex-shrink:0;color:var(--dim);">' + numTag + '</span>' +
     '<span style="flex-shrink:0;position:relative;width:38px;height:38px;border-radius:50%;background:conic-gradient(' + ringColor + ' ' + (pr * 3.6) + 'deg,var(--line) ' + (pr * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
-    '<span style="width:32px;height:32px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font-size:14px;">' + esc(f.icon) + '</span></span>' +
-    '<span style="flex:1;min-width:0;"><span style="display:block;font:500 13.5px/1.35 \'Inter\',sans-serif;">' + esc(f.title) + '</span>' + badge + '</span>' +
-    '<span style="flex-shrink:0;font:400 15px Fraunces,serif;color:' + acc + ';">&#8250;</span></button>';
+    '<span style="width:32px;height:32px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;color:' + acc + ';">' + emo(f.icon, 15) + '</span></span>' +
+    '<span style="flex:1;min-width:0;"><span style="display:block;font:500 13.5px/1.35 \'Manrope\',sans-serif;">' + esc(f.title) + '</span>' + badge + '</span>' +
+    '<span style="flex-shrink:0;color:var(--ink3);">' + icoSvg('chevron', 15) + '</span></button>';
 }
 
 function tplCourses(v) {
@@ -2067,31 +2187,31 @@ function tplCourses(v) {
     return '<button data-action="coursePoleGo" data-pole="' + esc(p.label) + '" class="hv-a stagger" style="animation-delay:' + (i * 0.04).toFixed(2) + 's;position:relative;overflow:hidden;width:100%;background:linear-gradient(120deg,' + hexA(p.accent, 0.16) + ',var(--panel) 60%);border:1px solid ' + hexA(p.accent, 0.35) + ';border-radius:20px;padding:19px 20px;text-align:left;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:16px;box-sizing:border-box;">' +
       '<span style="position:absolute;right:-8px;top:-16px;font-size:68px;opacity:.13;transform:rotate(8deg);pointer-events:none;">' + p.glyph + '</span>' +
       '<span style="flex-shrink:0;position:relative;width:56px;height:56px;border-radius:50%;background:conic-gradient(' + p.accent + ' ' + (p.pct * 3.6) + 'deg,var(--line) ' + (p.pct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
-      '<span style="width:47px;height:47px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:500 12px \'Inter\',sans-serif;color:' + p.accent + ';">' + p.pct + '%</span></span>' +
-      '<span style="flex:1;min-width:0;position:relative;"><span style="display:block;font:300 17px/1.25 Fraunces,serif;">' + esc(p.label) + '</span>' +
-      '<span style="display:block;font:500 9.5px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-top:6px;">' + p.readCount + '/' + p.count + ' LUES · MAÎTRISE ' + p.pct + '%</span></span>' +
-      '<span style="flex-shrink:0;font:400 20px Fraunces,serif;color:' + p.accent + ';position:relative;">&#8250;</span></button>';
+      '<span style="width:47px;height:47px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:500 12px \'Manrope\',sans-serif;color:' + p.accent + ';">' + p.pct + '%</span></span>' +
+      '<span style="flex:1;min-width:0;position:relative;"><span style="display:block;font:300 17px/1.25 Manrope,sans-serif;">' + esc(p.label) + '</span>' +
+      '<span style="display:block;font:500 9.5px \'Manrope\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-top:6px;">' + p.readCount + '/' + p.count + ' LUES · MAÎTRISE ' + p.pct + '%</span></span>' +
+      '<span style="flex-shrink:0;font:400 20px Manrope,sans-serif;color:' + p.accent + ';position:relative;">&#8250;</span></button>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:58px 24px 0;display:flex;justify-content:space-between;align-items:flex-start;">' +
-    '<div><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">FICHES</div>' +
-    '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:14px;">' + v.ficheCount + ' <span style="font-style:italic;">cours</span>, ' + v.coursePoles.length + ' pôles</div></div>' +
+    '<div><div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);">FICHES</div>' +
+    '<div style="font:300 34px/1.1 Manrope,sans-serif;letter-spacing:-.025em;margin-top:14px;">' + v.ficheCount + ' <span style="font-style:italic;">cours</span>, ' + v.coursePoles.length + ' pôles</div></div>' +
     '<button data-action="goSearch" aria-label="Rechercher" style="background:none;border:1px solid var(--line);border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;color:var(--ink2);cursor:pointer;flex-shrink:0;margin-top:2px;">' + ICON_SEARCH + '</button></div>' +
     '<div style="margin:24px 24px 0;display:flex;flex-direction:column;gap:12px;">' + cards +
-    '<button data-action="goCulture" class="hv-a" style="position:relative;overflow:hidden;width:100%;background:linear-gradient(120deg,' + hexA('#a9814a', 0.16) + ',var(--panel) 60%);border:1px solid ' + hexA('#a9814a', 0.35) + ';border-radius:20px;padding:19px 20px;text-align:left;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:16px;box-sizing:border-box;">' +
-    '<span style="position:absolute;right:-8px;top:-16px;font-size:68px;opacity:.13;transform:rotate(8deg);pointer-events:none;">🎓</span>' +
+    '<button data-action="goCulture" class="hv-a" style="position:relative;overflow:hidden;width:100%;background:linear-gradient(120deg,' + hexA('#3DA9FC', 0.16) + ',var(--panel) 60%);border:1px solid ' + hexA('#3DA9FC', 0.35) + ';border-radius:20px;padding:19px 20px;text-align:left;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:16px;box-sizing:border-box;">' +
+    '<span style="position:absolute;right:-8px;top:-16px;opacity:.16;transform:rotate(8deg);pointer-events:none;color:var(--info);">' + icoSvg('book', 64) + '</span>' +
     '<span style="flex-shrink:0;position:relative;width:56px;height:56px;border-radius:50%;background:conic-gradient(var(--gold) ' + (v.cultureOverallPct * 3.6) + 'deg,var(--line) ' + (v.cultureOverallPct * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
-    '<span style="width:47px;height:47px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:500 12px \'Inter\',sans-serif;color:var(--gold);">' + v.cultureOverallPct + '%</span></span>' +
-    '<span style="flex:1;min-width:0;position:relative;"><span style="display:block;font:300 17px/1.25 Fraunces,serif;">Culture générale</span>' +
-    '<span style="display:block;font:500 9.5px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-top:6px;">' + v.cultureTestedCount + '/' + CULTURE_METIERS.length + ' MÉTIERS · MAÎTRISE ' + v.cultureOverallPct + '%</span></span>' +
-    '<span style="flex-shrink:0;font:400 20px Fraunces,serif;color:var(--gold);position:relative;">&#8250;</span></button>' +
-    '<button data-action="goFormulas" class="hv-a" style="position:relative;overflow:hidden;width:100%;background:linear-gradient(120deg,' + hexA('#5f7f66', 0.16) + ',var(--panel) 60%);border:1px solid ' + hexA('#5f7f66', 0.35) + ';border-radius:20px;padding:19px 20px;text-align:left;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:16px;box-sizing:border-box;">' +
-    '<span style="position:absolute;right:-8px;top:-16px;font-size:68px;opacity:.13;transform:rotate(8deg);pointer-events:none;">🧮</span>' +
-    '<span style="flex-shrink:0;position:relative;width:56px;height:56px;border-radius:50%;background:conic-gradient(#5f7f66 ' + (Math.round(100 * v.formulesSeenCount / FORMULES.length) * 3.6) + 'deg,var(--line) ' + (Math.round(100 * v.formulesSeenCount / FORMULES.length) * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
-    '<span style="width:47px;height:47px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:500 12px \'Inter\',sans-serif;color:#5f7f66;">' + v.formulesSeenCount + '/' + FORMULES.length + '</span></span>' +
-    '<span style="flex:1;min-width:0;position:relative;"><span style="display:block;font:300 17px/1.25 Fraunces,serif;">Boîte à formules</span>' +
-    '<span style="display:block;font:500 9.5px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-top:6px;">TOUTES LES MÉTHODOS DE CALCUL, PAS À PAS</span></span>' +
-    '<span style="flex-shrink:0;font:400 20px Fraunces,serif;color:#5f7f66;position:relative;">&#8250;</span></button>' +
+    '<span style="width:47px;height:47px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:500 12px \'Manrope\',sans-serif;color:var(--gold);">' + v.cultureOverallPct + '%</span></span>' +
+    '<span style="flex:1;min-width:0;position:relative;"><span style="display:block;font:300 17px/1.25 Manrope,sans-serif;">Culture générale</span>' +
+    '<span style="display:block;font:500 9.5px \'Manrope\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-top:6px;">' + v.cultureTestedCount + '/' + CULTURE_METIERS.length + ' MÉTIERS · MAÎTRISE ' + v.cultureOverallPct + '%</span></span>' +
+    '<span style="flex-shrink:0;color:var(--ink3);position:relative;">' + icoSvg('chevron', 17) + '</span></button>' +
+    '<button data-action="goFormulas" class="hv-a" style="position:relative;overflow:hidden;width:100%;background:linear-gradient(120deg,' + hexA('#00E08F', 0.16) + ',var(--panel) 60%);border:1px solid ' + hexA('#00E08F', 0.35) + ';border-radius:20px;padding:19px 20px;text-align:left;cursor:pointer;color:var(--ink);display:flex;align-items:center;gap:16px;box-sizing:border-box;">' +
+    '<span style="position:absolute;right:-8px;top:-16px;opacity:.16;transform:rotate(8deg);pointer-events:none;color:var(--acc);">' + icoSvg('calculator', 64) + '</span>' +
+    '<span style="flex-shrink:0;position:relative;width:56px;height:56px;border-radius:50%;background:conic-gradient(#00E08F ' + (Math.round(100 * v.formulesSeenCount / FORMULES.length) * 3.6) + 'deg,var(--line) ' + (Math.round(100 * v.formulesSeenCount / FORMULES.length) * 3.6) + 'deg 360deg);display:flex;align-items:center;justify-content:center;">' +
+    '<span style="width:47px;height:47px;border-radius:50%;background:var(--bg-hi);display:flex;align-items:center;justify-content:center;font:500 12px \'Manrope\',sans-serif;color:#00E08F;">' + v.formulesSeenCount + '/' + FORMULES.length + '</span></span>' +
+    '<span style="flex:1;min-width:0;position:relative;"><span style="display:block;font:300 17px/1.25 Manrope,sans-serif;">Boîte à formules</span>' +
+    '<span style="display:block;font:500 9.5px \'Manrope\',sans-serif;letter-spacing:.08em;color:var(--ink3);margin-top:6px;">TOUTES LES MÉTHODOS DE CALCUL, PAS À PAS</span></span>' +
+    '<span style="flex-shrink:0;color:var(--ink3);position:relative;">' + icoSvg('chevron', 17) + '</span></button>' +
     '</div>' +
     '<div style="height:26px;"></div></div>';
 }
@@ -2103,11 +2223,11 @@ function tplCoursePole(v) {
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:0 0 0;position:relative;background:linear-gradient(160deg,' + hexA(acc, 0.22) + ',transparent 65%);">' +
-    '<div style="padding:58px 24px 22px;"><button data-action="goBack" class="btn-back hv-a" style="color:' + acc + ';"><span class="bkarr">&#8249;</span> Fiches</button>' +
+    '<div style="padding:58px 24px 22px;"><button data-action="goBack" class="btn-back hv-a" style="color:' + acc + ';"><span class="bkarr">' + icoSvg('chevron-left', 15) + '</span>Fiches</button>' +
     '<div style="display:flex;align-items:center;gap:14px;margin-top:16px;">' +
-    '<span style="flex-shrink:0;width:50px;height:50px;border-radius:16px;background:' + hexA(acc, 0.18) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;font-size:22px;">' + v.coursePoleGlyph + '</span>' +
-    '<div><div style="font:300 28px/1.1 Fraunces,serif;letter-spacing:-.02em;">' + esc(v.coursePoleLabel) + '</div>' +
-    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">' + v.coursePoleReadCount + '/' + v.coursePoleFichesList.length + ' LUES · MAÎTRISE ' + v.coursePolePct + '% <span style="text-transform:none;letter-spacing:0;color:var(--dim);">(quiz)</span></div></div></div></div></div>' +
+    '<span style="flex-shrink:0;width:50px;height:50px;border-radius:16px;background:' + hexA(acc, 0.18) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;color:' + acc + ';">' + v.coursePoleGlyph + '</span>' +
+    '<div><div style="font:300 28px/1.1 Manrope,sans-serif;letter-spacing:-.02em;">' + esc(v.coursePoleLabel) + '</div>' +
+    '<div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">' + v.coursePoleReadCount + '/' + v.coursePoleFichesList.length + ' LUES · MAÎTRISE ' + v.coursePolePct + '% <span style="text-transform:none;letter-spacing:0;color:var(--dim);">(quiz)</span></div></div></div></div></div>' +
     '<div class="ledger" style="margin:6px 24px 0;">' + cards + '</div>' +
     '<div style="height:26px;"></div></div>';
 }
@@ -2128,21 +2248,21 @@ function formatBody(raw, accent) {
     var intro = parts.shift().trim();
     var items = parts.map(function (s) { return s.trim().replace(/\s+/g, ' '); }).filter(Boolean);
     var html = '';
-    if (intro) html += '<div style="font:400 14px/1.75 \'Inter\',sans-serif;color:var(--ink);">' + emphasizeCaps(esc(intro)) + '</div>';
+    if (intro) html += '<div style="font:400 14px/1.75 \'Manrope\',sans-serif;color:var(--ink);">' + emphasizeCaps(esc(intro)) + '</div>';
     html += '<div style="display:flex;flex-direction:column;gap:10px;' + (intro ? 'margin-top:12px;' : '') + '">' + items.map(function (it) {
       return '<div style="display:flex;gap:10px;align-items:flex-start;"><span style="flex-shrink:0;width:5px;height:5px;border-radius:50%;background:' + dotColor + ';margin-top:8px;"></span>' +
-        '<span style="flex:1;font:400 13.5px/1.7 \'Inter\',sans-serif;color:var(--ink2);">' + emphasizeCaps(esc(it)) + '</span></div>';
+        '<span style="flex:1;font:400 13.5px/1.7 \'Manrope\',sans-serif;color:var(--ink2);">' + emphasizeCaps(esc(it)) + '</span></div>';
     }).join('') + '</div>';
     return html;
   }
-  return '<div style="font:400 14px/1.78 \'Inter\',sans-serif;color:var(--ink2);">' + emphasizeCaps(esc(text)) + '</div>';
+  return '<div style="font:400 14px/1.78 \'Manrope\',sans-serif;color:var(--ink2);">' + emphasizeCaps(esc(text)) + '</div>';
 }
 function tplPara(p, i, accent) {
   var delay = ((i || 0) * 0.06).toFixed(2) + 's';
   if (p.callout) {
     return '<div class="stagger" style="animation-delay:' + delay + ';margin:10px 0;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:11px 13px;">' +
-      '<div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:var(--gold);display:flex;align-items:center;gap:6px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--gold);animation:kfBreathe 2s ease-in-out infinite;"></span>' + esc(p.label) + '</div>' +
-      '<div style="font:400 13px/1.65 \'Inter\',sans-serif;color:var(--ink);margin-top:4px;text-wrap:pretty;">' + emphasizeCaps(esc(p.text.trim())) + '</div></div>';
+      '<div style="font:600 9px \'Manrope\',sans-serif;letter-spacing:.09em;color:var(--gold);display:flex;align-items:center;gap:6px;"><span style="width:5px;height:5px;border-radius:50%;background:var(--gold);animation:kfBreathe 2s ease-in-out infinite;"></span>' + esc(p.label) + '</div>' +
+      '<div style="font:400 13px/1.65 \'Manrope\',sans-serif;color:var(--ink);margin-top:4px;text-wrap:pretty;">' + emphasizeCaps(esc(p.text.trim())) + '</div></div>';
   }
   if (!p.text.trim()) return '';
   return '<div class="stagger" style="animation-delay:' + delay + ';margin-top:12px;text-wrap:pretty;">' + formatBody(p.text, accent) + '</div>';
@@ -2151,74 +2271,101 @@ function tplPara(p, i, accent) {
 function tplFiche(v) {
   var acc = v.ficheAccent;
   var toc = v.ficheTocDots.map(function (d) {
-    var col = d.warnish ? 'var(--warn)' : acc;
-    return '<button data-action="ficheJump" data-i="' + (d.n - 1) + '" style="flex-shrink:0;min-width:28px;height:26px;padding:0 6px;border:1px solid ' + hexA(col, 0.45) + ';border-bottom:2px solid ' + col + ';background:' + hexA(col, 0.12) + ';color:' + col + ';font:500 11px \'Inter\',sans-serif;cursor:pointer;">' + d.n + '</button>';
+    var col = d.warnish ? 'var(--due)' : acc;
+    return '<button data-action="ficheJump" data-i="' + (d.n - 1) + '" style="flex-shrink:0;min-width:28px;height:26px;padding:0 6px;border:1px solid ' + hexA(col, 0.45) + ';border-bottom:2px solid ' + col + ';background:' + hexA(col, 0.12) + ';color:' + col + ';font:500 11px \'Manrope\',sans-serif;cursor:pointer;">' + d.n + '</button>';
   }).join('');
   var sections = v.ficheSections.map(function (s, i) {
-    var col = s.warnish ? 'var(--warn)' : acc;
+    var col = s.warnish ? 'var(--due)' : acc;
     var body = s.paras.map(function (p, pi) { return tplPara(p, pi, acc); }).join('') + (s.svg ? '<div class="stagger" style="animation-delay:' + (s.paras.length * 0.06).toFixed(2) + 's;margin-top:14px;border-radius:14px;overflow:hidden;background:#f5efe1;padding:8px;">' + s.svg + '</div>' : '');
     return '<div id="sec-' + i + '" class="thsec' + (i === 0 ? ' open' : '') + '" style="margin-top:12px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--panel);animation:kfIn .4s cubic-bezier(.16,1,.3,1) both;animation-delay:' + (i * 0.05).toFixed(2) + 's;">' +
-      '<button data-fold-head style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:' + col + ';font:500 10px \'Inter\',sans-serif;letter-spacing:.12em;text-align:left;">' +
-      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + (s.seen ? col : hexA(col, 0.16)) + ';border:1px solid ' + hexA(col, 0.4) + ';display:flex;align-items:center;justify-content:center;font:500 10px \'Inter\',sans-serif;color:' + (s.seen ? 'var(--on)' : col) + ';">' + (s.seen ? '✓' : (s.warnish ? '!' : (i + 1))) + '</span>' +
+      '<button data-fold-head style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:' + col + ';font:500 10px \'Manrope\',sans-serif;letter-spacing:.12em;text-align:left;">' +
+      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + (s.seen ? col : hexA(col, 0.16)) + ';border:1px solid ' + hexA(col, 0.4) + ';display:flex;align-items:center;justify-content:center;font:500 10px \'Manrope\',sans-serif;color:' + (s.seen ? 'var(--on)' : col) + ';">' + (s.seen ? icoSvg('check', 11) : (s.warnish ? '!' : (i + 1))) + '</span>' +
       '<span style="flex:1;">' + esc(s.h) + '</span><span class="fold-arr" style="flex-shrink:0;transition:transform .25s;transform:rotate(' + (i === 0 ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
       '<div class="fold-body' + (i === 0 ? '' : ' fold-closed') + '"><div style="padding:0 16px 16px;">' + body + '</div></div></div>';
   }).join('');
   var completionBar = '<div style="margin:16px 26px 0;display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px;">' +
-    '<span id="ficheSecStatus" style="font:500 11.5px \'Inter\',sans-serif;color:' + (v.ficheAllSectionsSeen ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (v.ficheAllSectionsSeen ? '✓' : v.ficheSectionsSeenCount + '/' + v.ficheSections.length) + ' sections lues</span>' +
+    '<span id="ficheSecStatus" style="font:500 11.5px \'Manrope\',sans-serif;color:' + (v.ficheAllSectionsSeen ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (v.ficheAllSectionsSeen ? icoSvg('check', 12) : v.ficheSectionsSeenCount + '/' + v.ficheSections.length) + ' sections lues</span>' +
     (v.ficheHasTest ? '<span style="width:1px;height:12px;background:var(--line);"></span>' +
-      '<span id="ficheTestStatus" style="font:500 11.5px \'Inter\',sans-serif;color:' + (v.ficheTested ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (v.ficheTested ? '✓ test fait' : 'test à faire') + '</span>' : '') +
-    '<span id="ficheValidatedBadge" style="margin-left:auto;font:600 10.5px \'Inter\',sans-serif;color:var(--acc2);display:' + (v.ficheValidated ? '' : 'none') + ';">FICHE VALIDÉE</span></div>';
+      '<span id="ficheTestStatus" style="font:500 11.5px \'Manrope\',sans-serif;color:' + (v.ficheTested ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (v.ficheTested ? icoSvg('check', 12) + ' test fait' : 'test à faire') + '</span>' : '') +
+    '<span id="ficheValidatedBadge" style="margin-left:auto;font:600 10.5px \'Manrope\',sans-serif;color:var(--acc2);display:' + (v.ficheValidated ? '' : 'none') + ';">FICHE VALIDÉE</span></div>';
   return '<div style="flex:1;overflow:auto;min-height:0;position:relative;">' +
     '<div style="position:sticky;top:0;left:0;right:0;height:3px;background:var(--line);z-index:5;"><div id="ficheProgressFill" style="height:3px;width:0%;background:' + acc + ';"></div></div>' +
     '<div style="padding:32px 26px 22px;background:linear-gradient(160deg,' + hexA(acc, 0.2) + ',transparent 70%);">' +
-    '<button data-action="goBack" class="btn-back hv-a" style="color:' + acc + ';"><span class="bkarr">&#8249;</span> Retour</button>' +
+    '<button data-action="goBack" class="btn-back hv-a" style="color:' + acc + ';"><span class="bkarr">' + icoSvg('chevron-left', 15) + '</span>Retour</button>' +
     '<div style="display:flex;align-items:center;gap:14px;margin-top:16px;">' +
-    '<span style="flex-shrink:0;width:52px;height:52px;border-radius:16px;background:' + hexA(acc, 0.18) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;font-size:23px;animation:kfCalm 3.4s ease-in-out infinite;">' + esc(v.ficheIcon) + '</span>' +
-    '<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;align-items:center;font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);"><div>' + esc(v.ficheIdx) + '</div><div style="color:' + acc + ';">' + v.ficheMin + ' MIN</div></div>' +
+    '<span style="flex-shrink:0;width:52px;height:52px;border-radius:16px;background:' + hexA(acc, 0.18) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;color:' + acc + ';animation:kfCalm 3.4s ease-in-out infinite;">' + emo(v.ficheIcon, 22) + '</span>' +
+    '<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;align-items:center;font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);"><div>' + esc(v.ficheIdx) + '</div><div style="color:' + acc + ';">' + v.ficheMin + ' MIN</div></div>' +
     '<div class="folio-num" style="font-size:24px;margin-top:6px;">' + esc(v.ficheTitle) + '</div></div></div>' +
-    '<div style="font:400 10px/1.6 \'Inter\',sans-serif;color:var(--dim);margin-top:16px;">' + esc(v.ficheSource) + '</div>' +
+    '<div style="font:400 10px/1.6 \'Manrope\',sans-serif;color:var(--dim);margin-top:16px;">' + esc(v.ficheSource) + '</div>' +
     '<div style="margin-top:16px;display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;">' + toc + '</div></div>' +
     completionBar +
     '<div style="padding:6px 26px 0;">' + sections + '</div>' +
     '<div style="padding:26px 26px 30px;display:flex;flex-direction:column;gap:10px;">' + (v.ficheHasTest
       ? '<button data-action="startFicheQuiz" class="btn-cta" style="width:100%;">Tester la fiche</button>'
-      : '<div style="text-align:center;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);margin-bottom:2px;">Fiche de synthèse — aucun test dédié, elle est validée une fois toutes les sections lues.</div>' +
-        '<button data-action="startFicheReview" style="width:100%;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:16px;font:600 12.5px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;">↻ Réviser avec des questions d\'autres fiches</button>') +
-    (v.ficheHasReview ? '<button data-action="goFicheReview" style="width:100%;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:16px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Revoir les questions du test</button>' : '') +
+      : '<div style="text-align:center;font:400 12px/1.6 \'Manrope\',sans-serif;color:var(--ink3);margin-bottom:2px;">Fiche de synthèse — aucun test dédié, elle est validée une fois toutes les sections lues.</div>' +
+        '<button data-action="startFicheReview" style="width:100%;border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px;font:600 12.5px \'Manrope\',sans-serif;color:var(--ink);cursor:pointer;">↻ Réviser avec des questions d\'autres fiches</button>') +
+    (v.ficheHasReview ? '<button data-action="goFicheReview" style="width:100%;border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:16px;font:500 12.5px \'Manrope\',sans-serif;color:var(--ink2);cursor:pointer;">Revoir les questions du test</button>' : '') +
     '</div></div>';
 }
 
 function tplFicheReview(v) {
   var acc = v.ficheAccent;
   var items = v.ficheReviewItems.map(function (it) {
-    var col = it.ok ? 'var(--acc2)' : 'var(--warn)';
+    var col = it.ok ? 'var(--acc2)' : 'var(--bad)';
     return '<div style="margin-top:12px;border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:16px;">' +
       '<div style="display:flex;align-items:flex-start;gap:10px;">' +
-      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + hexA(col, 0.18) + ';border:1px solid ' + hexA(col, 0.4) + ';display:flex;align-items:center;justify-content:center;font:600 11px \'Inter\',sans-serif;color:' + col + ';">' + (it.ok ? '✓' : '✕') + '</span>' +
-      '<div style="flex:1;font:400 13.5px/1.55 \'Inter\',sans-serif;">' + (it.isReview ? '<span style="display:block;font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:var(--gold);margin-bottom:4px;">RÉVISION · FICHE PRÉCÉDENTE</span>' : '') + esc(it.text) + '</div></div>' +
-      '<div style="margin-top:10px;padding-left:32px;font:500 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);">Votre réponse : <span style="color:' + col + ';">' + esc(it.pickTxt) + '</span>' +
+      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + hexA(col, 0.18) + ';border:1px solid ' + hexA(col, 0.4) + ';display:flex;align-items:center;justify-content:center;color:' + col + ';">' + icoSvg(it.ok ? 'check' : 'cross', 12) + '</span>' +
+      '<div style="flex:1;font:400 13.5px/1.55 \'Manrope\',sans-serif;">' + (it.isReview ? '<span style="display:block;font:600 9px \'Manrope\',sans-serif;letter-spacing:.09em;color:var(--info);margin-bottom:4px;">RÉVISION · FICHE PRÉCÉDENTE</span>' : '') + esc(it.text) + '</div></div>' +
+      '<div style="margin-top:10px;padding-left:32px;font:500 12px/1.6 \'Manrope\',sans-serif;color:var(--ink2);">Votre réponse : <span style="color:' + col + ';">' + esc(it.pickTxt) + '</span>' +
       (!it.ok && it.showCorrect ? '<br>Bonne réponse : <span style="color:var(--acc2);">' + esc(it.correctTxt) + '</span>' : '') + '</div>' +
-      (it.formula ? '<div style="margin-top:8px;margin-left:32px;padding:10px 12px;background:' + hexA(it.ok ? '#5f7f66' : '#a8432f', 0.12) + ';border:1px solid ' + hexA(it.ok ? '#5f7f66' : '#a8432f', 0.35) + ';border-radius:10px;">' +
-        '<div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:' + (it.ok ? 'var(--acc2)' : 'var(--warn)') + ';margin-bottom:4px;">LE CALCUL</div>' +
-        '<div style="font:500 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink);white-space:pre-line;">' + esc(it.formula) + '</div>' +
-        (it.exponentNote ? '<div style="font:400 11px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:6px;padding-top:6px;border-top:1px solid ' + hexA(it.ok ? '#5f7f66' : '#a8432f', 0.25) + ';">' + esc(it.exponentNote) + '</div>' : '') +
+      (it.formula ? '<div class="feedback-box' + (it.ok ? '' : ' bad') + '" style="margin-top:8px;margin-left:32px;">' +
+        '<div style="font:600 9px \'Manrope\',sans-serif;letter-spacing:.09em;color:' + (it.ok ? 'var(--acc2)' : 'var(--bad)') + ';margin-bottom:4px;">LE CALCUL</div>' +
+        '<div style="font:500 12.5px/1.6 \'Manrope\',sans-serif;color:var(--ink);white-space:pre-line;">' + esc(it.formula) + '</div>' +
+        (it.exponentNote ? '<div style="font:400 11px/1.5 \'Manrope\',sans-serif;color:var(--ink3);margin-top:6px;padding-top:6px;border-top:1px solid var(--line);">' + esc(it.exponentNote) + '</div>' : '') +
         '</div>' : '') +
-      (it.explain ? '<div style="margin-top:8px;padding:10px 12px;background:var(--surface,rgba(255,255,255,.03));border-radius:10px;padding-left:32px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);white-space:pre-line;">' + esc(it.explain) + '</div>' : '') +
+      (it.explain ? '<div style="margin-top:8px;padding:10px 12px;background:var(--panel2);border-radius:10px;padding-left:32px;font:400 12px/1.6 \'Manrope\',sans-serif;color:var(--ink3);white-space:pre-line;">' + esc(it.explain) + '</div>' : '') +
       (it.catId ? '<div style="margin-top:10px;padding-left:32px;">' +
-        '<button data-action="flagTopic" data-cat="' + esc(it.catId) + '" style="background:none;border:1px solid ' + (it.flagged ? 'var(--warn)' : 'var(--line)') + ';border-radius:999px;padding:6px 11px;font:500 10.5px \'Inter\',sans-serif;color:' + (it.flagged ? 'var(--warn)' : 'var(--ink3)') + ';cursor:pointer;">' + (it.flagged ? 'Sujet marqué' : 'Retravailler ce sujet') + '</button></div>' : '') +
+        '<button data-action="flagTopic" data-cat="' + esc(it.catId) + '" style="background:none;border:1px solid ' + (it.flagged ? 'var(--due)' : 'var(--line)') + ';border-radius:12px;padding:6px 11px;font:500 10.5px \'Manrope\',sans-serif;color:' + (it.flagged ? 'var(--due)' : 'var(--ink3)') + ';cursor:pointer;">' + (it.flagged ? 'Sujet marqué' : 'Retravailler ce sujet') + '</button></div>' : '') +
       '</div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:32px 26px 8px;background:linear-gradient(160deg,' + hexA(acc, 0.2) + ',transparent 70%);">' +
-    '<button data-action="goBack" class="btn-back hv-a" style="color:' + acc + ';"><span class="bkarr">&#8249;</span> Retour</button>' +
-    '<div style="font:300 24px/1.2 Fraunces,serif;letter-spacing:-.02em;margin-top:14px;">Revoir mes réponses</div>' +
-    '<div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);margin-top:6px;">' + esc(v.ficheTitle) + '</div></div>' +
+    '<button data-action="goBack" class="btn-back hv-a" style="color:' + acc + ';"><span class="bkarr">' + icoSvg('chevron-left', 15) + '</span>Retour</button>' +
+    '<div style="font:300 24px/1.2 Manrope,sans-serif;letter-spacing:-.02em;margin-top:14px;">Revoir mes réponses</div>' +
+    '<div style="font:400 12px/1.6 \'Manrope\',sans-serif;color:var(--ink3);margin-top:6px;">' + esc(v.ficheTitle) + '</div></div>' +
     '<div style="padding:6px 26px 30px;">' + items + '</div></div>';
 }
 
+var MINI_SPARK_UID = 0;
+function miniSpark(hist, w, h, color) {
+  w = w || 84; h = h || 28; color = color || 'var(--acc)';
+  if (!hist || hist.length < 2) return '';
+  var pad = 2, vals = hist.map(function (p) { return p.mastery; });
+  var min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+  if (max === min) max = min + 10;
+  var n = hist.length, id = 'msp' + (++MINI_SPARK_UID);
+  var pts = hist.map(function (p, i) {
+    var x = pad + (n === 1 ? 0 : (i / (n - 1)) * (w - pad * 2));
+    var y = pad + (1 - (p.mastery - min) / (max - min)) * (h - pad * 2);
+    return x.toFixed(1) + ',' + y.toFixed(1);
+  });
+  var area = 'M' + pts[0] + ' L' + pts.join(' L') + ' L' + (w - pad) + ',' + (h - pad) + ' L' + pad + ',' + (h - pad) + ' Z';
+  return '<svg viewBox="0 0 ' + w + ' ' + h + '" width="' + w + '" height="' + h + '" style="display:block;overflow:visible;">' +
+    '<defs><linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + color + '" stop-opacity=".45"/><stop offset="100%" stop-color="' + color + '" stop-opacity="0"/></linearGradient></defs>' +
+    '<path d="' + area + '" fill="url(#' + id + ')"></path>' +
+    '<polyline points="' + pts.join(' ') + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>' +
+    '</svg>';
+}
+function chipDelta(delta, suffix) {
+  suffix = suffix == null ? ' pts' : suffix;
+  var dir = delta > 0 ? 'up' : (delta < 0 ? 'down' : 'flat');
+  var ic = delta > 0 ? 'arrow-up' : (delta < 0 ? 'arrow-down' : 'dot');
+  var label = (delta > 0 ? '+' : '') + delta + suffix;
+  return '<span class="chip-delta ' + dir + '">' + icoSvg(ic, 12) + esc(label) + '</span>';
+}
 function tplMasteryChart(hist) {
   if (!hist || hist.length < 2) {
-    return '<div style="margin:16px 24px 0;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:16px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink3);">Reviens demain pour voir ta courbe de progression réelle se dessiner ici.</div>';
+    return '<div style="margin:16px 24px 0;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:16px;font:400 12px/1.6 \'Manrope\',sans-serif;color:var(--ink3);">Reviens demain pour voir ta courbe de progression réelle se dessiner ici.</div>';
   }
   var w = 300, h = 110, pad = 8;
   var vals = hist.map(function (p) { return p.mastery; });
@@ -2236,38 +2383,38 @@ function tplMasteryChart(hist) {
   var delta = last.mastery - first.mastery;
   var deltaLabel = (delta >= 0 ? '+' : '') + delta + ' points depuis le ' + first.label;
   return '<div style="margin:16px 24px 0;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:16px;">' +
-    '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;"><span style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">ÉVOLUTION RÉELLE</span><span style="font:500 11.5px \'Inter\',sans-serif;color:' + (delta >= 0 ? 'var(--acc2)' : 'var(--warn)') + ';flex-shrink:0;">' + esc(deltaLabel) + '</span></div>' +
+    '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;"><span style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);">ÉVOLUTION RÉELLE</span><span style="font:500 11.5px \'Manrope\',sans-serif;color:' + (delta >= 0 ? 'var(--acc2)' : 'var(--warn)') + ';flex-shrink:0;">' + esc(deltaLabel) + '</span></div>' +
     '<svg viewBox="0 0 ' + w + ' ' + h + '" style="width:100%;height:auto;margin-top:10px;overflow:visible;">' +
     '<defs><linearGradient id="mgGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" style="stop-color:var(--acc);stop-opacity:.5"></stop><stop offset="100%" style="stop-color:var(--acc);stop-opacity:0"></stop></linearGradient></defs>' +
     '<path d="' + area + '" fill="url(#mgGrad)"></path>' +
     '<polyline points="' + line + '" fill="none" stroke="var(--acc)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></polyline>' +
     '</svg>' +
-    '<div style="display:flex;justify-content:space-between;margin-top:4px;"><span style="font:400 9.5px \'Inter\',sans-serif;color:var(--ink3);">' + esc(first.label) + '</span><span style="font:400 9.5px \'Inter\',sans-serif;color:var(--ink3);">' + esc(last.label) + '</span></div></div>';
+    '<div style="display:flex;justify-content:space-between;margin-top:4px;"><span style="font:400 9.5px \'Manrope\',sans-serif;color:var(--ink3);">' + esc(first.label) + '</span><span style="font:400 9.5px \'Manrope\',sans-serif;color:var(--ink3);">' + esc(last.label) + '</span></div></div>';
 }
 function tplProgress(v) {
   var dots = v.radarDots.map(function (d, i) {
     return '<circle cx="' + d.x + '" cy="' + d.y + '" r="3.5" fill="var(--acc)" style="animation:kfPop .3s ease ' + (0.9 + i * 0.06).toFixed(2) + 's both;"></circle>';
   }).join('');
   var radarLabels = v.radarDots.map(function (d, i) {
-    return '<text x="' + d.lx + '" y="' + d.ly + '" text-anchor="' + d.anchor + '" dominant-baseline="middle" style="font:500 9px \'Inter\',sans-serif;fill:var(--ink3);">' + esc(d.label) + '</text>' +
-      '<text x="' + d.lx + '" y="' + (d.ly + 12) + '" text-anchor="' + d.anchor + '" dominant-baseline="middle" style="font:600 9.5px \'Inter\',sans-serif;fill:var(--acc);">' + d.pct + '%</text>';
+    return '<text x="' + d.lx + '" y="' + d.ly + '" text-anchor="' + d.anchor + '" dominant-baseline="middle" style="font:500 9px \'Manrope\',sans-serif;fill:var(--ink3);">' + esc(d.label) + '</text>' +
+      '<text x="' + d.lx + '" y="' + (d.ly + 12) + '" text-anchor="' + d.anchor + '" dominant-baseline="middle" style="font:600 9.5px \'Manrope\',sans-serif;fill:var(--acc);">' + d.pct + '%</text>';
   }).join('');
   var poles = v.poles.map(function (p) {
     var acc = poleAccent(p.label);
     return '<div class="ledger-row" style="flex-direction:column;align-items:stretch;gap:7px;padding-left:18px;">' +
-      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;"><span style="font:400 12.5px \'Inter\',sans-serif;">' + esc(p.label) + '</span><span style="font:500 9.5px \'Inter\',sans-serif;color:var(--ink3);flex-shrink:0;">' + esc(p.ratio) + ' bonnes réponses</span></div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;"><span style="font:400 12.5px \'Manrope\',sans-serif;">' + esc(p.label) + '</span><span style="font:500 9.5px \'Manrope\',sans-serif;color:var(--ink3);flex-shrink:0;">' + esc(p.ratio) + ' bonnes réponses</span></div>' +
       '<div style="display:flex;align-items:center;gap:10px;"><div style="flex:1;height:3px;background:var(--line);overflow:hidden;"><div style="width:' + p.pct + '%;height:3px;background:' + acc + ';transform-origin:left;animation:kfFill 1.1s cubic-bezier(.16,1,.3,1) both;"></div></div>' +
-      '<div style="width:32px;text-align:right;font:500 10.5px \'Inter\',sans-serif;color:' + acc + ';">' + p.pct + '%</div></div></div>';
+      '<div style="width:32px;text-align:right;font:500 10.5px \'Manrope\',sans-serif;color:' + acc + ';">' + p.pct + '%</div></div></div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:54px 24px 0;"><div class="folio-kicker">PROGRESSION</div>' +
     '<div class="folio-num" style="font-size:32px;margin-top:12px;"><span data-countup="' + v.mastery + '">0</span><span style="font-size:17px;"> %</span> de <span style="font-style:italic;color:var(--acc);">maîtrise</span></div>' +
-    '<div style="font:400 11.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:10px;">Moyenne du % de bonnes réponses aux questions testées, par pôle — le registre ci-dessous détaille chaque pôle.</div></div>' +
+    '<div style="font:400 11.5px/1.5 \'Manrope\',sans-serif;color:var(--ink3);margin-top:10px;">Moyenne du % de bonnes réponses aux questions testées, par pôle — le registre ci-dessous détaille chaque pôle.</div></div>' +
     '<div style="padding:14px 20px 0;"><svg viewBox="0 0 400 340" style="width:100%;height:auto;">' +
     '<polygon points="' + v.radarGridOuter + '" fill="none" stroke="var(--rule)" stroke-width="1"></polygon>' +
     '<polygon points="' + v.radarGridMid + '" fill="none" stroke="var(--rule)" stroke-width="1"></polygon>' +
     '<polygon points="' + v.radarGridInner + '" fill="none" stroke="var(--rule)" stroke-width="1"></polygon>' +
-    '<polygon class="v16draw" points="' + v.radarPts + '" fill="rgba(169,129,74,.18)" stroke="var(--acc)" stroke-width="2" style="stroke-dasharray:900;stroke-dashoffset:900;animation:v16draw 1.1s cubic-bezier(.16,1,.3,1) .15s forwards,kfIn .5s ease .15s forwards;"></polygon>' + dots + radarLabels + '</svg></div>' +
+    '<polygon class="v16draw" points="' + v.radarPts + '" fill="rgba(0,224,143,.18)" stroke="var(--acc)" stroke-width="2" style="stroke-dasharray:900;stroke-dashoffset:900;animation:v16draw 1.1s cubic-bezier(.16,1,.3,1) .15s forwards,kfIn .5s ease .15s forwards;"></polygon>' + dots + radarLabels + '</svg></div>' +
     tplMasteryChart(v.masteryHistory) +
     '<div style="margin:22px 24px 0;" class="folio-kicker">DÉTAIL PAR PÔLE</div>' +
     '<div class="ledger" style="margin:6px 24px 0;">' + poles + '</div>' +
@@ -2287,56 +2434,56 @@ function tplProfile(v) {
     : '<span style="width:42px;height:24px;border-radius:999px;background:var(--line);display:flex;align-items:center;padding:2px;box-sizing:border-box;flex-shrink:0;"><span style="width:20px;height:20px;border-radius:50%;background:var(--dim);"></span></span>';
   var nameVal = v.nameInput != null ? v.nameInput : v.userName;
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:54px 24px 20px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--rule);background:linear-gradient(160deg,' + hexA('#a9814a', 0.14) + ',transparent 70%);">' +
+    '<div style="padding:54px 24px 20px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--rule);background:linear-gradient(160deg,' + hexA('#00E08F', 0.14) + ',transparent 70%);">' +
     '<span class="seal seal-sm" style="width:52px;height:52px;flex-shrink:0;"><span class="seal-glyph" style="font-size:19px;">' + esc((v.userName || '?').charAt(0).toUpperCase()) + '</span></span>' +
     '<div style="flex:1;min-width:0;"><div class="folio-kicker">FICHE PERSONNELLE</div>' +
     '<div class="folio-num" style="font-size:26px;margin-top:6px;">' + esc(v.userName) + '</div>' +
-    '<div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">Niveau ' + esc(v.levelLabel) + ' · ' + v.xp + ' XP</div></div></div>' +
+    '<div style="font:400 11.5px \'Manrope\',sans-serif;color:var(--ink2);margin-top:4px;">Niveau ' + esc(v.levelLabel) + ' · ' + v.xp + ' XP</div></div></div>' +
     '<div style="margin:22px 24px 0;"><div class="folio-kicker">COMPTE</div>' +
     '<div style="display:flex;gap:8px;margin-top:10px;">' +
-    '<input data-name-input value="' + esc(nameVal) + '" placeholder="Votre prénom" maxlength="24" style="flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 15px;font:500 14px \'Inter\',sans-serif;color:var(--ink);outline:none;box-sizing:border-box;" />' +
-    '<button data-action="renameSave" style="flex-shrink:0;border:none;border-radius:14px;padding:13px 18px;font:600 12.5px \'Inter\',sans-serif;color:var(--on);background:var(--acc);cursor:pointer;">Valider</button></div>' +
-    '<label style="display:block;font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);margin:14px 0 8px;">DATE D\'EXAMEN</label>' +
-    '<input type="date" data-exam-date-input value="' + esc(v.examDate || '') + '" style="width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 15px;font:500 14px \'Inter\',sans-serif;color:var(--ink);outline:none;" />' +
+    '<input data-name-input value="' + esc(nameVal) + '" placeholder="Votre prénom" maxlength="24" style="flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 15px;font:500 14px \'Manrope\',sans-serif;color:var(--ink);outline:none;box-sizing:border-box;" />' +
+    '<button data-action="renameSave" style="flex-shrink:0;border:none;border-radius:14px;padding:13px 18px;font:600 12.5px \'Manrope\',sans-serif;color:var(--on);background:var(--acc);cursor:pointer;">Valider</button></div>' +
+    '<label style="display:block;font:500 10.5px \'Manrope\',sans-serif;color:var(--ink3);margin:14px 0 8px;">DATE D\'EXAMEN</label>' +
+    '<input type="date" data-exam-date-input value="' + esc(v.examDate || '') + '" style="width:100%;box-sizing:border-box;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 15px;font:500 14px \'Manrope\',sans-serif;color:var(--ink);outline:none;" />' +
     '</div>' +
     '<div style="margin:24px 24px 0;"><div class="folio-kicker">PRÉFÉRENCES</div>' +
     '<div class="ledger" style="margin-top:4px;">' +
-    '<button data-action="toggleNotif" class="ledger-row" style="width:100%;background:none;border:none;cursor:pointer;color:var(--ink);text-align:left;padding-left:0;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Rappel quotidien</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(v.notifSub) + '</span></span>' + notifSwitch + '</button>' +
-    '<button data-action="toggleExamInstant" class="ledger-row" style="width:100%;background:none;border:none;gap:10px;cursor:pointer;color:var(--ink);text-align:left;padding-left:0;"><span style="flex:1;min-width:0;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Correction immédiate en examen blanc</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(v.examInstantSub) + '</span></span>' + examInstantSwitch + '</button></div></div>' +
+    '<button data-action="toggleNotif" class="ledger-row" style="width:100%;background:none;border:none;cursor:pointer;color:var(--ink);text-align:left;padding-left:0;"><span style="flex:1;"><span style="display:block;font:500 13px \'Manrope\',sans-serif;">Rappel quotidien</span><span style="display:block;font:400 11px \'Manrope\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(v.notifSub) + '</span></span>' + notifSwitch + '</button>' +
+    '<button data-action="toggleExamInstant" class="ledger-row" style="width:100%;background:none;border:none;gap:10px;cursor:pointer;color:var(--ink);text-align:left;padding-left:0;"><span style="flex:1;min-width:0;"><span style="display:block;font:500 13px \'Manrope\',sans-serif;">Correction immédiate en examen blanc</span><span style="display:block;font:400 11px \'Manrope\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(v.examInstantSub) + '</span></span>' + examInstantSwitch + '</button></div></div>' +
     '<div style="margin:24px 24px 0;"><div class="folio-kicker">PROGRESSION</div>' +
     '<div class="ledger" style="margin-top:4px;">' +
-    '<button data-action="startDiag" class="ledger-row" style="width:100%;background:none;border:none;cursor:pointer;color:var(--ink);text-align:left;padding-left:0;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Refaire le diagnostic</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">5 questions pour recalibrer tes révisions</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
-    '<button data-action="resetProgress" class="ledger-row" style="width:100%;background:none;border:none;cursor:pointer;color:var(--warn);text-align:left;padding-left:0;"><span style="flex:1;font:500 13px \'Inter\',sans-serif;">Réinitialiser ma progression</span></button></div></div>' +
+    '<button data-action="startDiag" class="ledger-row" style="width:100%;background:none;border:none;cursor:pointer;color:var(--ink);text-align:left;padding-left:0;"><span style="flex:1;"><span style="display:block;font:500 13px \'Manrope\',sans-serif;">Refaire le diagnostic</span><span style="display:block;font:400 11px \'Manrope\',sans-serif;color:var(--ink2);margin-top:4px;">5 questions pour recalibrer tes révisions</span></span><span style="color:var(--ink3);">' + icoSvg('chevron', 15) + '</span></button>' +
+    '<button data-action="resetProgress" class="ledger-row" style="width:100%;background:none;border:none;cursor:pointer;color:var(--warn);text-align:left;padding-left:0;"><span style="flex:1;font:500 13px \'Manrope\',sans-serif;">Réinitialiser ma progression</span></button></div></div>' +
     (v.confirmReset ? '<div class="stagger" style="margin:16px 24px 0;background:var(--panel2);border:1px solid var(--warn);border-radius:12px;padding:16px;">' +
-      '<div style="font:500 13px \'Inter\',sans-serif;color:var(--ink);">Tout effacer ?</div>' +
-      '<div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">XP, série, révisions et diagnostic seront définitivement remis à zéro sur cet appareil.</div>' +
-      '<div style="display:flex;gap:10px;margin-top:14px;"><button data-action="resetProgressCancel" style="flex:1;background:none;border:1px solid var(--line);border-radius:999px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Annuler</button>' +
-      '<button data-action="resetProgressConfirm" style="flex:1;background:var(--warn);border:none;border-radius:999px;padding:12px;font:600 12.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;">Confirmer</button></div></div>' : '') +
+      '<div style="font:500 13px \'Manrope\',sans-serif;color:var(--ink);">Tout effacer ?</div>' +
+      '<div style="font:400 12px/1.6 \'Manrope\',sans-serif;color:var(--ink2);margin-top:6px;">XP, série, révisions et diagnostic seront définitivement remis à zéro sur cet appareil.</div>' +
+      '<div style="display:flex;gap:10px;margin-top:14px;"><button data-action="resetProgressCancel" style="flex:1;background:none;border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Manrope\',sans-serif;color:var(--ink2);cursor:pointer;">Annuler</button>' +
+      '<button data-action="resetProgressConfirm" style="flex:1;background:var(--warn);border:none;border-radius:12px;padding:12px;font:600 12.5px \'Manrope\',sans-serif;color:var(--on);cursor:pointer;">Confirmer</button></div></div>' : '') +
     '<div style="margin:24px 24px 0;"><div class="folio-kicker">DONNÉES</div>' +
     '<div class="ledger" style="margin-top:4px;">' +
-    '<button data-action="exportData" class="ledger-row" style="width:100%;background:none;border:none;cursor:pointer;color:var(--ink);text-align:left;padding-left:0;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Exporter ma progression</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">Télécharge un fichier de sauvegarde (.json)</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
-    '<button data-action="importDataPick" class="ledger-row" style="width:100%;background:none;border:none;cursor:pointer;color:var(--ink);text-align:left;padding-left:0;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Importer une sauvegarde</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">Restaure la progression depuis un fichier .json</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
-    '<button data-action="genAttestation" class="ledger-row" style="width:100%;background:none;border:none;cursor:pointer;color:var(--ink);text-align:left;padding-left:0;"><span style="flex:1;"><span style="display:block;font:500 13px \'Inter\',sans-serif;">Récapitulatif de temps de révision</span><span style="display:block;font:400 11px \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(v.totalTimeLabel) + ' cumulées · document personnel, non certifié</span></span><span style="font:400 15px Fraunces,serif;color:var(--acc);">&#8250;</span></button>' +
+    '<button data-action="exportData" class="ledger-row" style="width:100%;background:none;border:none;cursor:pointer;color:var(--ink);text-align:left;padding-left:0;"><span style="flex:1;"><span style="display:block;font:500 13px \'Manrope\',sans-serif;">Exporter ma progression</span><span style="display:block;font:400 11px \'Manrope\',sans-serif;color:var(--ink2);margin-top:4px;">Télécharge un fichier de sauvegarde (.json)</span></span><span style="color:var(--ink3);">' + icoSvg('chevron', 15) + '</span></button>' +
+    '<button data-action="importDataPick" class="ledger-row" style="width:100%;background:none;border:none;cursor:pointer;color:var(--ink);text-align:left;padding-left:0;"><span style="flex:1;"><span style="display:block;font:500 13px \'Manrope\',sans-serif;">Importer une sauvegarde</span><span style="display:block;font:400 11px \'Manrope\',sans-serif;color:var(--ink2);margin-top:4px;">Restaure la progression depuis un fichier .json</span></span><span style="color:var(--ink3);">' + icoSvg('chevron', 15) + '</span></button>' +
+    '<button data-action="genAttestation" class="ledger-row" style="width:100%;background:none;border:none;cursor:pointer;color:var(--ink);text-align:left;padding-left:0;"><span style="flex:1;"><span style="display:block;font:500 13px \'Manrope\',sans-serif;">Récapitulatif de temps de révision</span><span style="display:block;font:400 11px \'Manrope\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(v.totalTimeLabel) + ' cumulées · document personnel, non certifié</span></span><span style="color:var(--ink3);">' + icoSvg('chevron', 15) + '</span></button>' +
     '<input type="file" id="importFileInput" data-import-file-input accept="application/json" style="display:none" />' +
-    '</div><div style="font:400 10.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;">Tout reste stocké sur cet appareil : exporte régulièrement pour ne rien perdre en cas de changement de téléphone ou de vidage du cache.</div></div>' +
+    '</div><div style="font:400 10.5px \'Manrope\',sans-serif;color:var(--ink3);margin-top:8px;">Tout reste stocké sur cet appareil : exporte régulièrement pour ne rien perdre en cas de changement de téléphone ou de vidage du cache.</div></div>' +
     (v.confirmImport ? '<div class="stagger" style="margin:16px 24px 0;background:var(--panel2);border:1px solid var(--acc);border-radius:12px;padding:16px;">' +
-      '<div style="font:500 13px \'Inter\',sans-serif;color:var(--ink);">Remplacer ta progression actuelle ?</div>' +
-      '<div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">Fichier importé : ' + esc(v.confirmImportSummary || '') + '. Il va remplacer toutes les données actuelles sur cet appareil.</div>' +
-      '<div style="display:flex;gap:10px;margin-top:14px;"><button data-action="importDataCancel" style="flex:1;background:none;border:1px solid var(--line);border-radius:999px;padding:12px;font:500 12.5px \'Inter\',sans-serif;color:var(--ink2);cursor:pointer;">Annuler</button>' +
-      '<button data-action="importDataConfirm" style="flex:1;background:var(--acc);border:none;border-radius:999px;padding:12px;font:600 12.5px \'Inter\',sans-serif;color:var(--on);cursor:pointer;">Remplacer</button></div></div>' : '') +
+      '<div style="font:500 13px \'Manrope\',sans-serif;color:var(--ink);">Remplacer ta progression actuelle ?</div>' +
+      '<div style="font:400 12px/1.6 \'Manrope\',sans-serif;color:var(--ink2);margin-top:6px;">Fichier importé : ' + esc(v.confirmImportSummary || '') + '. Il va remplacer toutes les données actuelles sur cet appareil.</div>' +
+      '<div style="display:flex;gap:10px;margin-top:14px;"><button data-action="importDataCancel" style="flex:1;background:none;border:1px solid var(--line);border-radius:12px;padding:12px;font:500 12.5px \'Manrope\',sans-serif;color:var(--ink2);cursor:pointer;">Annuler</button>' +
+      '<button data-action="importDataConfirm" style="flex:1;background:var(--acc);border:none;border-radius:12px;padding:12px;font:600 12.5px \'Manrope\',sans-serif;color:var(--on);cursor:pointer;">Remplacer</button></div></div>' : '') +
     (v.notifOn ? '<div style="margin:16px 24px 0;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;gap:12px;align-items:flex-start;">' +
       '<div style="width:9px;height:9px;border-radius:50%;background:var(--acc);margin-top:4px;animation:kfBreathe 2.6s ease-in-out infinite;"></div>' +
-      '<div><div style="font:500 12.5px \'Inter\',sans-serif;">Dossier CGP · 19:30</div><div style="font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + v.dueCount + ' questions arrivent à échéance. Trois minutes suffisent.</div></div></div>' : '') +
-    '<div style="margin:26px 24px 0;text-align:center;font:italic 380 17px/1.5 Fraunces,serif;color:var(--acc);">« L\'échec c\'est l\'abandon,<br>la réussite c\'est la persévérance ! »</div>' +
-    '<div style="margin:24px 24px 0;padding-top:20px;border-top:1px solid var(--rule);font:400 11px/1.7 \'Inter\',sans-serif;color:var(--dim);">Prototype · banque de ' + v.totalQ + ' questions et ' + v.ficheCount + ' fiches reprises de votre fichier source. La progression est enregistrée sur cet appareil.</div>' +
+      '<div><div style="font:500 12.5px \'Manrope\',sans-serif;">Dossier CGP · 19:30</div><div style="font:400 12px/1.6 \'Manrope\',sans-serif;color:var(--ink2);margin-top:4px;">' + v.dueCount + ' questions arrivent à échéance. Trois minutes suffisent.</div></div></div>' : '') +
+    '<div style="margin:26px 24px 0;text-align:center;font:italic 380 17px/1.5 Manrope,sans-serif;color:var(--acc);">« L\'échec c\'est l\'abandon,<br>la réussite c\'est la persévérance ! »</div>' +
+    '<div style="margin:24px 24px 0;padding-top:20px;border-top:1px solid var(--rule);font:400 11px/1.7 \'Manrope\',sans-serif;color:var(--dim);">Prototype · banque de ' + v.totalQ + ' questions et ' + v.ficheCount + ' fiches reprises de votre fichier source. La progression est enregistrée sur cet appareil.</div>' +
     '<div style="height:26px;"></div></div>';
 }
 
-var TAB_GLYPH = { home: '◆', srs: '↻', courses: '§', progress: '◧', profile: '⚙' };
+var TAB_GLYPH = { home: 'home', srs: 'refresh', courses: 'book', progress: 'chart', profile: 'gear' };
 function tplTabs(v) {
   var tabs = v.tabs.map(function (t) {
     return '<button data-action="goTab" data-k="' + esc(t.k) + '" class="tab-item' + (t.on ? ' on' : '') + '">' +
-      '<span class="ti-ico">' + (TAB_GLYPH[t.k] || '·') + '</span>' + esc(t.label) + '</button>';
+      '<span class="ti-ico">' + icoSvg(TAB_GLYPH[t.k] || 'dot', 20) + '</span>' + esc(t.label) + '</button>';
   }).join('');
   return '<div class="nav-rail">' + tabs + '</div>';
 }
@@ -2373,11 +2520,11 @@ var laboState = {
 };
 
 function laboField(label, id, min, max, step, value, labelId) {
-  return '<div style="margin-top:14px;"><div style="display:flex;justify-content:space-between;gap:10px;font:500 12px \'Inter\',sans-serif;color:var(--ink2);"><span' + (labelId ? ' id="' + labelId + '"' : '') + '>' + label + '</span><b id="' + id + 'V" style="color:var(--ink);font-family:\'Inter\',sans-serif;font-weight:500;font-size:11.5px;white-space:nowrap;">—</b></div>' +
+  return '<div style="margin-top:14px;"><div style="display:flex;justify-content:space-between;gap:10px;font:500 12px \'Manrope\',sans-serif;color:var(--ink2);"><span' + (labelId ? ' id="' + labelId + '"' : '') + '>' + label + '</span><b id="' + id + 'V" style="color:var(--ink);font-family:\'Manrope\',sans-serif;font-weight:500;font-size:11.5px;white-space:nowrap;">—</b></div>' +
     '<input type="range" id="' + id + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + value + '"></div>';
 }
 function laboSeg(idA, labelA, idB, labelB, prefixLabel) {
-  return '<div style="margin-top:14px;">' + (prefixLabel ? '<div style="font:500 12px \'Inter\',sans-serif;color:var(--ink2);margin-bottom:6px;">' + prefixLabel + '</div>' : '') +
+  return '<div style="margin-top:14px;">' + (prefixLabel ? '<div style="font:500 12px \'Manrope\',sans-serif;color:var(--ink2);margin-bottom:6px;">' + prefixLabel + '</div>' : '') +
     '<div style="display:flex;gap:8px;"><button type="button" id="' + idA + '" class="lab-seg on" style="flex:1;">' + labelA + '</button><button type="button" id="' + idB + '" class="lab-seg" style="flex:1;">' + labelB + '</button></div></div>';
 }
 function laboSeg3(a, la, b, lb, c, lc) {
@@ -2385,7 +2532,7 @@ function laboSeg3(a, la, b, lb, c, lc) {
 }
 function laboKpiRow(items) {
   var cells = items.map(function (it) {
-    return '<div style="flex:1;min-width:0;"><div style="font:500 9.5px \'Inter\',sans-serif;letter-spacing:.08em;color:var(--ink3);">' + it.label + '</div><div id="' + it.id + '" style="font:500 15.5px \'Inter\',sans-serif;margin-top:4px;color:' + (it.color || 'var(--ink)') + ';word-break:break-word;">—</div></div>';
+    return '<div style="flex:1;min-width:0;"><div style="font:500 9.5px \'Manrope\',sans-serif;letter-spacing:.08em;color:var(--ink3);">' + it.label + '</div><div id="' + it.id + '" style="font:500 15.5px \'Manrope\',sans-serif;margin-top:4px;color:' + (it.color || 'var(--ink)') + ';word-break:break-word;">—</div></div>';
   }).join('');
   return '<div style="display:flex;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);">' + cells + '</div>';
 }
@@ -2395,17 +2542,17 @@ function laboBar(idA, idB) {
     '<span id="' + idB + '" style="display:block;height:8px;background:var(--warn);"></span></div>';
 }
 function laboNote(id) {
-  return '<div id="' + id + '" style="font:400 11.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;"></div>';
+  return '<div id="' + id + '" style="font:400 11.5px/1.6 \'Manrope\',sans-serif;color:var(--ink2);margin-top:12px;"></div>';
 }
 function laboCard(tag, tagColor, icon, title, purpose, inner) {
   return '<div style="background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:16px;margin-top:14px;">' +
-    '<div style="display:inline-block;font:500 9.5px \'Inter\',sans-serif;letter-spacing:.06em;color:' + tagColor + ';background:var(--panel2);padding:5px 10px;border-radius:999px;">' + tag + '</div>' +
-    '<div style="font:500 15px \'Inter\',sans-serif;margin-top:12px;display:flex;align-items:center;gap:9px;"><span style="font-size:17px;">' + icon + '</span>' + title + '</div>' +
-    '<div style="font:400 11.5px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:4px;">' + purpose + '</div>' +
+    '<div style="display:inline-block;font:500 9.5px \'Manrope\',sans-serif;letter-spacing:.06em;color:' + tagColor + ';background:var(--panel2);padding:5px 10px;border-radius:999px;">' + tag + '</div>' +
+    '<div style="font:500 15px \'Manrope\',sans-serif;margin-top:12px;display:flex;align-items:center;gap:9px;"><span class="pos-ico" style="background:' + hexA(tagColor === 'var(--acc)' ? '#00E08F' : (tagColor === 'var(--warn)' ? '#FF6B6B' : (tagColor === 'var(--gold)' ? '#3DA9FC' : '#9CA3AF')), 0.14) + ';color:' + tagColor + ';">' + emo(icon, 17) + '</span>' + title + '</div>' +
+    '<div style="font:400 11.5px/1.5 \'Manrope\',sans-serif;color:var(--ink3);margin-top:4px;">' + purpose + '</div>' +
     inner + '</div>';
 }
 function laboLine(label, value, tot) {
-  return '<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font:400 12px \'Inter\',sans-serif;color:' + (tot ? 'var(--ink)' : 'var(--ink2)') + ';' + (tot ? 'font-weight:600;border-top:1px solid var(--line);margin-top:4px;padding-top:10px;' : '') + '"><span>' + label + '</span><b style="font-family:\'Inter\',sans-serif;font-weight:500;">' + value + '</b></div>';
+  return '<div style="display:flex;justify-content:space-between;gap:10px;padding:6px 0;font:400 12px \'Manrope\',sans-serif;color:' + (tot ? 'var(--ink)' : 'var(--ink2)') + ';' + (tot ? 'font-weight:600;border-top:1px solid var(--line);margin-top:4px;padding-top:10px;' : '') + '"><span>' + label + '</span><b style="font-family:\'Manrope\',sans-serif;font-weight:500;">' + value + '</b></div>';
 }
 
 // ---- Culture générale : métiers connexes au conseil patrimonial ------------
@@ -3004,13 +3151,13 @@ function tplCulture(v) {
     return '<div class="stagger" style="animation-delay:' + (i * 0.04).toFixed(2) + 's;">' + tplFicheCard(f, i, acc, 'cultureGo') + '</div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:0 0 0;position:relative;background:linear-gradient(160deg,' + hexA('#a9814a', 0.22) + ',transparent 65%);">' +
-    '<div style="padding:58px 24px 22px;"><button data-action="goBack" class="btn-back hv-a" style="color:' + acc + ';"><span class="bkarr">&#8249;</span> Fiches</button>' +
+    '<div style="padding:0 0 0;position:relative;background:linear-gradient(160deg,' + hexA('#3DA9FC', 0.22) + ',transparent 65%);">' +
+    '<div style="padding:58px 24px 22px;"><button data-action="goBack" class="btn-back hv-a" style="color:' + acc + ';"><span class="bkarr">' + icoSvg('chevron-left', 15) + '</span>Fiches</button>' +
     '<div style="display:flex;align-items:center;gap:14px;margin-top:16px;">' +
-    '<span style="flex-shrink:0;width:50px;height:50px;border-radius:16px;background:' + hexA('#a9814a', 0.18) + ';border:1px solid ' + hexA('#a9814a', 0.4) + ';display:flex;align-items:center;justify-content:center;font-size:22px;">🎓</span>' +
-    '<div><div style="font:300 28px/1.1 Fraunces,serif;letter-spacing:-.02em;">Culture générale</div>' +
-    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">' + v.cultureTestedCount + '/' + CULTURE_METIERS.length + ' TESTÉS · MAÎTRISE ' + v.cultureOverallPct + '%</div></div></div>' +
-    '<div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">Les professions que tout CGP croise chez ses clients — utile pour comprendre leur situation patrimoniale. Chiffres indicatifs, très variables selon l\'expérience, la zone et la structure d\'exercice.</div></div></div>' +
+    '<span class="pos-ico" style="width:50px;height:50px;border-radius:16px;background:' + hexA('#3DA9FC', 0.18) + ';border:1px solid ' + hexA('#3DA9FC', 0.4) + ';color:' + acc + ';">' + icoSvg('book', 22) + '</span>' +
+    '<div><div style="font:300 28px/1.1 Manrope,sans-serif;letter-spacing:-.02em;">Culture générale</div>' +
+    '<div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:6px;">' + v.cultureTestedCount + '/' + CULTURE_METIERS.length + ' TESTÉS · MAÎTRISE ' + v.cultureOverallPct + '%</div></div></div>' +
+    '<div style="font:400 12.5px/1.6 \'Manrope\',sans-serif;color:var(--ink2);margin-top:14px;">Les professions que tout CGP croise chez ses clients — utile pour comprendre leur situation patrimoniale. Chiffres indicatifs, très variables selon l\'expérience, la zone et la structure d\'exercice.</div></div></div>' +
     '<div style="margin:6px 24px 0;display:flex;flex-direction:column;gap:9px;">' + cards + '</div>' +
     '<div style="height:26px;"></div></div>';
 }
@@ -3022,21 +3169,21 @@ function tplCultureDetail(v) {
   var toc = m.specialites.map(function (s, i) {
     var seen = !!v.cultureSpecSeenAll[m.id + '#' + i];
     var col = seen ? acc : acc;
-    return '<button data-action="cultureJump" data-i="' + i + '" style="flex-shrink:0;width:30px;height:30px;border-radius:50%;background:' + hexA(col, seen ? 0.28 : 0.14) + ';border:1px solid ' + hexA(col, 0.4) + ';color:' + col + ';font:500 11px \'Inter\',sans-serif;cursor:pointer;">' + (seen ? '✓' : (i + 1)) + '</button>';
+    return '<button data-action="cultureJump" data-i="' + i + '" style="flex-shrink:0;width:30px;height:30px;border-radius:50%;background:' + hexA(col, seen ? 0.28 : 0.14) + ';border:1px solid ' + hexA(col, 0.4) + ';color:' + col + ';font:500 11px \'Manrope\',sans-serif;cursor:pointer;">' + (seen ? icoSvg('check', 12) : (i + 1)) + '</button>';
   }).join('');
   var secs = m.specialites.map(function (s, i) {
     var open = v.cultureSecOpen === i;
     var seen = !!v.cultureSpecSeenAll[m.id + '#' + i];
     if (seen) specSeenCount++;
     return '<div id="csec-' + i + '" style="margin-top:12px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--panel);">' +
-      '<button data-action="cultureSecToggle" data-i="' + i + '" style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:' + acc + ';font:500 10px \'Inter\',sans-serif;letter-spacing:.12em;text-align:left;">' +
-      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + (seen ? acc : hexA(acc, 0.16)) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;font:500 10px \'Inter\',sans-serif;color:' + (seen ? 'var(--on)' : acc) + ';">' + (seen ? '✓' : (i + 1)) + '</span>' +
-      '<span style="flex:1;text-transform:none;letter-spacing:0;font:500 13px \'Inter\',sans-serif;color:var(--ink);">' + esc(s.name) + '</span>' +
+      '<button data-action="cultureSecToggle" data-i="' + i + '" style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:' + acc + ';font:500 10px \'Manrope\',sans-serif;letter-spacing:.12em;text-align:left;">' +
+      '<span style="flex-shrink:0;width:22px;height:22px;border-radius:50%;background:' + (seen ? acc : hexA(acc, 0.16)) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;font:500 10px \'Manrope\',sans-serif;color:' + (seen ? 'var(--on)' : acc) + ';">' + (seen ? icoSvg('check', 12) : (i + 1)) + '</span>' +
+      '<span style="flex:1;text-transform:none;letter-spacing:0;font:500 13px \'Manrope\',sans-serif;color:var(--ink);">' + esc(s.name) + '</span>' +
       '<span style="flex-shrink:0;transition:transform .25s;transform:rotate(' + (open ? '90deg' : '0deg') + ');">&rsaquo;</span></button>' +
       (open ? '<div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:10px;">' +
-        '<div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:' + acc + ';">EN QUOI ÇA CONSISTE</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(s.desc) + '</div></div>' +
-        '<div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:' + acc + ';">PARCOURS POUR SE SPÉCIALISER</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(s.parcoursSpe) + '</div></div>' +
-        '<div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:' + acc + ';">DEVENIR ENSEIGNANT / PROFESSEUR</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(s.parcoursProf) + '</div></div>' +
+        '<div><div style="font:600 9px \'Manrope\',sans-serif;letter-spacing:.09em;color:' + acc + ';">EN QUOI ÇA CONSISTE</div><div style="font:400 12.5px/1.6 \'Manrope\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(s.desc) + '</div></div>' +
+        '<div><div style="font:600 9px \'Manrope\',sans-serif;letter-spacing:.09em;color:' + acc + ';">PARCOURS POUR SE SPÉCIALISER</div><div style="font:400 12.5px/1.6 \'Manrope\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(s.parcoursSpe) + '</div></div>' +
+        '<div><div style="font:600 9px \'Manrope\',sans-serif;letter-spacing:.09em;color:' + acc + ';">DEVENIR ENSEIGNANT / PROFESSEUR</div><div style="font:400 12.5px/1.6 \'Manrope\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(s.parcoursProf) + '</div></div>' +
         '</div>' : '') + '</div>';
   }).join('');
   var etabs = m.etablissements.map(function (e) { return '<li style="margin-top:4px;">' + esc(e) + '</li>'; }).join('');
@@ -3045,26 +3192,26 @@ function tplCultureDetail(v) {
   var allSpecSeen = specSeenCount >= m.specialites.length;
   var testBtnLabel = tested ? 'Retester ce métier · meilleur score ' + best + '/' + m.quiz.length : 'Tester ce métier · ' + m.quiz.length + ' questions';
   var completionBar = '<div style="margin:16px 24px 0;display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px;flex-wrap:wrap;">' +
-    '<span style="font:500 11.5px \'Inter\',sans-serif;color:' + (allSpecSeen ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (allSpecSeen ? '✓' : specSeenCount + '/' + m.specialites.length) + ' spécialités consultées</span>' +
+    '<span style="font:500 11.5px \'Manrope\',sans-serif;color:' + (allSpecSeen ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (allSpecSeen ? icoSvg('check', 12) : specSeenCount + '/' + m.specialites.length) + ' spécialités consultées</span>' +
     '<span style="width:1px;height:12px;background:var(--line);"></span>' +
-    '<span style="font:500 11.5px \'Inter\',sans-serif;color:' + (tested ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (tested ? '✓ testé · ' + best + '/' + m.quiz.length : 'test à faire') + '</span>' +
-    (allSpecSeen && tested ? '<span style="margin-left:auto;font:600 10.5px \'Inter\',sans-serif;color:var(--acc2);">MÉTIER EXPLORÉ</span>' : '') + '</div>';
+    '<span style="font:500 11.5px \'Manrope\',sans-serif;color:' + (tested ? 'var(--acc2)' : 'var(--ink2)') + ';">' + (tested ? icoSvg('check', 12) + ' testé · ' + best + '/' + m.quiz.length : 'test à faire') + '</span>' +
+    (allSpecSeen && tested ? '<span style="margin-left:auto;font:600 10.5px \'Manrope\',sans-serif;color:var(--acc2);">MÉTIER EXPLORÉ</span>' : '') + '</div>';
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
     '<div style="padding:32px 26px 22px;background:linear-gradient(160deg,' + hexA(acc, 0.2) + ',transparent 70%);">' +
-    '<button data-action="goBack" class="btn-back hv-a" style="color:' + acc + ';"><span class="bkarr">&#8249;</span> Métiers</button>' +
+    '<button data-action="goBack" class="btn-back hv-a" style="color:' + acc + ';"><span class="bkarr">' + icoSvg('chevron-left', 15) + '</span>Métiers</button>' +
     '<div style="display:flex;align-items:center;gap:14px;margin-top:16px;">' +
-    '<span style="flex-shrink:0;width:52px;height:52px;border-radius:16px;background:' + hexA(acc, 0.18) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;font-size:23px;">' + m.icon + '</span>' +
-    '<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;align-items:center;font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);"><div>CULTURE GÉNÉRALE</div><div style="color:' + acc + ';">' + m.specialites.length + ' SPÉ.</div></div>' +
-    '<div style="font:300 26px/1.15 Fraunces,serif;letter-spacing:-.02em;margin-top:6px;">' + esc(m.name) + '</div></div></div>' +
-    '<div style="font:400 12.5px/1.65 \'Inter\',sans-serif;color:var(--ink2);margin-top:14px;">' + esc(m.intro) + '</div>' +
+    '<span style="flex-shrink:0;width:52px;height:52px;border-radius:16px;background:' + hexA(acc, 0.18) + ';border:1px solid ' + hexA(acc, 0.4) + ';display:flex;align-items:center;justify-content:center;color:' + acc + ';">' + emo(m.icon, 22) + '</span>' +
+    '<div style="flex:1;min-width:0;"><div style="display:flex;justify-content:space-between;align-items:center;font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);"><div>CULTURE GÉNÉRALE</div><div style="color:' + acc + ';">' + m.specialites.length + ' SPÉ.</div></div>' +
+    '<div style="font:300 26px/1.15 Manrope,sans-serif;letter-spacing:-.02em;margin-top:6px;">' + esc(m.name) + '</div></div></div>' +
+    '<div style="font:400 12.5px/1.65 \'Manrope\',sans-serif;color:var(--ink2);margin-top:14px;">' + esc(m.intro) + '</div>' +
     '<div style="margin-top:16px;display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;">' + toc + '</div></div>' +
     completionBar +
-    '<div style="padding:6px 24px 0;"><div style="margin-top:16px;font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">SPÉCIALITÉS DÉTAILLÉES</div>' + secs + '</div>' +
-    '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">ÉTABLISSEMENTS (EXEMPLES CONNUS)</div>' +
-    '<ul style="margin:8px 0 0;padding-left:20px;font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);">' + etabs + '</ul></div>' +
-    '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">RÉMUNÉRATION INDICATIVE</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + esc(m.remuneration) + '</div></div>' +
-    '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">STATUT JURIDIQUE USUEL</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + esc(m.statut) + '</div></div>' +
-    (m.investLimites ? '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">LIMITES D\'INVESTISSEMENT PROFESSIONNEL</div><div style="font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + esc(m.investLimites) + '</div></div>' : '') +
+    '<div style="padding:6px 24px 0;"><div style="margin-top:16px;font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);">SPÉCIALITÉS DÉTAILLÉES</div>' + secs + '</div>' +
+    '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);">ÉTABLISSEMENTS (EXEMPLES CONNUS)</div>' +
+    '<ul style="margin:8px 0 0;padding-left:20px;font:400 12.5px/1.6 \'Manrope\',sans-serif;color:var(--ink2);">' + etabs + '</ul></div>' +
+    '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);">RÉMUNÉRATION INDICATIVE</div><div style="font:400 12.5px/1.6 \'Manrope\',sans-serif;color:var(--ink2);margin-top:6px;">' + esc(m.remuneration) + '</div></div>' +
+    '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);">STATUT JURIDIQUE USUEL</div><div style="font:400 12.5px/1.6 \'Manrope\',sans-serif;color:var(--ink2);margin-top:6px;">' + esc(m.statut) + '</div></div>' +
+    (m.investLimites ? '<div style="margin:24px 24px 0;"><div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);">LIMITES D\'INVESTISSEMENT PROFESSIONNEL</div><div style="font:400 12.5px/1.6 \'Manrope\',sans-serif;color:var(--ink2);margin-top:6px;">' + esc(m.investLimites) + '</div></div>' : '') +
     '<div style="padding:26px 24px 30px;"><button data-action="startCultureTest" data-id="' + esc(m.id) + '" class="btn-cta" style="width:100%;">' + testBtnLabel + '</button></div>' +
     '<div style="height:10px;"></div></div>';
 }
@@ -3075,11 +3222,11 @@ function tplCultureTest(v) {
   if (idx >= total) {
     var pct = Math.round(v.cultureTestScore / total * 100);
     return '<div style="flex:1;overflow:auto;min-height:0;display:flex;flex-direction:column;padding:58px 24px 0;">' +
-      '<button data-action="goBack" class="btn-back hv-a" style="align-self:flex-start;"><span class="bkarr">&#8249;</span> ' + esc(m.name) + '</button>' +
+      '<button data-action="goBack" class="btn-back hv-a" style="align-self:flex-start;"><span class="bkarr">' + icoSvg('chevron-left', 15) + '</span>' + esc(m.name) + '</button>' +
       '<div style="background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:24px;text-align:center;margin-top:24px;">' +
-      '<div style="font:400 12px \'Inter\',sans-serif;color:var(--ink2);">Terminé !</div>' +
-      '<div style="font:300 46px Fraunces,serif;margin-top:8px;">' + v.cultureTestScore + ' / ' + total + '</div>' +
-      '<div style="font:400 12.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + (pct >= 80 ? 'Excellent — culture générale solide.' : pct >= 50 ? 'Bien, quelques révisions possibles.' : 'À revoir — relis la fiche du métier.') + '</div>' +
+      '<div style="font:400 12px \'Manrope\',sans-serif;color:var(--ink2);">Terminé !</div>' +
+      '<div style="font:300 46px Manrope,sans-serif;margin-top:8px;">' + v.cultureTestScore + ' / ' + total + '</div>' +
+      '<div style="font:400 12.5px \'Manrope\',sans-serif;color:var(--ink2);margin-top:6px;">' + (pct >= 80 ? 'Excellent — culture générale solide.' : pct >= 50 ? 'Bien, quelques révisions possibles.' : 'À revoir — relis la fiche du métier.') + '</div>' +
       '<button data-action="goBack" class="btn-cta-sm" style="margin-top:16px;">Retour au métier →</button></div></div>';
   }
   var q = v.cultureTestSet[idx];
@@ -3088,17 +3235,17 @@ function tplCultureTest(v) {
     var isCorrect = i === q.correct, isPick = i === v.cultureTestPick;
     var bg = 'var(--panel)', bd = 'var(--line)', col = 'var(--ink)';
     if (answered) {
-      if (isCorrect) { bg = hexA('#5f7f66', 0.16); bd = '#5f7f66'; col = '#5f7f66'; }
-      else if (isPick) { bg = hexA('#a8432f', 0.16); bd = '#a8432f'; col = '#a8432f'; }
+      if (isCorrect) { bg = hexA('#00E08F', 0.16); bd = '#00E08F'; col = '#00E08F'; }
+      else if (isPick) { bg = hexA('#FF6B6B', 0.16); bd = '#FF6B6B'; col = '#FF6B6B'; }
     }
-    return '<button ' + (answered ? '' : 'data-action="cultureTestPick" data-i="' + i + '"') + ' style="width:100%;text-align:left;background:' + bg + ';border:1px solid ' + bd + ';border-radius:14px;padding:13px 14px;font:400 13px/1.5 \'Inter\',sans-serif;color:' + col + ';cursor:' + (answered ? 'default' : 'pointer') + ';margin-top:8px;">' + esc(o) + '</button>';
+    return '<button ' + (answered ? '' : 'data-action="cultureTestPick" data-i="' + i + '"') + ' style="width:100%;text-align:left;background:' + bg + ';border:1px solid ' + bd + ';border-radius:14px;padding:13px 14px;font:400 13px/1.5 \'Manrope\',sans-serif;color:' + col + ';cursor:' + (answered ? 'default' : 'pointer') + ';margin-top:8px;">' + esc(o) + '</button>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> ' + esc(m.name) + '</button>' +
-    '<div style="font:500 10.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:16px;">Question ' + (idx + 1) + ' / ' + total + ' · Score ' + v.cultureTestScore + '</div>' +
-    '<div style="font:300 21px/1.4 Fraunces,serif;margin-top:10px;">' + esc(q.q) + '</div></div>' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">' + icoSvg('chevron-left', 15) + '</span>' + esc(m.name) + '</button>' +
+    '<div style="font:500 10.5px \'Manrope\',sans-serif;color:var(--ink3);margin-top:16px;">Question ' + (idx + 1) + ' / ' + total + ' · Score ' + v.cultureTestScore + '</div>' +
+    '<div style="font:300 21px/1.4 Manrope,sans-serif;margin-top:10px;">' + esc(q.q) + '</div></div>' +
     '<div style="margin:16px 24px 0;">' + opts + '</div>' +
-    (answered ? '<div style="margin:16px 24px 0;padding:13px 14px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;font:400 12px/1.6 \'Inter\',sans-serif;color:var(--ink2);">💡 ' + esc(q.explain) + '</div>' +
+    (answered ? '<div style="margin:16px 24px 0;padding:13px 14px;background:var(--panel2);border:1px solid var(--line);border-radius:12px;display:flex;gap:8px;align-items:flex-start;font:400 12px/1.6 \'Manrope\',sans-serif;color:var(--ink2);"><span style="flex-shrink:0;color:var(--info);">' + icoSvg('bulb', 14) + '</span><span>' + esc(q.explain) + '</span></div>' +
       '<div style="padding:20px 24px 30px;"><button data-action="cultureTestNext" class="btn-cta" style="width:100%;">' + (idx + 1 >= total ? 'Voir le résultat →' : 'Question suivante →') + '</button></div>' : '<div style="height:20px;"></div>') +
     '</div>';
 }
@@ -3106,40 +3253,40 @@ function tplCultureTest(v) {
 function tplFormulas(v) {
   var toc = v.formulas.map(function (f, i) {
     var col = poleAccent(f.pole);
-    return '<button data-action="formulaJump" data-i="' + i + '" style="flex-shrink:0;width:30px;height:30px;border-radius:50%;background:' + hexA(col, f.seen ? 0.28 : 0.14) + ';border:1px solid ' + hexA(col, 0.4) + ';color:' + col + ';font:500 11px \'Inter\',sans-serif;cursor:pointer;">' + (f.seen ? '✓' : (i + 1)) + '</button>';
+    return '<button data-action="formulaJump" data-i="' + i + '" style="flex-shrink:0;width:30px;height:30px;border-radius:50%;background:' + hexA(col, f.seen ? 0.28 : 0.14) + ';border:1px solid ' + hexA(col, 0.4) + ';color:' + col + ';font:500 11px \'Manrope\',sans-serif;cursor:pointer;">' + (f.seen ? icoSvg('check', 12) : (i + 1)) + '</button>';
   }).join('');
   var cards = v.formulas.map(function (f, i) {
     var acc = poleAccent(f.pole);
     var open = v.formulaOpen === f.id;
     return '<div id="fsec-' + i + '" style="margin-top:12px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--panel);">' +
       '<button data-action="formulaToggle" data-id="' + esc(f.id) + '" style="width:100%;background:none;border:none;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;color:var(--ink);text-align:left;">' +
-      '<span style="flex-shrink:0;width:34px;height:34px;border-radius:50%;background:' + hexA(acc, f.seen ? 0.22 : 0.12) + ';display:flex;align-items:center;justify-content:center;font-size:16px;">' + f.icon + '</span>' +
-      '<span style="flex:1;min-width:0;"><span style="display:block;font:500 9px \'Inter\',sans-serif;letter-spacing:.1em;color:' + acc + ';">' + esc((f.pole || '').toUpperCase()) + '</span>' +
-      '<span style="display:block;font:500 14px \'Inter\',sans-serif;margin-top:2px;">' + esc(f.title) + '</span></span>' +
-      (f.seen ? '<span style="flex-shrink:0;font-size:12px;color:' + acc + ';">✓</span>' : '') +
-      '<span style="flex-shrink:0;transition:transform .25s;transform:rotate(' + (open ? '90deg' : '0deg') + ');color:var(--ink3);">&rsaquo;</span></button>' +
+      '<span style="flex-shrink:0;width:34px;height:34px;border-radius:50%;background:' + hexA(acc, f.seen ? 0.22 : 0.12) + ';display:flex;align-items:center;justify-content:center;color:' + acc + ';">' + emo(f.icon, 15) + '</span>' +
+      '<span style="flex:1;min-width:0;"><span style="display:block;font:500 9px \'Manrope\',sans-serif;letter-spacing:.1em;color:' + acc + ';">' + esc((f.pole || '').toUpperCase()) + '</span>' +
+      '<span style="display:block;font:500 14px \'Manrope\',sans-serif;margin-top:2px;">' + esc(f.title) + '</span></span>' +
+      (f.seen ? '<span style="flex-shrink:0;color:' + acc + ';">' + icoSvg('check', 13) + '</span>' : '') +
+      '<span style="flex-shrink:0;transition:transform .25s;transform:rotate(' + (open ? '90deg' : '0deg') + ');color:var(--ink3);">' + icoSvg('chevron', 15) + '</span></button>' +
       (open ? '<div style="padding:0 16px 18px;display:flex;flex-direction:column;gap:12px;">' +
         '<div style="background:' + hexA(acc, 0.1) + ';border:1px solid ' + hexA(acc, 0.3) + ';border-radius:12px;padding:13px 14px;">' +
-        '<div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:' + acc + ';">LA FORMULE</div>' +
-        '<div style="font:500 14.5px/1.5 Fraunces,serif;color:var(--ink);margin-top:4px;">' + esc(f.formula) + '</div></div>' +
-        '<div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:var(--ink3);">LES ÉTAPES</div>' +
-        '<ol style="margin:6px 0 0;padding-left:18px;font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);">' + f.steps.map(function (s) { return '<li style="margin-top:4px;">' + esc(s) + '</li>'; }).join('') + '</ol></div>' +
+        '<div style="font:600 9px \'Manrope\',sans-serif;letter-spacing:.09em;color:' + acc + ';">LA FORMULE</div>' +
+        '<div style="font:500 14.5px/1.5 Manrope,sans-serif;color:var(--ink);margin-top:4px;">' + esc(f.formula) + '</div></div>' +
+        '<div><div style="font:600 9px \'Manrope\',sans-serif;letter-spacing:.09em;color:var(--ink3);">LES ÉTAPES</div>' +
+        '<ol style="margin:6px 0 0;padding-left:18px;font:400 12.5px/1.6 \'Manrope\',sans-serif;color:var(--ink2);">' + f.steps.map(function (s) { return '<li style="margin-top:4px;">' + esc(s) + '</li>'; }).join('') + '</ol></div>' +
         '<div style="background:var(--panel2);border-radius:12px;padding:13px 14px;">' +
-        '<div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:var(--ink3);">EXEMPLE CHIFFRÉ</div>' +
-        '<div style="font:400 12px/1.55 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(f.example.q) + '</div>' +
-        '<div style="font:500 13px \'Inter\',sans-serif;color:var(--ink);margin-top:8px;">' + esc(f.example.calc) + ' = <span style="color:' + acc + ';">' + esc(f.example.result) + '</span></div></div>' +
-        '<div style="display:flex;gap:9px;align-items:flex-start;background:' + hexA('#a8432f', 0.1) + ';border:1px solid ' + hexA('#a8432f', 0.3) + ';border-radius:12px;padding:12px 13px;">' +
-        '<span style="flex-shrink:0;font-size:14px;">⚠️</span><div><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:var(--warn);">LE PIÈGE CLASSIQUE</div>' +
-        '<div style="font:400 12px/1.55 \'Inter\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(f.piege) + '</div></div></div>' +
-        (f.theory ? '<button data-action="ficheGo" data-fiche="' + esc(f.theory) + '" class="hv-a" style="width:100%;text-align:left;background:none;border:1px solid var(--line);border-radius:12px;padding:11px 13px;font:500 11.5px \'Inter\',sans-serif;color:' + acc + ';cursor:pointer;">📘 Revoir la fiche de cours liée →</button>' : '') +
+        '<div style="font:600 9px \'Manrope\',sans-serif;letter-spacing:.09em;color:var(--ink3);">EXEMPLE CHIFFRÉ</div>' +
+        '<div style="font:400 12px/1.55 \'Manrope\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(f.example.q) + '</div>' +
+        '<div style="font:500 13px \'Manrope\',sans-serif;color:var(--ink);margin-top:8px;">' + esc(f.example.calc) + ' = <span style="color:' + acc + ';">' + esc(f.example.result) + '</span></div></div>' +
+        '<div class="feedback-box due" style="display:flex;gap:9px;align-items:flex-start;">' +
+        '<span style="flex-shrink:0;color:var(--due);">' + icoSvg('warning', 15) + '</span><div><div style="font:600 9px \'Manrope\',sans-serif;letter-spacing:.09em;color:var(--due);">LE PIÈGE CLASSIQUE</div>' +
+        '<div style="font:400 12px/1.55 \'Manrope\',sans-serif;color:var(--ink2);margin-top:4px;">' + esc(f.piege) + '</div></div></div>' +
+        (f.theory ? '<button data-action="ficheGo" data-fiche="' + esc(f.theory) + '" class="hv-a" style="width:100%;text-align:left;background:none;border:1px solid var(--line);border-radius:12px;padding:11px 13px;display:flex;align-items:center;gap:7px;font:500 11.5px \'Manrope\',sans-serif;color:' + acc + ';cursor:pointer;">' + icoSvg('book', 13) + 'Revoir la fiche de cours liée →</button>' : '') +
         '</div>' : '') + '</div>';
   }).join('');
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:32px 26px 22px;background:linear-gradient(160deg,' + hexA('#5f7f66', 0.18) + ',transparent 70%);">' +
-    '<button data-action="goBack" class="btn-back hv-a" style="color:#5f7f66;"><span class="bkarr">&#8249;</span> Retour</button>' +
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);"><div>MÉTHODO</div><div style="color:#5f7f66;">' + v.formulesSeenCount + '/' + v.formulas.length + ' VUES</div></div>' +
-    '<div style="font:300 30px/1.15 Fraunces,serif;letter-spacing:-.02em;margin-top:10px;">Boîte à <span style="font-style:italic;color:#5f7f66;">formules</span></div>' +
-    '<div style="font:400 12.5px/1.65 \'Inter\',sans-serif;color:var(--ink2);margin-top:12px;">Toutes les méthodologies de calcul de l\'app, en un seul endroit : la formule, les étapes, un exemple chiffré, et le piège classique à éviter.</div>' +
+    '<div style="padding:32px 26px 22px;background:linear-gradient(160deg,' + hexA('#00E08F', 0.18) + ',transparent 70%);">' +
+    '<button data-action="goBack" class="btn-back hv-a" style="color:#00E08F;"><span class="bkarr">' + icoSvg('chevron-left', 15) + '</span>Retour</button>' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);"><div>MÉTHODO</div><div style="color:#00E08F;">' + v.formulesSeenCount + '/' + v.formulas.length + ' VUES</div></div>' +
+    '<div style="font:300 30px/1.15 Manrope,sans-serif;letter-spacing:-.02em;margin-top:10px;">Boîte à <span style="font-style:italic;color:#00E08F;">formules</span></div>' +
+    '<div style="font:400 12.5px/1.65 \'Manrope\',sans-serif;color:var(--ink2);margin-top:12px;">Toutes les méthodologies de calcul de l\'app, en un seul endroit : la formule, les étapes, un exemple chiffré, et le piège classique à éviter.</div>' +
     '<div style="margin-top:16px;display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;">' + toc + '</div></div>' +
     '<div style="padding:6px 24px 30px;">' + cards + '</div>' +
     '<div style="height:10px;"></div></div>';
@@ -3179,8 +3326,8 @@ function tplLabo() {
     laboField('Durée', 'frYr', 1, 40, 1, 25) +
     laboKpiRow([{ id: 'frNet', label: 'CE QUE TU AS (NET)', color: 'var(--acc)' }, { id: 'frCost', label: 'COÛT TOTAL DES FRAIS', color: 'var(--warn)' }]) +
     laboBar('frBarCap', 'frBarInt') + laboNote('frNote');
-  var guide = '<button type="button" id="pxGuideBtn" style="width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:11px 13px;font:500 12px \'Inter\',sans-serif;color:var(--ink);cursor:pointer;margin-top:14px;">📄 Comment remplir depuis un DIC ? (exemples)</button>' +
-    '<div id="pxGuide" style="display:none;margin-top:10px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px;font:400 11.5px/1.6 \'Inter\',sans-serif;color:var(--ink2);">' +
+  var guide = '<button type="button" id="pxGuideBtn" style="width:100%;text-align:left;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:11px 13px;font:500 12px \'Manrope\',sans-serif;color:var(--ink);cursor:pointer;margin-top:14px;display:flex;align-items:center;gap:8px;"><span style="flex-shrink:0;color:var(--ink3);">' + icoSvg('scroll', 14) + '</span>Comment remplir depuis un DIC ? (exemples)</button>' +
+    '<div id="pxGuide" style="display:none;margin-top:10px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:14px;font:400 11.5px/1.6 \'Manrope\',sans-serif;color:var(--ink2);">' +
     '<div>Reporte chaque valeur du DIC dans les bonnes cases :</div>' +
     '<div style="margin-top:8px;"><b style="color:var(--ink);">Montant investi</b> — « Scénarios de performance » → « Exemple d’investissement » <i>(ex. 10 000 €)</i></div>' +
     '<div style="margin-top:6px;"><b style="color:var(--ink);">Coupon /an (brut)</b> — Section 1 → « Intérêts » <i>(ex. 8 %)</i></div>' +
@@ -3189,9 +3336,9 @@ function tplLabo() {
     '<div style="margin-top:6px;"><b style="color:var(--ink);">Coûts d’entrée (produit)</b> — Section 4 → « Composition des coûts » <i>(ex. 8,91 %)</i></div>' +
     '<div style="margin-top:6px;"><b style="color:var(--ink);">Frais de gestion /an</b> — Section 4 → « Coûts récurrents » <i>(ex. 0,80 %)</i></div>' +
     '<div style="margin-top:6px;"><b style="color:var(--ink);">Coûts de sortie</b> — Section 4 → « Coûts de sortie », dus seulement si vente avant terme <i>(ex. 1,00 %)</i></div>' +
-    '<div style="margin-top:10px;color:var(--gold);">💡 Les frais du DIC sont ceux du PRODUIT. Ajoute à part les frais d’entrée du CGP / de l’enveloppe, absents du DIC.</div>' +
-    '<div style="margin-top:8px;">✅ Contrôle : « l’incidence des coûts annuels » du DIC (à l’échéance) doit être proche de ce qu’affiche le simulateur.</div>' +
-    '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;"><button type="button" id="pxFillCiti" style="flex:1;background:var(--acc);color:var(--on);border:none;border-radius:999px;padding:9px 12px;font:600 11px \'Inter\',sans-serif;cursor:pointer;">Exemple Citi (décrément)</button><button type="button" id="pxFillMS" style="flex:1;background:none;border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:9px 12px;font:500 11px \'Inter\',sans-serif;cursor:pointer;">Exemple Morgan Stanley</button></div>' +
+    '<div style="margin-top:10px;display:flex;gap:7px;align-items:flex-start;color:var(--info);"><span style="flex-shrink:0;">' + icoSvg('bulb', 14) + '</span><span>Les frais du DIC sont ceux du PRODUIT. Ajoute à part les frais d’entrée du CGP / de l’enveloppe, absents du DIC.</span></div>' +
+    '<div style="margin-top:8px;display:flex;gap:7px;align-items:flex-start;"><span style="flex-shrink:0;color:var(--acc);">' + icoSvg('check', 14) + '</span><span>Contrôle : « l’incidence des coûts annuels » du DIC (à l’échéance) doit être proche de ce qu’affiche le simulateur.</span></div>' +
+    '<div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;"><button type="button" id="pxFillCiti" style="flex:1;background:var(--acc);color:var(--on);border:none;border-radius:12px;padding:9px 12px;font:600 11px \'Manrope\',sans-serif;cursor:pointer;">Exemple Citi (décrément)</button><button type="button" id="pxFillMS" style="flex:1;background:none;border:1px solid var(--line);color:var(--ink);border-radius:12px;padding:9px 12px;font:500 11px \'Manrope\',sans-serif;cursor:pointer;">Exemple Morgan Stanley</button></div>' +
     '</div>';
   var card5 = guide +
     laboField('Montant investi', 'pxCap', 5000, 500000, 1000, 10000) +
@@ -3199,32 +3346,32 @@ function tplLabo() {
     laboField('Décrément de l’indice (pts/an)', 'pxDec', 0, 6, 0.1, 4.7) +
     laboField('Barrière de protection du capital (%)', 'pxBar', 0, 100, 5, 40) +
     laboField('Durée totale', 'pxN', 1, 12, 1, 12) +
-    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:16px;">FRAIS DU PRODUIT (DIC)</div>' +
+    '<div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:16px;">FRAIS DU PRODUIT (DIC)</div>' +
     laboField('Coûts d’entrée produit', 'pxEnt', 0, 12, 0.1, 8.9) +
     laboField('Frais de gestion /an produit', 'pxGes', 0, 3, 0.1, 0.8) +
-    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:16px;">FRAIS CÔTÉ CGP / ENVELOPPE (HORS DIC)</div>' +
+    '<div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:16px;">FRAIS CÔTÉ CGP / ENVELOPPE (HORS DIC)</div>' +
     laboField('Frais d’entrée CGP / enveloppe', 'pxCgp', 0, 5, 0.1, 0) +
     laboField('Valeur liquidative initiale de la part', 'pxPart', 10, 1000, 10, 100) +
-    '<div style="margin-top:10px;background:var(--panel2);border:1px solid ' + hexA('#a8432f', 0.3) + ';border-radius:10px;padding:10px 12px;"><div style="font:600 9px \'Inter\',sans-serif;letter-spacing:.09em;color:var(--warn);margin-bottom:4px;">ATTENTION</div><div style="font:400 11px/1.55 \'Inter\',sans-serif;color:var(--ink2);">Ces frais sont prélevés avant l’achat des parts : ils réduisent le nominal qui travaille réellement dans le produit, pas seulement le résultat final.</div></div>' +
-    '<div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:16px;">SCÉNARIO DE SORTIE</div>' +
+    '<div class="feedback-box due" style="margin-top:10px;"><div style="font:600 9px \'Manrope\',sans-serif;letter-spacing:.09em;color:var(--due);margin-bottom:4px;">ATTENTION</div><div style="font:400 11px/1.55 \'Manrope\',sans-serif;color:var(--ink2);">Ces frais sont prélevés avant l’achat des parts : ils réduisent le nominal qui travaille réellement dans le produit, pas seulement le résultat final.</div></div>' +
+    '<div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);margin-top:16px;">SCÉNARIO DE SORTIE</div>' +
     laboSeg3('scAuto', 'Remb. anticipé', 'scEch', 'À l’échéance', 'scVol', 'Sortie volontaire') +
-    '<div id="pxScenHint" style="font:400 11px/1.5 \'Inter\',sans-serif;color:var(--ink3);margin-top:8px;"></div>' +
+    '<div id="pxScenHint" style="font:400 11px/1.5 \'Manrope\',sans-serif;color:var(--ink3);margin-top:8px;"></div>' +
     '<div id="pxYrRow" style="display:none;">' + laboField('Année de sortie / de rappel', 'pxYr', 1, 12, 1, 3) + '</div>' +
     '<div id="pxPerfRow" style="display:none;">' + laboField('Performance du sous-jacent (avant décrément)', 'pxPerf', -70, 40, 1, -30) + '</div>' +
     '<div id="pxSorRow" style="display:none;">' + laboField('Coûts de sortie (si tu retires)', 'pxSor', 0, 5, 0.1, 1) + '</div>' +
     laboKpiRow([{ id: 'pxCost', label: 'FRAIS DÉDUITS', color: 'var(--warn)' }, { id: 'pxRes', label: 'TU RÉCUPÈRES' }, { id: 'pxNet', label: 'RÉSULTAT /AN', color: 'var(--acc)' }]) +
     '<div id="pxBreak" style="margin-top:6px;"></div>' + laboNote('pxNote') +
     '<div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--line);">' +
-    '<div style="font:500 13px \'Inter\',sans-serif;">Scénarios du DIC (PRIIPS)</div>' +
-    '<div style="font:400 11px/1.6 \'Inter\',sans-serif;color:var(--ink3);margin-top:4px;">Reporte les hypothèses de performance du sous-jacent des 4 scénarios réglementaires — ou ajoute les tiens — pour voir le montant net réellement perçu une fois les frais cabinet + produit déduits.</div>' +
+    '<div style="font:500 13px \'Manrope\',sans-serif;">Scénarios du DIC (PRIIPS)</div>' +
+    '<div style="font:400 11px/1.6 \'Manrope\',sans-serif;color:var(--ink3);margin-top:4px;">Reporte les hypothèses de performance du sous-jacent des 4 scénarios réglementaires — ou ajoute les tiens — pour voir le montant net réellement perçu une fois les frais cabinet + produit déduits.</div>' +
     '<div id="pxScenTable" style="margin-top:10px;"></div>' +
-    '<button type="button" id="pxScenAdd" style="width:100%;margin-top:10px;background:none;border:1px dashed var(--line);color:var(--ink2);border-radius:10px;padding:8px;font:500 11.5px \'Inter\',sans-serif;cursor:pointer;">+ Ajouter un scénario</button>' +
+    '<button type="button" id="pxScenAdd" style="width:100%;margin-top:10px;background:none;border:1px dashed var(--line);color:var(--ink2);border-radius:10px;padding:8px;font:500 11.5px \'Manrope\',sans-serif;cursor:pointer;">+ Ajouter un scénario</button>' +
     '</div>';
 
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
-    '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:16px;">Labo <span style="font-style:italic;">interactif</span></div>' +
-    '<div style="font:400 13px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;">5 simulateurs, 5 usages distincts. Chiffres élevés supportés — adapte-les à tes clients.</div></div>' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">' + icoSvg('chevron-left', 15) + '</span>Retour</button>' +
+    '<div style="font:300 34px/1.1 Manrope,sans-serif;letter-spacing:-.025em;margin-top:16px;">Labo <span style="font-style:italic;">interactif</span></div>' +
+    '<div style="font:400 13px/1.6 \'Manrope\',sans-serif;color:var(--ink2);margin-top:10px;">5 simulateurs, 5 usages distincts. Chiffres élevés supportés — adapte-les à tes clients.</div></div>' +
     '<div style="margin:0 24px;">' +
     laboCard('UTILITÉ', 'var(--gold)', '🌱', 'Intérêts composés + versements', 'La puissance du temps + de l’épargne régulière.', card1) +
     laboCard('UTILITÉ', 'var(--acc)', '💸', 'Levier fiscal du PER', 'Ton vrai gain fiscal PER selon tes revenus (gère les effets de tranche).', card2) +
@@ -3342,15 +3489,15 @@ function wireLabo() {
     return { valeur: valeur, rendNet: rendNet };
   }
   function renderPxScenTable() {
-    var head = '<div style="display:flex;align-items:center;gap:8px;padding-bottom:8px;font:500 9px \'Inter\',sans-serif;letter-spacing:.06em;color:var(--ink3);"><span style="flex:1;">SCÉNARIO</span><span style="width:60px;text-align:right;">S-JACENT</span><span style="width:76px;text-align:right;">NET REÇU</span><span style="width:52px;text-align:right;">/AN</span><span style="width:18px;"></span></div>';
+    var head = '<div style="display:flex;align-items:center;gap:8px;padding-bottom:8px;font:500 9px \'Manrope\',sans-serif;letter-spacing:.06em;color:var(--ink3);"><span style="flex:1;">SCÉNARIO</span><span style="width:60px;text-align:right;">S-JACENT</span><span style="width:76px;text-align:right;">NET REÇU</span><span style="width:52px;text-align:right;">/AN</span><span style="width:18px;"></span></div>';
     var rows = laboState.pxScenarios.map(function (s, i) {
       var c = pxScenCompute(s);
       return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line);">' +
-        '<input data-pxrow="' + i + '" data-f="label" value="' + esc(s.label) + '" style="flex:1;min-width:0;background:none;border:none;color:var(--ink);font:500 11px \'Inter\',sans-serif;padding:0;">' +
-        '<span style="width:60px;display:flex;align-items:center;justify-content:flex-end;gap:2px;"><input data-pxrow="' + i + '" data-f="perf" type="number" value="' + s.perf + '" style="width:42px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font:500 11px \'Inter\',sans-serif;padding:4px 4px;text-align:right;"><span style="font:400 9.5px \'Inter\',sans-serif;color:var(--ink3);">%</span></span>' +
-        '<span id="pxScenVal_' + i + '" style="width:76px;text-align:right;font:500 11.5px \'Inter\',sans-serif;color:var(--ink);">' + euro(c.valeur) + '</span>' +
-        '<span id="pxScenRend_' + i + '" style="width:52px;text-align:right;font:500 11px \'Inter\',sans-serif;color:' + (c.rendNet >= 0 ? 'var(--acc2)' : 'var(--warn)') + ';">' + pctv(c.rendNet) + '</span>' +
-        '<button data-pxdel="' + i + '" type="button" style="width:18px;background:none;border:none;color:var(--ink3);cursor:pointer;font-size:12px;padding:0;">✕</button></div>';
+        '<input data-pxrow="' + i + '" data-f="label" value="' + esc(s.label) + '" style="flex:1;min-width:0;background:none;border:none;color:var(--ink);font:500 11px \'Manrope\',sans-serif;padding:0;">' +
+        '<span style="width:60px;display:flex;align-items:center;justify-content:flex-end;gap:2px;"><input data-pxrow="' + i + '" data-f="perf" type="number" value="' + s.perf + '" style="width:42px;background:var(--panel2);border:1px solid var(--line);border-radius:8px;color:var(--ink);font:500 11px \'Manrope\',sans-serif;padding:4px 4px;text-align:right;"><span style="font:400 9.5px \'Manrope\',sans-serif;color:var(--ink3);">%</span></span>' +
+        '<span id="pxScenVal_' + i + '" style="width:76px;text-align:right;font:500 11.5px \'Manrope\',sans-serif;color:var(--ink);">' + euro(c.valeur) + '</span>' +
+        '<span id="pxScenRend_' + i + '" style="width:52px;text-align:right;font:500 11px \'Manrope\',sans-serif;color:' + (c.rendNet >= 0 ? 'var(--acc2)' : 'var(--bad)') + ';">' + pctv(c.rendNet) + '</span>' +
+        '<button data-pxdel="' + i + '" type="button" style="width:18px;background:none;border:none;color:var(--ink3);cursor:pointer;padding:0;display:flex;align-items:center;">' + icoSvg('cross', 12) + '</button></div>';
     }).join('');
     $('pxScenTable').innerHTML = head + rows;
   }
@@ -3359,7 +3506,7 @@ function wireLabo() {
     var c = pxScenCompute(s);
     var elV = $('pxScenVal_' + i), elR = $('pxScenRend_' + i);
     if (elV) elV.textContent = euro(c.valeur);
-    if (elR) { elR.textContent = pctv(c.rendNet); elR.style.color = c.rendNet >= 0 ? 'var(--acc2)' : 'var(--warn)'; }
+    if (elR) { elR.textContent = pctv(c.rendNet); elR.style.color = c.rendNet >= 0 ? 'var(--acc2)' : 'var(--bad)'; }
   }
   function pxMode(m) {
     laboState.pxMode = m;
@@ -3422,7 +3569,7 @@ function wireLabo() {
   $('pxGuideBtn').addEventListener('click', function () {
     var hid = $('pxGuide').style.display === 'none';
     $('pxGuide').style.display = hid ? '' : 'none';
-    $('pxGuideBtn').textContent = hid ? '✕ Masquer le guide' : '📄 Comment remplir depuis un DIC ? (exemples)';
+    $('pxGuideBtn').innerHTML = '<span style="flex-shrink:0;color:var(--ink3);">' + icoSvg(hid ? 'cross' : 'scroll', 14) + '</span>' + (hid ? 'Masquer le guide' : 'Comment remplir depuis un DIC ? (exemples)');
   });
   $('pxFillCiti').addEventListener('click', function () {
     $('pxCap').value = 10000; $('pxCoup').value = 8; $('pxDec').value = 4.7; $('pxBar').value = 40; $('pxN').value = 12;
@@ -3467,15 +3614,15 @@ function mentalGen() { return _pick(MEN_GENS)(); }
 
 function tplMental(v) {
   return '<div style="flex:1;overflow:auto;min-height:0;">' +
-    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">&#8249;</span> Retour</button>' +
-    '<div style="font:300 34px/1.1 Fraunces,serif;letter-spacing:-.025em;margin-top:16px;text-align:center;">Calcul <span style="font-style:italic;">mental</span></div>' +
-    '<div style="font:400 13px/1.6 \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;text-align:center;">' + mentalState.total + ' questions, ' + MEN_TIME + ' s chacune. À chaque réponse, une astuce de calcul — et un récapitulatif complet à la fin.</div></div>' +
+    '<div style="padding:58px 24px 0;"><button data-action="goBack" class="btn-back hv-a"><span class="bkarr">' + icoSvg('chevron-left', 15) + '</span>Retour</button>' +
+    '<div style="font:300 34px/1.1 Manrope,sans-serif;letter-spacing:-.025em;margin-top:16px;text-align:center;">Calcul <span style="font-style:italic;">mental</span></div>' +
+    '<div style="font:400 13px/1.6 \'Manrope\',sans-serif;color:var(--ink2);margin-top:10px;text-align:center;">' + mentalState.total + ' questions, ' + MEN_TIME + ' s chacune. À chaque réponse, une astuce de calcul — et un récapitulatif complet à la fin.</div></div>' +
     '<div id="menStage" style="margin:24px 24px 0;"></div><div style="height:32px;"></div></div>';
 }
 function mentalIntroHtml(v) {
   return '<div style="background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:24px;text-align:center;">' +
-    '<div style="font:300 22px Fraunces,serif;">Prêt ?</div>' +
-    '<div style="font:400 12px \'Inter\',sans-serif;color:var(--ink2);margin-top:10px;">Meilleur score : <b style="color:var(--ink);font-family:\'Inter\',sans-serif;">' + v.mentalBest + '</b> / ' + mentalState.total + '</div>' +
+    '<div style="font:300 22px Manrope,sans-serif;">Prêt ?</div>' +
+    '<div style="font:400 12px \'Manrope\',sans-serif;color:var(--ink2);margin-top:10px;">Meilleur score : <b style="color:var(--ink);font-family:\'Manrope\',sans-serif;">' + v.mentalBest + '</b> / ' + mentalState.total + '</div>' +
     '<button data-action="mentalStart" class="btn-cta-sm" style="margin-top:16px;">Commencer →</button></div>';
 }
 function wireMentalIntro() {
@@ -3489,20 +3636,20 @@ function mentalNext() {
   mentalState.cur = mentalGen(); mentalState.left = MEN_TIME; mentalState.answered = false;
   var stage = document.getElementById('menStage');
   if (!stage) return;
-  stage.innerHTML = '<div style="text-align:center;font:500 11px \'Inter\',sans-serif;color:var(--ink2);">Question ' + (mentalState.idx + 1) + ' / ' + mentalState.total + ' · Score ' + mentalState.score + '</div>' +
+  stage.innerHTML = '<div style="text-align:center;font:500 11px \'Manrope\',sans-serif;color:var(--ink2);">Question ' + (mentalState.idx + 1) + ' / ' + mentalState.total + ' · Score ' + mentalState.score + '</div>' +
     '<div style="height:4px;border-radius:2px;background:var(--line);overflow:hidden;margin-top:10px;"><div id="menBar" style="height:4px;background:var(--acc);width:100%;"></div></div>' +
-    '<div id="menTimer" style="text-align:center;font:500 26px \'Inter\',sans-serif;margin-top:10px;color:var(--ink);">' + MEN_TIME + '</div>' +
+    '<div id="menTimer" style="text-align:center;font:500 26px \'Manrope\',sans-serif;margin-top:10px;color:var(--ink);">' + MEN_TIME + '</div>' +
     '<div id="menCard" style="background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:20px;margin-top:12px;">' +
-    '<div id="menQ" style="font:300 22px/1.35 Fraunces,serif;text-align:center;"></div>' +
+    '<div id="menQ" style="font:300 22px/1.35 Manrope,sans-serif;text-align:center;"></div>' +
     '<input id="menInp" type="number" inputmode="decimal" autocomplete="off" placeholder="?" style="margin-top:16px;">' +
-    '<div id="menTip" style="display:none;margin-top:12px;font:400 12.5px/1.6 \'Inter\',sans-serif;color:var(--acc);"></div>' +
+    '<div id="menTip" style="display:none;margin-top:12px;font:400 12.5px/1.6 \'Manrope\',sans-serif;color:var(--acc);"></div>' +
     '<div style="margin-top:14px;"><button id="menValid" class="btn-cta" style="width:100%;">Valider →</button></div></div>';
   var qEl = document.getElementById('menQ'), inp = document.getElementById('menInp');
   qEl.textContent = mentalState.cur.q;
   try { inp.focus(); } catch (e) {}
   function trySubmit() {
     if (String(inp.value).trim() === '') {
-      inp.style.borderColor = 'var(--warn)';
+      inp.style.borderColor = 'var(--bad)';
       inp.placeholder = 'Réponse obligatoire';
       setTimeout(function () { inp.style.borderColor = ''; }, 900);
       return;
@@ -3535,14 +3682,14 @@ function mentalAnswer(timeout) {
   if (inp) inp.disabled = true;
   var vb = document.getElementById('menValid'); if (vb) vb.style.display = 'none';
   var badge = document.createElement('div');
-  badge.style.cssText = 'text-align:center;font:600 14px \'Inter\',sans-serif;border-radius:12px;padding:10px;margin-bottom:14px;' +
-    (ok ? 'background:' + hexA('#5f7f66', 0.16) + ';color:#5f7f66;' : 'background:' + hexA('#a8432f', 0.16) + ';color:#a8432f;');
-  badge.textContent = ok ? '✅ Correct !' : (timeout ? '⏱ Temps écoulé' : '❌ Raté');
+  badge.style.cssText = 'text-align:center;font:600 14px \'Manrope\',sans-serif;border-radius:12px;padding:10px;margin-bottom:14px;' +
+    (ok ? 'background:' + hexA('#00E08F', 0.16) + ';color:#00E08F;' : 'background:' + hexA('#FF6B6B', 0.16) + ';color:#FF6B6B;');
+  badge.innerHTML = '<span style="display:inline-flex;align-items:center;gap:6px;justify-content:center;">' + icoSvg(ok ? 'check' : (timeout ? 'clock' : 'cross'), 15) + (ok ? 'Correct !' : (timeout ? 'Temps écoulé' : 'Raté')) + '</span>';
   card.insertBefore(badge, card.firstChild);
   var qEl = document.getElementById('menQ');
-  if (qEl && !ok) qEl.innerHTML = esc(mentalState.cur.q) + '<div style="font:500 13px \'Inter\',sans-serif;color:var(--warn);margin-top:8px;">Bonne réponse : ' + fmtNum(mentalState.cur.a) + '</div>';
+  if (qEl && !ok) qEl.innerHTML = esc(mentalState.cur.q) + '<div style="font:500 13px \'Manrope\',sans-serif;color:var(--bad);margin-top:8px;">Bonne réponse : ' + fmtNum(mentalState.cur.a) + '</div>';
   var tip = document.getElementById('menTip');
-  if (tip) { tip.innerHTML = '💡 <b>Méthode :</b> ' + esc(mentalState.cur.method); tip.style.display = 'block'; tip.style.background = 'var(--panel2)'; tip.style.border = '1px solid var(--line)'; tip.style.borderRadius = '12px'; tip.style.padding = '12px 14px'; }
+  if (tip) { tip.innerHTML = '<span style="display:inline-flex;gap:6px;"><span style="flex-shrink:0;">' + icoSvg('bulb', 13) + '</span><span><b>Méthode :</b> ' + esc(mentalState.cur.method) + '</span></span>'; tip.style.display = 'block'; tip.style.background = 'var(--panel2)'; tip.style.border = '1px solid var(--line)'; tip.style.borderRadius = '12px'; tip.style.padding = '12px 14px'; }
   mentalState.idx++;
   if (card) {
     var nb = document.createElement('button');
@@ -3561,17 +3708,17 @@ function mentalEnd() {
   if (!stage) return;
   var pct = Math.round(mentalState.score / mentalState.total * 100);
   var h = '<div style="background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:24px;text-align:center;">' +
-    '<div style="font:400 12px \'Inter\',sans-serif;color:var(--ink2);">Terminé !</div>' +
-    '<div style="font:300 46px Fraunces,serif;margin-top:8px;">' + mentalState.score + ' / ' + mentalState.total + '</div>' +
-    '<div style="font:400 12.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">' + (pct >= 80 ? 'Excellent' : pct >= 50 ? 'Bien' : 'À retravailler') + (wasBest ? ' — 🏆 nouveau record !' : '') + '</div>' +
-    '<div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink3);margin-top:4px;">Meilleur : <b style="color:var(--ink);font-family:\'Inter\',sans-serif;">' + (store.mentalBest || 0) + '</b> / ' + mentalState.total + '</div>' +
+    '<div style="font:400 12px \'Manrope\',sans-serif;color:var(--ink2);">Terminé !</div>' +
+    '<div style="font:300 46px Manrope,sans-serif;margin-top:8px;">' + mentalState.score + ' / ' + mentalState.total + '</div>' +
+    '<div style="font:400 12.5px \'Manrope\',sans-serif;color:var(--ink2);margin-top:6px;">' + (pct >= 80 ? 'Excellent' : pct >= 50 ? 'Bien' : 'À retravailler') + (wasBest ? ' — nouveau record !' : '') + '</div>' +
+    '<div style="font:400 11.5px \'Manrope\',sans-serif;color:var(--ink3);margin-top:4px;">Meilleur : <b style="color:var(--ink);font-family:\'Manrope\',sans-serif;">' + (store.mentalBest || 0) + '</b> / ' + mentalState.total + '</div>' +
     '<button id="menAgain" class="btn-cta-sm" style="margin-top:14px;">Rejouer →</button></div>';
-  h += '<div style="margin-top:16px;"><div style="font:600 10px \'Inter\',sans-serif;letter-spacing:.12em;color:var(--ink3);">RÉCAPITULATIF</div><div style="display:flex;flex-direction:column;gap:9px;margin-top:12px;">';
+  h += '<div style="margin-top:16px;"><div style="font:600 10px \'Manrope\',sans-serif;letter-spacing:.12em;color:var(--ink3);">RÉCAPITULATIF</div><div style="display:flex;flex-direction:column;gap:9px;margin-top:12px;">';
   mentalState.log.forEach(function (r) {
-    h += '<div style="background:var(--panel);border:1px solid ' + (r.ok ? 'var(--line)' : 'var(--warn)') + ';border-radius:14px;padding:12px;">' +
-      '<div style="display:flex;gap:9px;align-items:flex-start;font:400 12.5px/1.4 \'Inter\',sans-serif;"><span style="color:' + (r.ok ? 'var(--acc)' : 'var(--warn)') + ';font-weight:600;">' + (r.ok ? '✓' : '✗') + '</span><span>' + esc(r.q) + '</span></div>' +
-      '<div style="font:400 11.5px \'Inter\',sans-serif;color:var(--ink2);margin-top:6px;">Ta réponse : <b style="color:var(--ink);">' + esc(r.your) + '</b> · Bonne réponse : <b style="color:var(--ink);">' + fmtNum(r.a) + '</b></div>' +
-      '<div style="font:400 11px/1.5 \'Inter\',sans-serif;color:var(--acc);margin-top:6px;">💡 ' + esc(r.method) + '</div></div>';
+    h += '<div style="background:var(--panel);border:1px solid ' + (r.ok ? 'var(--line)' : 'var(--bad)') + ';border-radius:14px;padding:12px;">' +
+      '<div style="display:flex;gap:9px;align-items:flex-start;font:400 12.5px/1.4 \'Manrope\',sans-serif;"><span style="color:' + (r.ok ? 'var(--acc)' : 'var(--bad)') + ';flex-shrink:0;">' + icoSvg(r.ok ? 'check' : 'cross', 13) + '</span><span>' + esc(r.q) + '</span></div>' +
+      '<div style="font:400 11.5px \'Manrope\',sans-serif;color:var(--ink2);margin-top:6px;">Ta réponse : <b style="color:var(--ink);">' + esc(r.your) + '</b> · Bonne réponse : <b style="color:var(--ink);">' + fmtNum(r.a) + '</b></div>' +
+      '<div style="display:flex;gap:6px;align-items:flex-start;font:400 11px/1.5 \'Manrope\',sans-serif;color:var(--acc);margin-top:6px;"><span style="flex-shrink:0;">' + icoSvg('bulb', 12) + '</span><span>' + esc(r.method) + '</span></div></div>';
   });
   h += '</div></div>';
   stage.innerHTML = h;
@@ -3722,12 +3869,12 @@ function render() {
             save();
             if (!wasSeen) {
               var iconSpan = hd.querySelector('span');
-              if (iconSpan) { iconSpan.textContent = '✓'; iconSpan.style.background = v.ficheAccent; iconSpan.style.color = 'var(--on)'; }
+              if (iconSpan) { iconSpan.innerHTML = icoSvg('check', 11); iconSpan.style.background = v.ficheAccent; iconSpan.style.color = 'var(--on)'; }
               var total = v.ficheSections.length;
               var seenCount = Object.keys(store.ficheSectionsSeen[state.fiche]).length;
               var secStatus = document.getElementById('ficheSecStatus');
               if (secStatus) {
-                secStatus.textContent = (seenCount >= total ? '✓' : seenCount + '/' + total) + ' sections lues';
+                secStatus.innerHTML = (seenCount >= total ? icoSvg('check', 12) : seenCount + '/' + total) + ' sections lues';
                 secStatus.style.color = seenCount >= total ? 'var(--acc2)' : 'var(--ink2)';
               }
               var badge = document.getElementById('ficheValidatedBadge');
